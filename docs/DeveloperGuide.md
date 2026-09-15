@@ -261,13 +261,15 @@ _{Explain here how the data archiving feature will be implemented}_
 
 **Target user profile**:
 
+* is a residential assistant at NUS hostels who manages contacts for residents, hall staff, vendors, and emergency services
+* handles incidents and welfare cases during duty shifts, where knowing who to contact next is critical and a resident's details need to be at hand immediately
 * has a need to manage a significant number of contacts
 * prefers desktop apps over other types of applications
 * can type fast
 * prefers typing to mouse interactions
 * is reasonably comfortable using CLI apps
 
-**Value proposition**: Manage contacts faster than with a typical mouse-driven GUI application.
+**Value proposition**: Residential assistants keep track of contacts for residents, hall staff, vendors, and emergency services, currently scattered across chats and documents. This app brings them together in one organised place, optimised for typing so the right person or resident's details can be retrieved in seconds during an emergency.
 
 
 ### User stories

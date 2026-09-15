@@ -8,6 +8,12 @@ title: DevOps guide
 
 --------------------------------------------------------------------------------------------------------------------
 
+## Git conventions
+
+When writing commit messages, follow the conventions given in [_[se-edu/guides] Git conventions_](https://se-education.org/guides/conventions/git.html).
+
+--------------------------------------------------------------------------------------------------------------------
+
 ## Build automation
 
 This project uses Gradle for **build automation and dependency management**. **We recommend reading [this Gradle tutorial from se-edu/guides](https://se-education.org/guides/tutorials/gradle.html).**
