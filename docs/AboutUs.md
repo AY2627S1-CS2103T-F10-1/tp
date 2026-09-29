@@ -24,7 +24,6 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 <img src="images/d1sha1.png" width="200px">
 
 [[github](http://github.com/d1sha1)]
-[[portfolio](team/d1sha1.md)]
 
 * Role: Team Lead
 * Responsibilities: UI
