@@ -9,15 +9,15 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 ## Project team
 
-### John Doe
+### Tan Hougen
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/itscoldhere22.png" width="200px">
 
-[[homepage](http://www.comp.nus.edu.sg/~damithch)]
-[[github](https://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[homepage](https://www.linkedin.com/in/hougen-tan-b36232275/)]
+[[github](https://github.com/Itscoldhere22)]
 
-* Role: Project Advisor
+* Role: Non-contributing stakeholder
+* Responsibilities: A connoisseur of communal goodwill
 
 ### Jane Doe
 
