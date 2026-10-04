@@ -33,6 +33,9 @@ public class Person {
         this(name, phone, email, address, new Remark(""), tags);
     }
 
+    /**
+     * Creates a person with the given details and remark.
+     */
     public Person(Name name, Phone phone, Email email, Address address, Remark remark, Set<Tag> tags) {
         requireAllNonNull(name, phone, email, address, remark, tags);
         this.name = name;
@@ -59,7 +62,9 @@ public class Person {
         return address;
     }
 
-    public Remark getRemark() { return remark; }
+    public Remark getRemark() {
+        return remark;
+    }
 
     /**
      * Returns an immutable tag set, which throws {@code UnsupportedOperationException}

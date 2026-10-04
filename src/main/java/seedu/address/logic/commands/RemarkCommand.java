@@ -7,10 +7,10 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_REMARK;
 import java.util.List;
 
 import seedu.address.commons.core.index.Index;
+import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Remark;
-import seedu.address.logic.commands.exceptions.CommandException;
 
 /** Adds or replaces a person's remark. */
 public class RemarkCommand extends Command {
@@ -23,6 +23,7 @@ public class RemarkCommand extends Command {
     private final Index index;
     private final Remark remark;
 
+    /** Creates a command for the given displayed index and remark. */
     public RemarkCommand(Index index, Remark remark) {
         requireAllNonNull(index, remark);
         this.index = index;
@@ -32,9 +33,12 @@ public class RemarkCommand extends Command {
     @Override
     public CommandResult execute(Model model) throws CommandException {
         List<Person> persons = model.getFilteredPersonList();
-        if (index.getZeroBased() >= persons.size()) throw new CommandException(MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        if (index.getZeroBased() >= persons.size()) {
+            throw new CommandException(MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        }
         Person old = persons.get(index.getZeroBased());
-        Person updated = new Person(old.getName(), old.getPhone(), old.getEmail(), old.getAddress(), remark, old.getTags());
+        Person updated = new Person(old.getName(), old.getPhone(), old.getEmail(), old.getAddress(), remark,
+                old.getTags());
         model.setPerson(old, updated);
         model.updateFilteredPersonList(x -> true);
         String message = remark.value.isEmpty() ? MESSAGE_DELETE_REMARK_SUCCESS : MESSAGE_ADD_REMARK_SUCCESS;

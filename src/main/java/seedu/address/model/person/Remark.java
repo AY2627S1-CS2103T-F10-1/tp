@@ -16,8 +16,12 @@ public class Remark {
     }
 
     @Override
-    public int hashCode() { return value.hashCode(); }
+    public int hashCode() {
+        return value.hashCode();
+    }
 
     @Override
-    public String toString() { return value; }
+    public String toString() {
+        return value;
+    }
 }
