@@ -15,6 +15,7 @@ import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
+import seedu.address.model.person.RoomNumber;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -29,6 +30,7 @@ class JsonAdaptedPerson {
     private final String email;
     private final String address;
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
+    private final String roomNumber;
 
     /**
      * Constructs a {@code JsonAdaptedPerson} with the given person details.
@@ -36,14 +38,20 @@ class JsonAdaptedPerson {
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
             @JsonProperty("email") String email, @JsonProperty("address") String address,
-            @JsonProperty("tags") List<JsonAdaptedTag> tags) {
+            @JsonProperty("tags") List<JsonAdaptedTag> tags, @JsonProperty("roomNumber") String roomNumber) {
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
+        this.roomNumber = roomNumber;
         if (tags != null) {
             this.tags.addAll(tags);
         }
+    }
+
+    public JsonAdaptedPerson(String name, String phone, String email, String address,
+            List<JsonAdaptedTag> tags) {
+        this(name, phone, email, address, tags, null);
     }
 
     /**
@@ -54,6 +62,7 @@ class JsonAdaptedPerson {
         phone = source.getPhone().value;
         email = source.getEmail().value;
         address = source.getAddress().value;
+        roomNumber = source.getRoomNumber().map(room -> room.value).orElse(null);
         tags.addAll(source.getTags().stream()
                 .map(JsonAdaptedTag::new)
                 .collect(Collectors.toList()));
@@ -103,7 +112,15 @@ class JsonAdaptedPerson {
         final Address modelAddress = new Address(address);
 
         final Set<Tag> modelTags = new HashSet<>(personTags);
-        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelTags);
+        RoomNumber modelRoomNumber = null;
+        if (roomNumber != null) {
+            if (!RoomNumber.isValidRoomNumber(roomNumber)) {
+                throw new IllegalValueException(RoomNumber.MESSAGE_CONSTRAINTS);
+            }
+            modelRoomNumber = new RoomNumber(roomNumber);
+        }
+        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelTags,
+                java.util.Optional.ofNullable(modelRoomNumber));
     }
 
 }
