@@ -289,32 +289,84 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Use cases
 
-(For all use cases below, the **System** is the `AddressBook` and the **Actor** is the `user`, unless specified otherwise)
+(For all use cases below, the **System** is `RAcontact` and the **Actor** is a residential assistant, unless specified otherwise.)
 
-**Use case: Delete a person**
+**Use case: Restore an archived contact**
 
 **MSS**
 
-1.  User requests to list persons
-2.  AddressBook shows a list of persons
-3.  User requests to delete a specific person in the list
-4.  AddressBook deletes the person
+1.  User requests to view archived contacts.
+2.  RAcontact shows the archived contacts.
+3.  User requests to restore a specific archived contact.
+4.  RAcontact returns the contact to the main contact list and confirms the restoration.
 
     Use case ends.
 
 **Extensions**
 
-* 2a. The list is empty.
+* 2a. There are no archived contacts.
 
-  Use case ends.
+    * 2a1. RAcontact shows an empty archive.
 
-* 3a. The given index is invalid.
+      Use case ends.
 
-    * 3a1. AddressBook shows an error message.
+* 3a. The specified contact is not in the archive.
 
-      Use case resumes at step 2.
+    * 3a1. RAcontact shows an error message.
 
-*{More to be added}*
+      Use case resumes at step 3.
+
+**Use case: Start using RAcontact with real contacts**
+
+**MSS**
+
+1.  User requests to remove all sample contacts.
+2.  RAcontact removes the sample contacts and confirms the removal.
+3.  User requests to add a real contact with a name and phone number.
+4.  RAcontact adds the contact, shows its details, and confirms the addition.
+
+    Use case ends.
+
+**Extensions**
+
+* 3a. The name or phone number is invalid.
+
+    * 3a1. RAcontact shows an error message and does not add the contact.
+
+      Use case resumes at step 3.
+
+**Use case: Find contacts during an emergency**
+
+**MSS**
+
+1.  User requests to find a resident.
+2.  RAcontact shows the resident's details.
+3.  User requests to view the resident's emergency contact.
+4.  RAcontact shows the emergency contact's details.
+5.  User requests to view contacts tagged as emergency.
+6.  RAcontact shows the emergency contacts, including the hall's on-call contact.
+
+    Use case ends.
+
+**Extensions**
+
+* 2a. The resident cannot be found.
+
+    * 2a1. RAcontact shows a message that no contact was found.
+
+      Use case resumes at step 1.
+
+* 4a. No emergency contact is recorded for the resident.
+
+    * 4a1. RAcontact informs the user.
+
+      Use case resumes at step 5.
+
+* 6a. No contacts are tagged as emergency.
+
+    * 6a1. RAcontact shows an empty list.
+
+      Use case ends.
 
 ### Non-Functional Requirements
 
