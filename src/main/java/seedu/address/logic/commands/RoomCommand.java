@@ -21,6 +21,9 @@ public class RoomCommand extends Command {
     private final String identifier;
     private final RoomNumber roomNumber;
 
+    /**
+     * Creates a command to assign {@code roomNumber} to the resident with the given name.
+     */
     public RoomCommand(String identifier, RoomNumber roomNumber) {
         this.identifier = identifier;
         this.roomNumber = roomNumber;

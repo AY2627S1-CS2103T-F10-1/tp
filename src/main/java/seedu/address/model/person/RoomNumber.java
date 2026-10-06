@@ -11,6 +11,11 @@ public class RoomNumber {
 
     public final String value;
 
+    /**
+     * Creates a validated room number with surrounding whitespace trimmed and extra whitespace collapsed.
+     *
+     * @param roomNumber A valid room number.
+     */
     public RoomNumber(String roomNumber) {
         requireNonNull(roomNumber);
         String normalizedRoomNumber = roomNumber.trim().replaceAll("\\s+", " ");

@@ -8,6 +8,12 @@ import seedu.address.model.person.RoomNumber;
 
 /** Parses room-number commands. */
 public class RoomCommandParser implements Parser<RoomCommand> {
+    /**
+     * Parses a resident name followed by {@code /room} and a room number.
+     *
+     * @throws ParseException if the command format or room number is invalid.
+     */
+    @Override
     public RoomCommand parse(String args) throws ParseException {
         int delimiterIndex = args.indexOf("/room");
         if (delimiterIndex <= 0 || args.indexOf("/room", delimiterIndex + 1) >= 0) {

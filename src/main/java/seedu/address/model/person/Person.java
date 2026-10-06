@@ -34,6 +34,10 @@ public class Person {
         this(name, phone, email, address, tags, Optional.empty());
     }
 
+    /**
+     * Creates a person with the given details and an optional room number.
+     * Every argument must be present and not null.
+     */
     public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags,
             Optional<RoomNumber> roomNumber) {
         requireAllNonNull(name, phone, email, address, tags);
