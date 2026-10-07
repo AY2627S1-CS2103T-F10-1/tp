@@ -62,8 +62,26 @@ public class Tag {
                 .collect(Collectors.joining(WORD_SEPARATOR));
     }
 
+    /**
+     * Returns true if {@code name} refers to this tag, ignoring case and extra whitespace.
+     * Unlike constructing a {@code Tag}, any string is accepted; one that is not a valid tag name never matches.
+     */
+    public boolean matchesName(String name) {
+        requireNonNull(name);
+        return getComparisonKey().equals(toComparisonKey(name));
+    }
+
+    /**
+     * Returns the form of {@code name} used to compare tag names, ignoring case and extra whitespace.
+     * Two names refer to the same tag exactly when their comparison keys are equal.
+     */
+    public static String toComparisonKey(String name) {
+        requireNonNull(name);
+        return StringUtil.collapseWhitespace(name).toLowerCase(Locale.ROOT);
+    }
+
     private String getComparisonKey() {
-        return tagName.toLowerCase(Locale.ROOT);
+        return toComparisonKey(tagName);
     }
 
     @Override

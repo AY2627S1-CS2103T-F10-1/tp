@@ -197,6 +197,12 @@ The sequence diagram below shows how `Sarah Tan /tag RA` is parsed and executed.
   * Pros: no data is lost.
   * Cons: the limit is no longer guaranteed, and contact cards can grow beyond 5 tags.
 
+### Filter by tag feature
+
+`list /filter TAG` shows only contacts with the given tag. `ListCommandParser` passes any arguments to `TagFilterParser#parse()`, which returns a `PersonHasTagPredicate`. `ListCommand` then applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any value is accepted and a value that is not a valid tag simply matches nobody.
+
+To let another output command filter by tag, such as `find`, call `TagFilterParser#parse()` from its parser and apply the predicate the same way.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -500,6 +506,25 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `Charlotte Oliveiro /tag Hall-Staff`<br>
       Expected: The status message shows `Tag added to Charlotte Oliveiro.` Run `list` to see the new tag.
+
+### Filtering by tag
+
+1. Prerequisites: Start with the sample data.
+
+1. Test case: `list /filter friends`<br>
+   Expected: Only contacts tagged `Friends` are shown. The status message shows how many are listed.
+
+1. Test case: `list   /filter   FRIENDS  `<br>
+   Expected: Same as above.
+
+1. Test case: `list /filter Nobody`<br>
+   Expected: An empty list. The status message shows `No contacts found with this tag.`
+
+1. Test case: `list /filter`<br>
+   Expected: The list is unchanged. Error: `Tag cannot be empty.`
+
+1. Other incorrect commands to try: `list 3`, `list friends`, `list /filterfriends`<br>
+   Expected: The list is unchanged. Error: `Invalid command format. Usage: <output command> /filter <tagName>`
 
 ### Saving data
 
