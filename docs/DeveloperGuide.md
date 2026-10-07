@@ -475,6 +475,33 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `list`<br>
       Expected: An empty list and `No contacts found.`.
 
+### Listing emergency contacts
+
+1. Filtering all stored contacts
+
+   1. Prerequisites: In a disposable address book, add at least one contact with `t/emergency`,
+      another with `t/EMERGENCY`, and contacts with no tags or with `t/emergencyservice`.
+
+   1. Test case: `list emerg`<br>
+      Expected: Only the contacts with a whole emergency tag appear, in stored order with their details.
+      The message is `Listed all emergency contacts.`. Stored contacts are unchanged.
+
+   1. Test case: Search for a non-emergency contact, then enter `  LIST   EMERG  `.<br>
+      Expected: The same emergency contacts appear, including contacts hidden by the search.
+
+   1. Test case: `list emerg friend`<br>
+      Expected: `Invalid command format. Usage: list emerg`. The displayed list and stored contacts stay unchanged.
+
+   1. Test case: `list`<br>
+      Expected: All contacts appear again in numbered order.
+
+1. Handling no matches
+
+   1. Prerequisites: Use a disposable address book with no emergency tags, then repeat with no contacts.
+
+   1. Test case: `list emerg`<br>
+      Expected: An empty list and `No emergency contacts found.` in both cases.
+
 ### Saving data
 
 1. Dealing with missing/corrupted data files

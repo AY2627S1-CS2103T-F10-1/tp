@@ -28,6 +28,8 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
    * `list` : Lists all contacts.
 
+   * `list emerg` : Lists contacts tagged as emergency.
+
    * `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01` : Adds a contact named `John Doe` to the Address Book.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
@@ -100,6 +102,30 @@ Format: `list`
   The displayed list stays unchanged when the command is rejected.
 * When there are no stored contacts, the list is empty and the result message is `No contacts found.`.
 * Otherwise, the result message is `Listed all contacts.`.
+
+### Listing emergency contacts: `list emerg`
+
+Shows only contacts carrying the complete tag `emergency`, in numbered order with their available details.
+It searches all stored contacts, including those hidden by a previous search.
+The command does not add, edit, delete, or deduplicate contacts.
+
+Format: `list emerg`
+
+* Both keywords and the emergency tag are case-insensitive. `LIST EMERG` also matches the tag `Emergency`.
+* Leading and trailing spaces, and extra spaces between the keywords, are ignored.
+* A contact with several tags appears once if any tag is `emergency`.
+  Tags such as `emerg` or `emergencyservice` do not match.
+* Extra arguments, such as `list emerg friend`, are rejected with `Invalid command format. Usage: list emerg`.
+  The displayed list stays unchanged when the command is rejected.
+* When no emergency contacts exist, the list is empty and the message is `No emergency contacts found.`.
+* Otherwise, the result message is `Listed all emergency contacts.`.
+* Run `list` to return to all contacts. `list` alone is a valid command to list everyone.
+
+Example using the existing tag syntax:
+
+1. `add n/Hall Security p/98765432 e/security@example.com a/Hall office t/emergency`
+1. `list emerg` shows Hall Security and any other emergency contacts.
+1. `list` restores all contacts.
 
 ### Editing a person: `edit`
 
@@ -203,4 +229,5 @@ Action | Format, Examples
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
 **Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List** | `list`
+**List emergency contacts** | `list emerg`
 **Help** | `help`
