@@ -50,6 +50,9 @@ public class TypicalPersons {
     public static final Person JANE = new PersonBuilder().withName("Jane Tan").withPhone("8482999")
             .withEmail("jane@example.com").withAddress("block 4")
             .withTags("RA", "Resident", "Block4", "Resident Fellow", "Hall-Staff").build(); // at the tag limit
+    public static final Person KAI = new PersonBuilder().withName("Kai Lim").withPhone("8482777")
+            .withEmail("kai@example.com").withAddress("block 5")
+            .withTags("RA", "Resident", "Block5", "Hall-Staff").build(); // one below the tag limit
 
     // Manually added - Person's details found in {@code CommandTestUtil}
     public static final Person AMY = new PersonBuilder().withName(VALID_NAME_AMY).withPhone(VALID_PHONE_AMY)

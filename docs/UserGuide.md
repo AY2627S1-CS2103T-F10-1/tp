@@ -56,7 +56,8 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
   For example, `[t/TAG]…​` may be omitted, or written as `t/friend` or `t/friend t/family`.
 
 * Parameters can be in any order.<br>
-  For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
+  For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.<br>
+  The exception is [tagging a contact](#tagging-a-contact-tag), which has no command word and must be typed as `CONTACT_NAME /tag TAG`, in that order.
 
 * Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
@@ -115,33 +116,14 @@ Adds one tag to an existing contact, to show their category at a glance (e.g., `
 
 Format: `CONTACT_NAME /tag TAG`
 
-* There is no command word: type the contact's name, then `/tag`, then the tag.
-* `CONTACT_NAME` is the contact's **full name**. It is not case-sensitive and extra spaces are ignored, so `sarah   tan` matches `Sarah Tan`. Contacts hidden by a previous `find` can still be tagged.
+* `CONTACT_NAME` is the contact's full name. It is not case-sensitive and extra spaces are ignored.
 * Only one tag can be added per command. Spaces inside the tag are allowed, so `Resident Fellow` is one tag.
-* Tags may contain letters, digits, spaces and hyphens (`-`), up to 50 characters.
-* Tags are not case-sensitive: `RA` and `ra` are the same tag. They are displayed with the first letter of each word capitalized and the rest as you typed it, so `resident fellow` is shown as `Resident Fellow` and `RA` stays `RA`.
+* Tags may contain letters, digits, spaces and hyphens (`-`), up to 50 characters. They are not case-sensitive, and are displayed with the first letter of each word capitalized.
 * A contact can have at most 5 tags, and cannot have the same tag twice.
-* The new tag appears on the contact's card after their existing tags.
 
 Examples:
 * `Sarah Tan /tag Resident Fellow` adds the tag `Resident Fellow` to Sarah Tan.
-* `daniel lim /tag ra` adds the tag `Ra` to Daniel Lim.
-* `Daniel Lim /tag Block4` adds the tag `Block4` to Daniel Lim.
-
-Possible errors (the contact is left unchanged):
-
-Situation | Message
---------|------------------
-No contact has that name | `Contact not found.`
-`/tag` or the tag value is missing | `Invalid command format. Usage: <contact identifier> /tag <tag>`
-Tag is longer than 50 characters | `Tag too long, please shorten it and try again.`
-Tag contains a character other than a letter, digit, space or `-` | `Tag contains invalid characters.`
-Contact already has the tag (in any case) | `Contact already has this tag.`
-Contact already has 5 tags | `Tag limit reached (max 5)`
-
-<div markdown="span" class="alert alert-primary">:bulb: **Tip:**
-To tag a contact as you create them, use `t/` in the `add` command, e.g. `add n/Sarah Tan p/91234567 e/sarah@u.nus.edu a/Block 4 t/Resident Fellow`.
-</div>
+* `daniel lim /tag RA` adds the tag `RA` to Daniel Lim.
 
 ### Locating persons by name: `find`
 

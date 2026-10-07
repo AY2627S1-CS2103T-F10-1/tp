@@ -12,6 +12,9 @@ import java.util.Arrays;
  */
 public class StringUtil {
 
+    private static final String WHITESPACE_RUN_REGEX = "\\s+";
+    private static final String SINGLE_SPACE = " ";
+
     /**
      * Returns true if the {@code sentence} contains the {@code word}.
      *   Ignores case, but a full word match is required.
@@ -46,7 +49,7 @@ public class StringUtil {
      */
     public static String collapseWhitespace(String s) {
         requireNonNull(s);
-        return s.trim().replaceAll("\\s+", " ");
+        return s.trim().replaceAll(WHITESPACE_RUN_REGEX, SINGLE_SPACE);
     }
 
     /**

@@ -4,14 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.logic.commands.CommandTestUtil.INVALID_TAG_TOO_LONG;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_AT_MAX_LENGTH;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
 public class TagTest {
-
-    private static final String TAG_AT_MAX_LENGTH = "a".repeat(Tag.MAX_LENGTH);
-    private static final String TAG_OVER_MAX_LENGTH = "a".repeat(Tag.MAX_LENGTH + 1);
 
     @Test
     public void constructor_null_throwsNullPointerException() {
@@ -35,7 +34,7 @@ public class TagTest {
         assertFalse(Tag.isValidTagName("Resident/Fellow")); // command delimiter
         assertFalse(Tag.isValidTagName("hubby*")); // other symbols
         assertFalse(Tag.isValidTagName("Block_4")); // underscore
-        assertFalse(Tag.isValidTagName(TAG_OVER_MAX_LENGTH)); // boundary: one character too long
+        assertFalse(Tag.isValidTagName(INVALID_TAG_TOO_LONG)); // boundary: one character too long
 
         // valid tag names
         assertTrue(Tag.isValidTagName("RA")); // letters only
@@ -44,8 +43,8 @@ public class TagTest {
         assertTrue(Tag.isValidTagName("Hall-Staff")); // hyphen
         assertTrue(Tag.isValidTagName("Resident Fellow")); // inner space
         assertTrue(Tag.isValidTagName("  Resident    Fellow  ")); // extra spaces are collapsed
-        assertTrue(Tag.isValidTagName(TAG_AT_MAX_LENGTH)); // boundary: exactly at the limit
-        assertTrue(Tag.isValidTagName(" " + TAG_AT_MAX_LENGTH + " ")); // surrounding spaces do not count
+        assertTrue(Tag.isValidTagName(VALID_TAG_AT_MAX_LENGTH)); // boundary: exactly at the limit
+        assertTrue(Tag.isValidTagName(" " + VALID_TAG_AT_MAX_LENGTH + " ")); // surrounding spaces do not count
     }
 
     @Test

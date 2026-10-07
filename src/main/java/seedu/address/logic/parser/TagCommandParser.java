@@ -15,13 +15,17 @@ import seedu.address.model.tag.Tag;
  */
 public class TagCommandParser implements Parser<TagCommand> {
 
+    private static final String GROUP_IDENTIFIER = "identifier";
+    private static final String GROUP_TAG = "tag";
+
     /** Matches the keyword as a standalone word, so names or tags merely containing "/tag" are not affected. */
     private static final Pattern KEYWORD_PATTERN =
             Pattern.compile("(^|\\s)" + Pattern.quote(TagCommand.COMMAND_KEYWORD) + "(\\s|$)");
 
     /** Splits the input at the first keyword; any later "/tag" becomes part of the tag and is rejected there. */
     private static final Pattern TAG_COMMAND_FORMAT = Pattern.compile(
-            "(?<identifier>.*?)\\s+" + Pattern.quote(TagCommand.COMMAND_KEYWORD) + "(?<tag>(\\s.*)?)");
+            "(?<" + GROUP_IDENTIFIER + ">.*?)\\s+" + Pattern.quote(TagCommand.COMMAND_KEYWORD)
+                    + "(?<" + GROUP_TAG + ">(\\s.*)?)");
 
     /**
      * Returns true if {@code userInput} contains the {@code /tag} keyword and should be parsed by this parser.
@@ -45,8 +49,8 @@ public class TagCommandParser implements Parser<TagCommand> {
             throw new ParseException(TagCommand.MESSAGE_INVALID_FORMAT);
         }
 
-        String identifier = matcher.group("identifier");
-        String tagValue = matcher.group("tag").trim();
+        String identifier = matcher.group(GROUP_IDENTIFIER);
+        String tagValue = matcher.group(GROUP_TAG).trim();
         assert !identifier.isBlank() : "Trimmed input cannot start with whitespace, so the identifier is non-blank";
         if (tagValue.isEmpty()) {
             throw new ParseException(TagCommand.MESSAGE_INVALID_FORMAT);

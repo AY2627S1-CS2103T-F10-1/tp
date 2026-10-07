@@ -10,6 +10,7 @@ import static seedu.address.logic.commands.CommandTestUtil.showPersonAtIndex;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.JANE;
+import static seedu.address.testutil.TypicalPersons.KAI;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.util.List;
@@ -30,6 +31,7 @@ import seedu.address.testutil.PersonBuilder;
 public class TagCommandTest {
 
     private static final Tag RESIDENT_FELLOW = new Tag(VALID_TAG_RESIDENT_FELLOW);
+    private static final int VERY_LONG_NAME_REPEATS = 500;
 
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
@@ -77,10 +79,8 @@ public class TagCommandTest {
 
     @Test
     public void execute_oneBelowTagLimit_success() {
-        Person personWithFourTags = new PersonBuilder().withTags("A", "B", "C", "D").build();
-        model.addPerson(personWithFourTags);
-
-        assertTagSuccess(personWithFourTags.getName().fullName, personWithFourTags, RESIDENT_FELLOW);
+        model.addPerson(KAI);
+        assertTagSuccess(KAI.getName().fullName, KAI, RESIDENT_FELLOW);
     }
 
     @Test
@@ -110,6 +110,10 @@ public class TagCommandTest {
 
         // partial name is not a match
         assertCommandFailure(new TagCommand("Benson", RESIDENT_FELLOW), model, Messages.MESSAGE_CONTACT_NOT_FOUND);
+
+        // very long name
+        String veryLongName = BENSON.getName().fullName.repeat(VERY_LONG_NAME_REPEATS);
+        assertCommandFailure(new TagCommand(veryLongName, RESIDENT_FELLOW), model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test

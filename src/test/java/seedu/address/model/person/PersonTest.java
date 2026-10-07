@@ -12,6 +12,7 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
 import static seedu.address.testutil.TypicalPersons.JANE;
+import static seedu.address.testutil.TypicalPersons.KAI;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -50,10 +51,8 @@ public class PersonTest {
 
     @Test
     public void isTagLimitReached() {
-        Person personWithFourTags = new PersonBuilder().withTags("A", "B", "C", "D").build();
-
         assertFalse(new PersonBuilder().build().isTagLimitReached()); // no tags
-        assertFalse(personWithFourTags.isTagLimitReached()); // boundary: one below the limit
+        assertFalse(KAI.isTagLimitReached()); // boundary: one below the limit
         assertTrue(JANE.isTagLimitReached()); // boundary: at the limit
     }
 

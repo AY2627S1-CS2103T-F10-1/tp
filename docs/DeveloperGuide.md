@@ -165,6 +165,10 @@ Unlike other commands, this input has no leading command word. `AddressBookParse
 
 `TagCommandParser` splits the input at the first `/tag`. The part before is the contact's name, and the part after is passed to `ParserUtil#parseTag()`. That method collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. `add` and `edit` use the same method for `t/`, so tags follow the same rules everywhere.
 
+The sequence diagram below shows how `Sarah Tan /tag RA` is parsed and executed.
+
+![Interactions Inside the Logic Component for the `Sarah Tan /tag RA` Command](images/TagSequenceDiagram.png)
+
 `TagCommand#execute()` then:
 
 1. Finds the contact in the full person list, not just the displayed one, whose name matches the given name. An exact match is preferred, then a match ignoring case and extra spaces. If there is none, it throws `Contact not found.`
@@ -467,50 +471,35 @@ testers are expected to do more *exploratory* testing.
 
 ### Tagging a contact
 
-1. Tagging a contact while all persons are being shown
+1. Tagging a contact
 
-   1. Prerequisites: Start with the sample data, or add a contact named `Alex Yeoh` who has fewer than 5 tags. Run `list`.
+   1. Prerequisites: Start with the sample data and run `list`.
 
    1. Test case: `Alex Yeoh /tag Resident Fellow`<br>
       Expected: `Resident Fellow` appears after Alex Yeoh's existing tags. The status message shows `Tag added to Alex Yeoh.`
 
-   1. Test case: `  alex   YEOH  /tag   block4-a  `<br>
-      Expected: The tag `Block4-a` is added. Case and extra spaces in the name and tag are ignored.
-
-   1. Test case: `Alex Yeoh /tag RESIDENT FELLOW` (after the first test case)<br>
+   1. Test case: `  alex   YEOH  /tag RESIDENT fellow`<br>
       Expected: No change. Error: `Contact already has this tag.`
 
    1. Test case: `Nobody Here /tag RA`<br>
       Expected: No change. Error: `Contact not found.`
 
-   1. Test case: `Alex /tag RA` (partial name)<br>
-      Expected: No change. Error: `Contact not found.`
-
-   1. Test cases: `Alex Yeoh /tag`, `/tag RA`<br>
-      Expected: No change. Error: `Invalid command format. Usage: <contact identifier> /tag <tag>`
-
-   1. Test cases: `Alex Yeoh /tag Resident/Fellow`, `Alex Yeoh /tag RA /tag Staff`, `Alex Yeoh /tag hubby*`<br>
-      Expected: No change. Error: `Tag contains invalid characters.`
-
-   1. Test case: `Alex Yeoh /tag` followed by 51 letters<br>
-      Expected: No change. Error: `Tag too long, please shorten it and try again.` A tag of exactly 50 letters is accepted.
+   1. Other incorrect commands to try: `Alex Yeoh /tag`, `/tag RA`, `Alex Yeoh /tag RA/Staff`, `Alex Yeoh /tag` followed by 51 letters<br>
+      Expected: No change. The status message shows the matching error.
 
 1. Tagging a contact at the tag limit
 
-   1. Prerequisites: Keep tagging Alex Yeoh with new tags (e.g., `/tag T1`, `/tag T2`, ...) until the card shows 5 tags.
+   1. Prerequisites: Tag Alex Yeoh with new tags (e.g., `T1`, `T2`, ...) until the card shows 5 tags.
 
    1. Test case: `Alex Yeoh /tag Staff`<br>
       Expected: No change. Error: `Tag limit reached (max 5)`
 
-   1. Test case: `add n/Test Person p/91234567 e/test@example.com a/Block 1 t/A t/B t/C t/D t/E t/F`<br>
-      Expected: No contact is added. Error: `Tag limit reached (max 5)`
-
 1. Tagging a contact hidden by a filter
 
-   1. Prerequisites: Run `find Bernice`, so that Alex Yeoh is not shown.
+   1. Prerequisites: Run `find Bernice`, so that Charlotte Oliveiro is not shown.
 
-   1. Test case: `Alex Yeoh /tag Hall-Staff` (on a contact with fewer than 5 tags)<br>
-      Expected: The status message shows `Tag added to Alex Yeoh.` Run `list` to see the new tag.
+   1. Test case: `Charlotte Oliveiro /tag Hall-Staff`<br>
+      Expected: The status message shows `Tag added to Charlotte Oliveiro.` Run `list` to see the new tag.
 
 ### Saving data
 

@@ -104,13 +104,13 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_tagKeywordWithoutIdentifier_throwsParseException() {
         assertThrows(ParseException.class, TagCommand.MESSAGE_INVALID_FORMAT, ()
-            -> parser.parseCommand(TagCommand.COMMAND_KEYWORD + " RA"));
+                -> parser.parseCommand(TagCommand.COMMAND_KEYWORD + " RA"));
     }
 
     @Test
     public void parseCommand_unrecognisedInput_throwsParseException() {
         assertThrows(ParseException.class, String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE), ()
-            -> parser.parseCommand(""));
+                -> parser.parseCommand(""));
     }
 
     @Test

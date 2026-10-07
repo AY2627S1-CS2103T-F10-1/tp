@@ -2,6 +2,8 @@ package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.logic.commands.CommandTestUtil.INVALID_TAG_TOO_LONG;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_AT_MAX_LENGTH;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
@@ -181,8 +183,7 @@ public class ParserUtilTest {
 
     @Test
     public void parseTag_tooLong_throwsParseException() {
-        String tagOverMaxLength = "a".repeat(Tag.MAX_LENGTH + 1);
-        assertThrows(ParseException.class, Tag.MESSAGE_TOO_LONG, () -> ParserUtil.parseTag(tagOverMaxLength));
+        assertThrows(ParseException.class, Tag.MESSAGE_TOO_LONG, () -> ParserUtil.parseTag(INVALID_TAG_TOO_LONG));
     }
 
     @Test
@@ -193,8 +194,8 @@ public class ParserUtilTest {
 
     @Test
     public void parseTag_atMaxLengthWithSurroundingWhitespace_returnsTag() throws Exception {
-        String tagAtMaxLength = "a".repeat(Tag.MAX_LENGTH);
-        assertEquals(new Tag(tagAtMaxLength), ParserUtil.parseTag(WHITESPACE + tagAtMaxLength + WHITESPACE));
+        assertEquals(new Tag(VALID_TAG_AT_MAX_LENGTH),
+                ParserUtil.parseTag(WHITESPACE + VALID_TAG_AT_MAX_LENGTH + WHITESPACE));
     }
 
     @Test
