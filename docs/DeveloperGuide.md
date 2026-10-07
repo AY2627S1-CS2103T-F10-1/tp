@@ -276,16 +276,45 @@ _{Explain here how the data archiving feature will be implemented}_
 
 Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unlikely to have) - `*`
 
-| Priority | As a …​                                    | I want to …​                     | So that I can…​                                                        |
-| -------- | ------------------------------------------ | ------------------------------ | ---------------------------------------------------------------------- |
-| `* * *`  | new user                                   | see usage instructions         | refer to instructions when I forget how to use the App                 |
-| `* * *`  | user                                       | add a new person               |                                                                        |
-| `* * *`  | user                                       | delete a person                | remove entries that I no longer need                                   |
-| `* * *`  | user                                       | find a person by name          | locate details of persons without having to go through the entire list |
-| `* *`    | user                                       | hide private contact details   | minimize chance of someone else seeing them by accident                |
-| `*`      | user with many persons in the address book | sort persons by name           | locate a person easily                                                 |
-
-*{More to be added}*
+| Priority | As a …​ | I want to …​ | So that I…​ |
+| -------- | ------- | ------------ | --------------- |
+| `* * *` | new user | add a contact with a name and a phone number | can start building up my contact list |
+| `* * *` | new user | close the app with a command | do not have to reach for the mouse to quit |
+| `* * *` | user on duty | search for a contact by name | can find the person I need while the resident is still at my door |
+| `* * *` | user on duty | see a contact's phone number in the search result itself | can read out the number without opening anything further |
+| `* * *` | user with contacts of several kinds | tag a contact by role, such as resident, staff, vendor or emergency | can tell at a glance who each contact is |
+| `* * *` | user with contacts of several kinds | list only the contacts carrying a given tag | can look through one type of contacts |
+| `* * *` | user with contacts of several kinds | add more than one tag to a contact | can record someone who is both a resident and a fellow RA |
+| `* * *` | user | record a room number against a resident | can look up where a resident lives |
+| `* * *` | user | list all my contacts | can see everything I have stored |
+| `* * *` | user | delete a contact | can only keep needed contacts |
+| `* * *` | user searching for a contact | search by tag as well as by name | can find the right vendor when I cannot recall the company name |
+| `* * *` | user handling an emergency | list every contact tagged as emergency | can reach the on-call number without remembering a name |
+| `* *` | user exploring the app for the first time | see the app preloaded with sample contacts | can see how the app will look once it holds my own data |
+| `* *` | user exploring the app for the first time | list every command the app supports | can find out what the app does without reading a manual |
+| `* *` | user ready to start using the app for personal use | delete all the sample data in one command | can quickly clear out the sample data before entering my own |
+| `* *` | new user | see a confirmation message showing the contact I just added | can check the app recorded what I typed |
+| `* *` | new user | be told what is wrong when I type a command incorrectly | can correct myself instead of guessing |
+| `* *` | user who has forgotten a command | view the usage format of one specific command | can type it correctly on the first try |
+| `* *` | user searching for a contact | search using only part of a name | can find someone without typing their full name |
+| `* *` | user searching for a contact | have my search ignore capitalisation | do not have to remember how the name was typed in |
+| `* *` | user | record an email address against a contact | can reach them through a more formal channel if needed |
+| `* *` | user whose contact details have changed | edit a single field of an existing contact | do not have to retype the whole entry to fix one thing |
+| `* *` | user | be warned when I add a contact whose name is already in use | do not end up with duplicate entries for one person |
+| `* *` | user searching for a contact | search by room number | can identify a resident when all I know is where the problem is |
+| `* *` | user | use a short form of a long command | can enter commands with fewer keystrokes |
+| `* *` | user | bring back my previous command with a keypress | can repeat or amend a lookup without typing it again |
+| `* *` | user | undo my last command | can recover from a deletion or edit I did not intend |
+| `* *` | user | redo a command I have undone | can get back a change I undid by accident |
+| `* *` | user with a long contact list | sort my contact list by name | can find my way around a list too long to scan |
+| `* *` | user | record an emergency contact against a resident | do not have to look for their family's number elsewhere |
+| `* *` | user handling an emergency | look up a resident's emergency contact in one command | can notify their family within seconds |
+| `* *` | user handling an emergency | mark a contact as a favourite | can keep the numbers I need most within easy reach |
+| `* *` | user handling an emergency | list my favourite contacts | can reach my most-used numbers first |
+| `* *` | user with new residents | archive a contact | can keep an old entry out of my list and searches without losing it |
+| `* *` | user with new residents | archive every contact carrying a given tag at once | can clear out last year's residents quickly |
+| `* *` | user with archived contacts | list my archived contacts | can still look someone up when a query about last year comes in |
+| `* *` | user with archived contacts | restore an archived contact to my main list | can bring a resident back if they return to the block |
 
 ### Use cases
 
