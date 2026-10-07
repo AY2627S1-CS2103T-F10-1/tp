@@ -302,19 +302,19 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *` | user whose contact details have changed | edit a single field of an existing contact | do not have to retype the whole entry to fix one thing |
 | `* *` | user | be warned when I add a contact whose name is already in use | do not end up with duplicate entries for one person |
 | `* *` | user searching for a contact | search by room number | can identify a resident when all I know is where the problem is |
-| `* *` | user | use a short form of a long command | can enter commands with fewer keystrokes |
-| `* *` | user | bring back my previous command with a keypress | can repeat or amend a lookup without typing it again |
 | `* *` | user | undo my last command | can recover from a deletion or edit I did not intend |
-| `* *` | user | redo a command I have undone | can get back a change I undid by accident |
-| `* *` | user with a long contact list | sort my contact list by name | can find my way around a list too long to scan |
 | `* *` | user | record an emergency contact against a resident | do not have to look for their family's number elsewhere |
 | `* *` | user handling an emergency | look up a resident's emergency contact in one command | can notify their family within seconds |
-| `* *` | user handling an emergency | mark a contact as a favourite | can keep the numbers I need most within easy reach |
-| `* *` | user handling an emergency | list my favourite contacts | can reach my most-used numbers first |
 | `* *` | user with new residents | archive a contact | can keep an old entry out of my list and searches without losing it |
-| `* *` | user with new residents | archive every contact carrying a given tag at once | can clear out last year's residents quickly |
 | `* *` | user with archived contacts | list my archived contacts | can still look someone up when a query about last year comes in |
 | `* *` | user with archived contacts | restore an archived contact to my main list | can bring a resident back if they return to the block |
+| `*` | user | use a short form of a long command | can enter commands with fewer keystrokes |
+| `*` | user | bring back my previous command with a keypress | can repeat or amend a lookup without typing it again |
+| `*` | user | redo a command I have undone | can get back a change I undid by accident |
+| `*` | user with a long contact list | sort my contact list by name | can find my way around a list too long to scan |
+| `*` | user handling an emergency | mark a contact as a favourite | can keep the numbers I need most within easy reach |
+| `*` | user handling an emergency | list my favourite contacts | can reach my most-used numbers first |
+| `*` | user with new residents | archive every contact carrying a given tag at once | can clear out last year's residents quickly |
 
 ### Use cases
 
