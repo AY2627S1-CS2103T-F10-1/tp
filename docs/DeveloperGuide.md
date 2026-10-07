@@ -456,6 +456,25 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases …​ }_
 
+### Listing all contacts
+
+1. Restoring a filtered list
+
+   1. Prerequisites: Start with sample contacts and run `find Alex`.
+
+   1. Test case: `  LiSt  `<br>
+      Expected: All contacts appear in numbered order with their details. The message is `Listed all contacts.`.
+
+   1. Test case: Run `find Alex`, then `list abc`.<br>
+      Expected: `Invalid command format. Usage: list`. The filtered list and stored contacts stay unchanged.
+
+1. Listing an empty address book
+
+   1. Prerequisites: Use a disposable copy of the address book with no stored contacts.
+
+   1. Test case: `list`<br>
+      Expected: An empty list and `No contacts found.`.
+
 ### Saving data
 
 1. Dealing with missing/corrupted data files
