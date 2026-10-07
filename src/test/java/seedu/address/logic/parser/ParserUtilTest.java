@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
+import static seedu.address.testutil.TypicalPersons.JANE;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -15,6 +17,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.tag.Tag;
 
@@ -31,6 +34,7 @@ public class ParserUtilTest {
     private static final String VALID_EMAIL = "rachel@example.com";
     private static final String VALID_TAG_1 = "friend";
     private static final String VALID_TAG_2 = "neighbour";
+    private static final List<String> TAGS_AT_LIMIT = JANE.getTags().stream().map(tag -> tag.tagName).toList();
 
     private static final String WHITESPACE = " \t\r\n";
 
@@ -170,6 +174,35 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseTag_emptyValue_throwsParseException() {
+        assertThrows(ParseException.class, Tag.MESSAGE_EMPTY, () -> ParserUtil.parseTag(""));
+        assertThrows(ParseException.class, Tag.MESSAGE_EMPTY, () -> ParserUtil.parseTag(WHITESPACE));
+    }
+
+    @Test
+    public void parseTag_tooLong_throwsParseException() {
+        String tagOverMaxLength = "a".repeat(Tag.MAX_LENGTH + 1);
+        assertThrows(ParseException.class, Tag.MESSAGE_TOO_LONG, () -> ParserUtil.parseTag(tagOverMaxLength));
+    }
+
+    @Test
+    public void parseTag_invalidCharacters_throwsParseException() {
+        assertThrows(ParseException.class, Tag.MESSAGE_INVALID_CHARACTERS, () -> ParserUtil.parseTag(INVALID_TAG));
+        assertThrows(ParseException.class, Tag.MESSAGE_INVALID_CHARACTERS, () -> ParserUtil.parseTag("RA/Staff"));
+    }
+
+    @Test
+    public void parseTag_atMaxLengthWithSurroundingWhitespace_returnsTag() throws Exception {
+        String tagAtMaxLength = "a".repeat(Tag.MAX_LENGTH);
+        assertEquals(new Tag(tagAtMaxLength), ParserUtil.parseTag(WHITESPACE + tagAtMaxLength + WHITESPACE));
+    }
+
+    @Test
+    public void parseTag_multiWordWithExtraSpaces_returnsCollapsedTag() throws Exception {
+        assertEquals("Resident Fellow", ParserUtil.parseTag("  resident    fellow ").tagName);
+    }
+
+    @Test
     public void parseTags_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ParserUtil.parseTags(null));
     }
@@ -190,5 +223,29 @@ public class ParserUtilTest {
         Set<Tag> expectedTagSet = Set.of(new Tag(VALID_TAG_1), new Tag(VALID_TAG_2));
 
         assertEquals(expectedTagSet, actualTagSet);
+    }
+
+    @Test
+    public void parseTags_atTagLimit_returnsTagsInGivenOrder() throws Exception {
+        Set<Tag> actualTagSet = ParserUtil.parseTags(TAGS_AT_LIMIT);
+        List<String> actualTagNames = actualTagSet.stream().map(tag -> tag.tagName).toList();
+
+        assertEquals(TAGS_AT_LIMIT, actualTagNames);
+    }
+
+    @Test
+    public void parseTags_overTagLimit_throwsParseException() {
+        List<String> tagsOverLimit = new ArrayList<>(TAGS_AT_LIMIT);
+        tagsOverLimit.add(VALID_TAG_1);
+
+        assertThrows(ParseException.class, Person.MESSAGE_TAG_LIMIT_REACHED, () -> ParserUtil.parseTags(tagsOverLimit));
+    }
+
+    @Test
+    public void parseTags_duplicatesDifferingInCase_countedOnce() throws Exception {
+        List<String> tagsWithDuplicate = new ArrayList<>(TAGS_AT_LIMIT);
+        tagsWithDuplicate.add(TAGS_AT_LIMIT.get(0).toLowerCase());
+
+        assertEquals(Person.MAX_TAGS, ParserUtil.parseTags(tagsWithDuplicate).size());
     }
 }
