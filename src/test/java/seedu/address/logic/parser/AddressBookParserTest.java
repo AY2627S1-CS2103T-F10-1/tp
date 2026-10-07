@@ -21,9 +21,11 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.TagCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 import seedu.address.testutil.PersonBuilder;
 import seedu.address.testutil.PersonUtil;
@@ -85,6 +87,24 @@ public class AddressBookParserTest {
     public void parseCommand_list() throws Exception {
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD) instanceof ListCommand);
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD + " 3") instanceof ListCommand);
+    }
+
+    @Test
+    public void parseCommand_tag() throws Exception {
+        TagCommand command = (TagCommand) parser.parseCommand("Sarah Tan " + TagCommand.COMMAND_KEYWORD + " RA");
+        assertEquals(new TagCommand("Sarah Tan", new Tag("RA")), command);
+    }
+
+    @Test
+    public void parseCommand_commandWordWithTagKeyword_commandWordTakesPriority() throws Exception {
+        assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD + " " + TagCommand.COMMAND_KEYWORD + " RA")
+                instanceof ListCommand);
+    }
+
+    @Test
+    public void parseCommand_tagKeywordWithoutIdentifier_throwsParseException() {
+        assertThrows(ParseException.class, TagCommand.MESSAGE_INVALID_FORMAT, ()
+            -> parser.parseCommand(TagCommand.COMMAND_KEYWORD + " RA"));
     }
 
     @Test

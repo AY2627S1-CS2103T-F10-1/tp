@@ -80,7 +80,7 @@ Adds a person to the address book.
 Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​`
 
 <div markdown="span" class="alert alert-primary">:bulb: **Tip:**
-A person can have any number of tags, including zero.
+A person can have up to 5 tags, including zero. Tags follow the rules in [Tagging a contact](#tagging-a-contact-tag).
 </div>
 
 Examples:
@@ -108,6 +108,40 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`
 Examples:
 *  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st person to be `91234567` and `johndoe@example.com` respectively.
 *  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd person to be `Betsy Crower` and clears all existing tags.
+
+### Tagging a contact: `/tag`
+
+Adds one tag to an existing contact, to show their category at a glance (e.g., `Resident`, `Resident Fellow`, `Staff`).
+
+Format: `CONTACT_NAME /tag TAG`
+
+* There is no command word: type the contact's name, then `/tag`, then the tag.
+* `CONTACT_NAME` is the contact's **full name**. It is not case-sensitive and extra spaces are ignored, so `sarah   tan` matches `Sarah Tan`. Contacts hidden by a previous `find` can still be tagged.
+* Only one tag can be added per command. Spaces inside the tag are allowed, so `Resident Fellow` is one tag.
+* Tags may contain letters, digits, spaces and hyphens (`-`), up to 50 characters.
+* Tags are not case-sensitive: `RA` and `ra` are the same tag. They are displayed with the first letter of each word capitalized and the rest as you typed it, so `resident fellow` is shown as `Resident Fellow` and `RA` stays `RA`.
+* A contact can have at most 5 tags, and cannot have the same tag twice.
+* The new tag appears on the contact's card after their existing tags.
+
+Examples:
+* `Sarah Tan /tag Resident Fellow` adds the tag `Resident Fellow` to Sarah Tan.
+* `daniel lim /tag ra` adds the tag `Ra` to Daniel Lim.
+* `Daniel Lim /tag Block4` adds the tag `Block4` to Daniel Lim.
+
+Possible errors (the contact is left unchanged):
+
+Situation | Message
+--------|------------------
+No contact has that name | `Contact not found.`
+`/tag` or the tag value is missing | `Invalid command format. Usage: <contact identifier> /tag <tag>`
+Tag is longer than 50 characters | `Tag too long, please shorten it and try again.`
+Tag contains a character other than a letter, digit, space or `-` | `Tag contains invalid characters.`
+Contact already has the tag (in any case) | `Contact already has this tag.`
+Contact already has 5 tags | `Tag limit reached (max 5)`
+
+<div markdown="span" class="alert alert-primary">:bulb: **Tip:**
+To tag a contact as you create them, use `t/` in the `add` command, e.g. `add n/Sarah Tan p/91234567 e/sarah@u.nus.edu a/Block 4 t/Resident Fellow`.
+</div>
 
 ### Locating persons by name: `find`
 
@@ -162,6 +196,7 @@ AddressBook data is saved automatically as a JSON file `[JAR file location]/data
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
+A contact with more than 5 distinct tags also makes the data file invalid.<br>
 Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
@@ -190,6 +225,7 @@ _Details coming soon ..._
 Action | Format, Examples
 --------|------------------
 **Add** | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 t/friend t/colleague`
+**Tag** | `CONTACT_NAME /tag TAG`<br> e.g., `Sarah Tan /tag Resident Fellow`
 **Clear** | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`

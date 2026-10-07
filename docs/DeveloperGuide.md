@@ -155,6 +155,44 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Tag feature
+
+The tag feature lets the user add one tag to an existing contact with `CONTACT_NAME /tag TAG`.
+
+#### Implementation
+
+Unlike other commands, this input has no leading command word. `AddressBookParser#parseCommand()` first tries the usual command words. Only if the first word matches none of them does it call `TagCommandParser#isTagCommand()`, which checks whether `/tag` appears as a standalone word. If so, the whole input goes to `TagCommandParser`. Because known command words are tried first, existing commands behave exactly as before.
+
+`TagCommandParser` splits the input at the first `/tag`. The part before is the contact's name, and the part after is passed to `ParserUtil#parseTag()`. That method collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. `add` and `edit` use the same method for `t/`, so tags follow the same rules everywhere.
+
+`TagCommand#execute()` then:
+
+1. Finds the contact in the full person list, not just the displayed one, whose name matches the given name. An exact match is preferred, then a match ignoring case and extra spaces. If there is none, it throws `Contact not found.`
+1. Rejects the tag if `Person#hasTag()` is true, then if `Person#isTagLimitReached()` is true.
+1. Replaces the contact with `Person#withAddedTag()`, which returns a new `Person` with the tag appended.
+
+`Tag` compares tag names ignoring case and stores them with the first letter of each word capitalized. `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were added. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
+
+#### Design considerations
+
+**Aspect: how the contact is identified**
+
+* **Alternative 1 (current choice):** the contact's full name.
+  * Pros: the RA can tag a contact without first finding their index, and tagging still works when the contact is hidden by a filter.
+  * Cons: it takes more typing than an index.
+* **Alternative 2:** the index in the displayed list, like `edit` and `delete`.
+  * Pros: it is shorter and consistent with other commands.
+  * Cons: the RA needs to `list` or `find` first to see the index.
+
+**Aspect: how a data file with more than 5 tags on a contact is handled**
+
+* **Alternative 1 (current choice):** treat the file as invalid, as for any other invalid field.
+  * Pros: it is consistent with the other fields, and every `Person` is guaranteed to have at most 5 tags.
+  * Cons: one bad edit makes the app start with an empty address book.
+* **Alternative 2:** load the extra tags and only enforce the limit when adding tags.
+  * Pros: no data is lost.
+  * Cons: the limit is no longer guaranteed, and contact cards can grow beyond 5 tags.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -426,6 +464,53 @@ testers are expected to do more *exploratory* testing.
       Expected: Similar to previous.
 
 1. _{ more test cases …​ }_
+
+### Tagging a contact
+
+1. Tagging a contact while all persons are being shown
+
+   1. Prerequisites: Start with the sample data, or add a contact named `Alex Yeoh` who has fewer than 5 tags. Run `list`.
+
+   1. Test case: `Alex Yeoh /tag Resident Fellow`<br>
+      Expected: `Resident Fellow` appears after Alex Yeoh's existing tags. The status message shows `Tag added to Alex Yeoh.`
+
+   1. Test case: `  alex   YEOH  /tag   block4-a  `<br>
+      Expected: The tag `Block4-a` is added. Case and extra spaces in the name and tag are ignored.
+
+   1. Test case: `Alex Yeoh /tag RESIDENT FELLOW` (after the first test case)<br>
+      Expected: No change. Error: `Contact already has this tag.`
+
+   1. Test case: `Nobody Here /tag RA`<br>
+      Expected: No change. Error: `Contact not found.`
+
+   1. Test case: `Alex /tag RA` (partial name)<br>
+      Expected: No change. Error: `Contact not found.`
+
+   1. Test cases: `Alex Yeoh /tag`, `/tag RA`<br>
+      Expected: No change. Error: `Invalid command format. Usage: <contact identifier> /tag <tag>`
+
+   1. Test cases: `Alex Yeoh /tag Resident/Fellow`, `Alex Yeoh /tag RA /tag Staff`, `Alex Yeoh /tag hubby*`<br>
+      Expected: No change. Error: `Tag contains invalid characters.`
+
+   1. Test case: `Alex Yeoh /tag` followed by 51 letters<br>
+      Expected: No change. Error: `Tag too long, please shorten it and try again.` A tag of exactly 50 letters is accepted.
+
+1. Tagging a contact at the tag limit
+
+   1. Prerequisites: Keep tagging Alex Yeoh with new tags (e.g., `/tag T1`, `/tag T2`, ...) until the card shows 5 tags.
+
+   1. Test case: `Alex Yeoh /tag Staff`<br>
+      Expected: No change. Error: `Tag limit reached (max 5)`
+
+   1. Test case: `add n/Test Person p/91234567 e/test@example.com a/Block 1 t/A t/B t/C t/D t/E t/F`<br>
+      Expected: No contact is added. Error: `Tag limit reached (max 5)`
+
+1. Tagging a contact hidden by a filter
+
+   1. Prerequisites: Run `find Bernice`, so that Alex Yeoh is not shown.
+
+   1. Test case: `Alex Yeoh /tag Hall-Staff` (on a contact with fewer than 5 tags)<br>
+      Expected: The status message shows `Tag added to Alex Yeoh.` Run `list` to see the new tag.
 
 ### Saving data
 
