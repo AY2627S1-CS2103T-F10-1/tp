@@ -5,6 +5,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import seedu.address.commons.util.ToStringBuilder;
@@ -24,17 +25,29 @@ public class Person {
     // Data fields
     private final Address address;
     private final Set<Tag> tags = new HashSet<>();
+    private final Optional<RoomNumber> roomNumber;
 
     /**
      * Every field must be present and not null.
      */
     public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags) {
+        this(name, phone, email, address, tags, Optional.empty());
+    }
+
+    /**
+     * Creates a person with the given details and an optional room number.
+     * Every argument must be present and not null.
+     */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags,
+            Optional<RoomNumber> roomNumber) {
         requireAllNonNull(name, phone, email, address, tags);
+        requireAllNonNull(roomNumber);
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
         this.tags.addAll(tags);
+        this.roomNumber = roomNumber;
     }
 
     public Name getName() {
@@ -59,6 +72,14 @@ public class Person {
      */
     public Set<Tag> getTags() {
         return Collections.unmodifiableSet(tags);
+    }
+
+    public Optional<RoomNumber> getRoomNumber() {
+        return roomNumber;
+    }
+
+    public boolean isResident() {
+        return tags.stream().anyMatch(tag -> tag.tagName.equalsIgnoreCase("Resident"));
     }
 
     /**
@@ -93,13 +114,14 @@ public class Person {
                 && phone.equals(otherPerson.phone)
                 && email.equals(otherPerson.email)
                 && address.equals(otherPerson.address)
-                && tags.equals(otherPerson.tags);
+                && tags.equals(otherPerson.tags)
+                && roomNumber.equals(otherPerson.roomNumber);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, tags);
+        return Objects.hash(name, phone, email, address, tags, roomNumber);
     }
 
     @Override
@@ -110,6 +132,7 @@ public class Person {
                 .add("email", email)
                 .add("address", address)
                 .add("tags", tags)
+                .add("roomNumber", roomNumber.orElse(null))
                 .toString();
     }
 
