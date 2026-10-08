@@ -111,20 +111,22 @@ Examples:
 
 ### Locating persons by name: `find`
 
-Finds persons whose names contain any of the given keywords.
+Finds persons whose full name is exactly the given name.
 
-Format: `find KEYWORD [MORE_KEYWORDS]`
+Format: `find /name NAME`
 
-* The search is case-insensitive; for example, `hans` matches `Hans`.
-* Keyword order does not matter; for example, `Hans Bo` matches `Bo Hans`.
+* The `/name` prefix is required, and nothing may be typed before it.
+* Everything after `/name` is treated as one full name. It is not split into separate keywords.
+* The search is case-sensitive; for example, `find /name alex yeoh` does not match `Alex Yeoh`.
+* The whole name must match; for example, `find /name Alex` does not match `Alex Yeoh`.
 * The search considers only names.
-* Only full words match; for example, `Han` does not match `Hans`.
-* Persons matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
+* Spaces before and after `NAME` are ignored. Spaces inside the name are matched as typed.
+* If no person matches, the message `No contacts found` is shown and the list is empty. Otherwise, the number of persons listed is shown.
+* If `/name` is missing or `NAME` is empty, an invalid command format message is shown.
 
 Examples:
-* `find John` returns `john` and `John Doe`
-* `find alex david` returns `Alex Yeoh`, `David Li`<br>
-  ![result for 'find alex david'](images/findAlexDavidResult.png)
+* `find /name Alex Yeoh` returns `Alex Yeoh`
+* `find /name Alex` returns no persons, because `Alex` is not the full name
 
 ### Deleting a person: `delete`
 
@@ -138,7 +140,7 @@ Format: `delete INDEX`
 
 Examples:
 * `list` followed by `delete 2` deletes the 2nd person in the address book.
-* `find Betsy` followed by `delete 1` deletes the 1st person in the results of the `find` command.
+* `find /name Betsy Crower` followed by `delete 1` deletes the 1st person in the results of the `find` command.
 
 ### Clearing all entries: `clear`
 
@@ -193,6 +195,6 @@ Action | Format, Examples
 **Clear** | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
-**Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
+**Find** | `find /name NAME`<br> e.g., `find /name James Jake`
 **List** | `list`
 **Help** | `help`

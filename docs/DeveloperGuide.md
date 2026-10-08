@@ -281,7 +281,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | new user                                   | see usage instructions         | refer to instructions when I forget how to use the App                 |
 | `* * *`  | user                                       | add a new person               |                                                                        |
 | `* * *`  | user                                       | delete a person                | remove entries that I no longer need                                   |
-| `* * *`  | user                                       | find a person by name          | locate details of persons without having to go through the entire list |
+| `* * *`  | user                                       | find a person by full name     | locate details of persons without having to go through the entire list |
 | `* *`    | user                                       | hide private contact details   | minimize chance of someone else seeing them by accident                |
 | `*`      | user with many persons in the address book | sort persons by name           | locate a person easily                                                 |
 
@@ -335,11 +335,34 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
+**Use case: Find a contact by full name**
+
+**MSS**
+
+1.  User requests to find a contact by entering `find /name` followed by the contact's full name.
+2.  RAcontact lists the contacts whose full name exactly matches the entered name (case-sensitive) and shows the number of contacts listed.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. The `/name` prefix is missing, the name is empty, or there is text before `/name`.
+
+    * 1a1. RAcontact shows an invalid command format error with the usage of `find`.
+
+      Use case resumes at step 1.
+
+* 2a. No contact has a full name that exactly matches the entered name.
+
+    * 2a1. RAcontact shows the message `No contacts found` and an empty list.
+
+      Use case ends.
+
 **Use case: Find contacts during an emergency**
 
 **MSS**
 
-1.  User requests to find a resident.
+1.  User requests to find a resident by full name.
 2.  RAcontact shows the resident's details.
 3.  User requests to view the resident's emergency contact.
 4.  RAcontact shows the emergency contact's details.
@@ -352,7 +375,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 2a. The resident cannot be found.
 
-    * 2a1. RAcontact shows a message that no contact was found.
+    * 2a1. RAcontact shows the message `No contacts found`.
 
       Use case resumes at step 1.
 
