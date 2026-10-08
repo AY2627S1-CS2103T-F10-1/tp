@@ -17,12 +17,12 @@ public class DeleteCommandParser implements Parser<DeleteCommand> {
      * @throws ParseException if the user input does not conform to the expected format
      */
     public DeleteCommand parse(String args) throws ParseException {
-        // TODO(delete-by-name): Keep numeric input on the existing index-parsing path, including
-        // invalid indexes such as 0, -1 and overflowing integers; do not retry these as names.
-        // Reject blank input. For nonnumeric input, reuse FindCommandParser to prepare a name
-        // search and pass it to a name-based DeleteCommand constructor. Purely numeric names
-        // are unsupported by this shorthand. Preserve find's case-insensitive, whole-word OR matching.
         try {
+            String trimmedArgs = args.trim();
+            // Signed integers must remain index inputs even when they are invalid or overflow.
+            if (!trimmedArgs.isEmpty() && !trimmedArgs.matches("[+-]?[0-9]+")) {
+                return new DeleteCommand(new FindCommandParser().parse(trimmedArgs));
+            }
             Index index = ParserUtil.parseIndex(args);
             return new DeleteCommand(index);
         } catch (ParseException pe) {
