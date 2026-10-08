@@ -3,7 +3,7 @@ package seedu.address.logic.parser;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import seedu.address.commons.core.index.Index;
@@ -12,6 +12,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.tag.Tag;
 
@@ -97,27 +98,39 @@ public class ParserUtil {
 
     /**
      * Parses a {@code String tag} into a {@code Tag}.
-     * Leading and trailing whitespaces will be trimmed.
+     * Leading and trailing whitespaces will be trimmed and inner runs of whitespace collapsed.
      *
-     * @throws ParseException if the given {@code tag} is invalid.
+     * @throws ParseException if the given {@code tag} is empty, too long or contains invalid characters.
      */
     public static Tag parseTag(String tag) throws ParseException {
         requireNonNull(tag);
-        String trimmedTag = tag.trim();
-        if (!Tag.isValidTagName(trimmedTag)) {
-            throw new ParseException(Tag.MESSAGE_CONSTRAINTS);
+        String normalizedTag = StringUtil.collapseWhitespace(tag);
+        if (normalizedTag.isEmpty()) {
+            throw new ParseException(Tag.MESSAGE_EMPTY);
         }
-        return new Tag(trimmedTag);
+        if (normalizedTag.length() > Tag.MAX_LENGTH) {
+            throw new ParseException(Tag.MESSAGE_TOO_LONG);
+        }
+        if (!Tag.isValidTagName(normalizedTag)) {
+            throw new ParseException(Tag.MESSAGE_INVALID_CHARACTERS);
+        }
+        return new Tag(normalizedTag);
     }
 
     /**
-     * Parses {@code Collection<String> tags} into a {@code Set<Tag>}.
+     * Parses {@code Collection<String> tags} into a {@code Set<Tag>}, keeping the order in which they were given.
+     * Tags that differ only in case or spacing are treated as one tag.
+     *
+     * @throws ParseException if any tag is invalid or there are more than {@link Person#MAX_TAGS} distinct tags.
      */
     public static Set<Tag> parseTags(Collection<String> tags) throws ParseException {
         requireNonNull(tags);
-        final Set<Tag> tagSet = new HashSet<>();
+        final Set<Tag> tagSet = new LinkedHashSet<>();
         for (String tagName : tags) {
             tagSet.add(parseTag(tagName));
+        }
+        if (tagSet.size() > Person.MAX_TAGS) {
+            throw new ParseException(Person.MESSAGE_TAG_LIMIT_REACHED);
         }
         return tagSet;
     }

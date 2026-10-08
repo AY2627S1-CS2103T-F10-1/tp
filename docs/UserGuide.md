@@ -56,9 +56,10 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
   For example, `[t/TAG]…​` may be omitted, or written as `t/friend` or `t/friend t/family`.
 
 * Parameters can be in any order.<br>
-  For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
+  For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.<br>
+  The exception is [tagging a contact](#tagging-a-contact-tag), which has no command word and must be typed as `CONTACT_NAME /tag TAG`, in that order.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
+* Extraneous parameters for commands that take no parameters, such as `help`, `exit`, and `clear`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -80,18 +81,26 @@ Adds a person to the address book.
 Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​`
 
 <div markdown="span" class="alert alert-primary">:bulb: **Tip:**
-A person can have any number of tags, including zero.
+A person can have up to 5 tags, including zero. Tags follow the rules in [Tagging a contact](#tagging-a-contact-tag).
 </div>
 
 Examples:
 * `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01`
 * `add n/Betsy Crowe t/friend e/betsycrowe@example.com a/Newgate Prison p/1234567 t/criminal`
 
-### Listing all persons: `list`
+### Listing persons: `list`
 
-Shows a list of all persons in the address book.
+Shows a list of all persons in the address book, or only those with a given tag.
 
-Format: `list`
+Format: `list [/filter TAG]`
+
+* `/filter TAG` shows only contacts with that tag. It is not case-sensitive and extra spaces are ignored.
+* If no contact has the tag, an empty list is shown with `No contacts found with this tag.`
+* Any other text after `list` is rejected, so a mistyped filter never silently shows everyone.
+
+Examples:
+* `list` shows all contacts.
+* `list /filter Resident` shows only contacts tagged `Resident`.
 
 ### Editing a person: `edit`
 
@@ -108,6 +117,21 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`
 Examples:
 *  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st person to be `91234567` and `johndoe@example.com` respectively.
 *  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd person to be `Betsy Crower` and clears all existing tags.
+
+### Tagging a contact: `/tag`
+
+Adds one tag to an existing contact, to show their category at a glance (e.g., `Resident`, `Resident Fellow`, `Staff`).
+
+Format: `CONTACT_NAME /tag TAG`
+
+* `CONTACT_NAME` is the contact's full name. It is not case-sensitive and extra spaces are ignored.
+* Only one tag can be added per command. Spaces inside the tag are allowed, so `Resident Fellow` is one tag.
+* Tags may contain letters, digits, spaces and hyphens (`-`), up to 50 characters. They are not case-sensitive, and are displayed with the first letter of each word capitalized.
+* A contact can have at most 5 tags, and cannot have the same tag twice.
+
+Examples:
+* `Sarah Tan /tag Resident Fellow` adds the tag `Resident Fellow` to Sarah Tan.
+* `daniel lim /tag RA` adds the tag `RA` to Daniel Lim.
 
 ### Locating persons by name: `find`
 
@@ -130,11 +154,21 @@ Examples:
 
 Deletes the specified person from the address book.
 
-Format: `delete INDEX`
+Format: `delete INDEX` or `delete KEYWORD [MORE_KEYWORDS]`
 
 * Deletes the person at the specified `INDEX`.
 * The index refers to the index number shown in the displayed person list.
 * The index **must be a positive integer** 1, 2, 3, …​
+* Name deletion searches **all contacts**, even when the displayed list is filtered.
+* Name matching is identical to `find`: case-insensitive, complete words, matching **any** supplied keyword.
+* Exactly one match is deleted immediately. With no matches, nothing is deleted.
+* With multiple matches, nothing is deleted; the matching contacts are displayed with their indexes.
+  Continue with `delete INDEX` or a unique name keyword.
+* For example, `delete Alice Tan` still matches both `Alice Tan` and `Alice Lee` because both contain `Alice`.
+  Use `delete Tan` if that keyword is unique, or select a displayed index.
+* The search results remain displayed; deleting the only match leaves an empty list. Use `list` to show all contacts.
+* Purely numeric input is treated as an index, so purely numeric names cannot be deleted by name.
+
 
 Examples:
 * `list` followed by `delete 2` deletes the 2nd person in the address book.
@@ -162,6 +196,7 @@ AddressBook data is saved automatically as a JSON file `[JAR file location]/data
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
+A contact with more than 5 distinct tags also makes the data file invalid.<br>
 Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
@@ -190,9 +225,10 @@ _Details coming soon ..._
 Action | Format, Examples
 --------|------------------
 **Add** | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 t/friend t/colleague`
+**Tag** | `CONTACT_NAME /tag TAG`<br> e.g., `Sarah Tan /tag Resident Fellow`
 **Clear** | `clear`
-**Delete** | `delete INDEX`<br> e.g., `delete 3`
+**Delete** | `delete INDEX` or `delete KEYWORD [MORE_KEYWORDS]`<br> e.g., `delete 3`, `delete Alice`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
 **Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List** | `list`
+**List** | `list [/filter TAG]`<br> e.g., `list /filter Resident`
 **Help** | `help`

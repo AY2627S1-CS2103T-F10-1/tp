@@ -1,9 +1,11 @@
 package seedu.address.model.person;
 
+import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -16,6 +18,10 @@ import seedu.address.model.tag.Tag;
  */
 public class Person {
 
+    /** Keeps the contact card scannable; beyond this, tags stop being an at-a-glance identifier. */
+    public static final int MAX_TAGS = 5;
+    public static final String MESSAGE_TAG_LIMIT_REACHED = "Tag limit reached (max " + MAX_TAGS + ")";
+
     // Identity fields
     private final Name name;
     private final Phone phone;
@@ -23,13 +29,15 @@ public class Person {
 
     // Data fields
     private final Address address;
-    private final Set<Tag> tags = new HashSet<>();
+    private final Set<Tag> tags = new LinkedHashSet<>();
 
     /**
-     * Every field must be present and not null.
+     * Every field must be present and not null, and there must be at most {@link #MAX_TAGS} tags.
+     * Tags keep the iteration order of {@code tags}.
      */
     public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags) {
         requireAllNonNull(name, phone, email, address, tags);
+        checkArgument(tags.size() <= MAX_TAGS, MESSAGE_TAG_LIMIT_REACHED);
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -59,6 +67,35 @@ public class Person {
      */
     public Set<Tag> getTags() {
         return Collections.unmodifiableSet(tags);
+    }
+
+    /**
+     * Returns true if this person already has {@code tag}, ignoring case.
+     */
+    public boolean hasTag(Tag tag) {
+        requireNonNull(tag);
+        return tags.contains(tag);
+    }
+
+    /**
+     * Returns true if this person already has {@link #MAX_TAGS} tags.
+     */
+    public boolean isTagLimitReached() {
+        return tags.size() >= MAX_TAGS;
+    }
+
+    /**
+     * Returns a copy of this person with {@code tag} added after the existing tags.
+     * The caller must ensure the tag is new and the tag limit has not been reached.
+     */
+    public Person withAddedTag(Tag tag) {
+        requireNonNull(tag);
+        assert !hasTag(tag) : "Tag should not already be present";
+        assert !isTagLimitReached() : "Tag limit should not already be reached";
+
+        Set<Tag> updatedTags = new LinkedHashSet<>(tags);
+        updatedTags.add(tag);
+        return new Person(name, phone, email, address, updatedTags);
     }
 
     /**
