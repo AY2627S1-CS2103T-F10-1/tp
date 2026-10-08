@@ -155,6 +155,54 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Tag feature
+
+The tag feature lets the user add one tag to an existing contact with `CONTACT_NAME /tag TAG`.
+
+#### Implementation
+
+Unlike other commands, this input has no leading command word. `AddressBookParser#parseCommand()` first tries the usual command words. Only if the first word matches none of them does it call `TagCommandParser#isTagCommand()`, which checks whether `/tag` appears as a standalone word. If so, the whole input goes to `TagCommandParser`. Because known command words are tried first, existing commands behave exactly as before.
+
+`TagCommandParser` splits the input at the first `/tag`. The part before is the contact's name, and the part after is passed to `ParserUtil#parseTag()`. That method collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. `add` and `edit` use the same method for `t/`, so tags follow the same rules everywhere.
+
+The sequence diagram below shows how `Sarah Tan /tag RA` is parsed and executed.
+
+![Interactions Inside the Logic Component for the `Sarah Tan /tag RA` Command](images/TagSequenceDiagram.png)
+
+`TagCommand#execute()` then:
+
+1. Finds the contact in the full person list, not just the displayed one, whose name matches the given name. An exact match is preferred, then a match ignoring case and extra spaces. If there is none, it throws `Contact not found.`
+1. Rejects the tag if `Person#hasTag()` is true, then if `Person#isTagLimitReached()` is true.
+1. Replaces the contact with `Person#withAddedTag()`, which returns a new `Person` with the tag appended.
+
+`Tag` compares tag names ignoring case and stores them with the first letter of each word capitalized. `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were added. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
+
+#### Design considerations
+
+**Aspect: how the contact is identified**
+
+* **Alternative 1 (current choice):** the contact's full name.
+  * Pros: the RA can tag a contact without first finding their index, and tagging still works when the contact is hidden by a filter.
+  * Cons: it takes more typing than an index.
+* **Alternative 2:** the index in the displayed list, like `edit` and `delete`.
+  * Pros: it is shorter and consistent with other commands.
+  * Cons: the RA needs to `list` or `find` first to see the index.
+
+**Aspect: how a data file with more than 5 tags on a contact is handled**
+
+* **Alternative 1 (current choice):** treat the file as invalid, as for any other invalid field.
+  * Pros: it is consistent with the other fields, and every `Person` is guaranteed to have at most 5 tags.
+  * Cons: one bad edit makes the app start with an empty address book.
+* **Alternative 2:** load the extra tags and only enforce the limit when adding tags.
+  * Pros: no data is lost.
+  * Cons: the limit is no longer guaranteed, and contact cards can grow beyond 5 tags.
+
+### Filter by tag feature
+
+`list /filter TAG` shows only contacts with the given tag. `ListCommandParser` passes any arguments to `TagFilterParser#parse()`, which returns a `PersonHasTagPredicate`. `ListCommand` then applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any value is accepted and a value that is not a valid tag simply matches nobody.
+
+To let another output command filter by tag, such as `find`, call `TagFilterParser#parse()` from its parser and apply the predicate the same way.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -276,16 +324,46 @@ _{Explain here how the data archiving feature will be implemented}_
 
 Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unlikely to have) - `*`
 
-| Priority | As a …​                                    | I want to …​                     | So that I can…​                                                        |
-| -------- | ------------------------------------------ | ------------------------------ | ---------------------------------------------------------------------- |
-| `* * *`  | new user                                   | see usage instructions         | refer to instructions when I forget how to use the App                 |
-| `* * *`  | user                                       | add a new person               |                                                                        |
-| `* * *`  | user                                       | delete a person                | remove entries that I no longer need                                   |
-| `* * *`  | user                                       | find a person by full name     | locate details of persons without having to go through the entire list |
-| `* *`    | user                                       | hide private contact details   | minimize chance of someone else seeing them by accident                |
-| `*`      | user with many persons in the address book | sort persons by name           | locate a person easily                                                 |
-
-*{More to be added}*
+| Priority | As a …​ | I want to …​ | So that I…​ |
+| -------- | ------- | ------------ | --------------- |
+| `* * *` | new user | add a contact with a name and a phone number | can start building up my contact list |
+| `* * *` | new user | close the app with a command | do not have to reach for the mouse to quit |
+| `* * *` | user on duty | search for a contact by name | can find the person I need while the resident is still at my door |
+| `* * *` | user on duty | see a contact's phone number in the search result itself | can read out the number without opening anything further |
+| `* * *` | user with contacts of several kinds | tag a contact by role, such as resident, staff, vendor or emergency | can tell at a glance who each contact is |
+| `* * *` | user with contacts of several kinds | list only the contacts carrying a given tag | can look through one type of contacts |
+| `* * *` | user with contacts of several kinds | add more than one tag to a contact | can record someone who is both a resident and a fellow RA |
+| `* * *` | user | record a room number against a resident | can look up where a resident lives |
+| `* * *` | user | list all my contacts | can see everything I have stored |
+| `* * *` | user | delete a contact | can only keep needed contacts |
+| `* * *` | user searching for a contact | search by tag as well as by name | can find the right vendor when I cannot recall the company name |
+| `* * *` | user handling an emergency | list every contact tagged as emergency | can reach the on-call number without remembering a name |
+| `* *` | user exploring the app for the first time | see the app preloaded with sample contacts | can see how the app will look once it holds my own data |
+| `* *` | user exploring the app for the first time | list every command the app supports | can find out what the app does without reading a manual |
+| `* *` | user ready to start using the app for personal use | delete all the sample data in one command | can quickly clear out the sample data before entering my own |
+| `* *` | new user | see a confirmation message showing the contact I just added | can check the app recorded what I typed |
+| `* *` | new user | be told what is wrong when I type a command incorrectly | can correct myself instead of guessing |
+| `* *` | user who has forgotten a command | view the usage format of one specific command | can type it correctly on the first try |
+| `* *` | user searching for a contact | search using only part of a name | can find someone without typing their full name |
+| `* *` | user searching for a contact | have my search ignore capitalisation | do not have to remember how the name was typed in |
+| `* *` | user | record an email address against a contact | can reach them through a more formal channel if needed |
+| `* *` | user whose contact details have changed | edit a single field of an existing contact | do not have to retype the whole entry to fix one thing |
+| `* *` | user | be warned when I add a contact whose name is already in use | do not end up with duplicate entries for one person |
+| `* *` | user searching for a contact | search by room number | can identify a resident when all I know is where the problem is |
+| `* *` | user | undo my last command | can recover from a deletion or edit I did not intend |
+| `* *` | user | record an emergency contact against a resident | do not have to look for their family's number elsewhere |
+| `* *` | user handling an emergency | look up a resident's emergency contact in one command | can notify their family within seconds |
+| `* *` | user with new residents | archive a contact | can keep an old entry out of my list and searches without losing it |
+| `* *` | user with archived contacts | list my archived contacts | can still look someone up when a query about last year comes in |
+| `* *` | user with archived contacts | restore an archived contact to my main list | can bring a resident back if they return to the block |
+| `* *` | user | hide private contact details | can minimize the chance of someone else seeing them by accident |
+| `*` | user | use a short form of a long command | can enter commands with fewer keystrokes |
+| `*` | user | bring back my previous command with a keypress | can repeat or amend a lookup without typing it again |
+| `*` | user | redo a command I have undone | can get back a change I undid by accident |
+| `*` | user with a long contact list | sort my contact list by name | can find my way around a list too long to scan |
+| `*` | user handling an emergency | mark a contact as a favourite | can keep the numbers I need most within easy reach |
+| `*` | user handling an emergency | list my favourite contacts | can reach my most-used numbers first |
+| `*` | user with new residents | archive every contact carrying a given tag at once | can clear out last year's residents quickly |
 
 ### Use cases
 
@@ -449,6 +527,57 @@ testers are expected to do more *exploratory* testing.
       Expected: Similar to previous.
 
 1. _{ more test cases …​ }_
+
+### Tagging a contact
+
+1. Tagging a contact
+
+   1. Prerequisites: Start with the sample data and run `list`.
+
+   1. Test case: `Alex Yeoh /tag Resident Fellow`<br>
+      Expected: `Resident Fellow` appears after Alex Yeoh's existing tags. The status message shows `Tag added to Alex Yeoh.`
+
+   1. Test case: `  alex   YEOH  /tag RESIDENT fellow`<br>
+      Expected: No change. Error: `Contact already has this tag.`
+
+   1. Test case: `Nobody Here /tag RA`<br>
+      Expected: No change. Error: `Contact not found.`
+
+   1. Other incorrect commands to try: `Alex Yeoh /tag`, `/tag RA`, `Alex Yeoh /tag RA/Staff`, `Alex Yeoh /tag` followed by 51 letters<br>
+      Expected: No change. The status message shows the matching error.
+
+1. Tagging a contact at the tag limit
+
+   1. Prerequisites: Tag Alex Yeoh with new tags (e.g., `T1`, `T2`, ...) until the card shows 5 tags.
+
+   1. Test case: `Alex Yeoh /tag Staff`<br>
+      Expected: No change. Error: `Tag limit reached (max 5)`
+
+1. Tagging a contact hidden by a filter
+
+   1. Prerequisites: Run `find Bernice`, so that Charlotte Oliveiro is not shown.
+
+   1. Test case: `Charlotte Oliveiro /tag Hall-Staff`<br>
+      Expected: The status message shows `Tag added to Charlotte Oliveiro.` Run `list` to see the new tag.
+
+### Filtering by tag
+
+1. Prerequisites: Start with the sample data.
+
+1. Test case: `list /filter friends`<br>
+   Expected: Only contacts tagged `Friends` are shown. The status message shows how many are listed.
+
+1. Test case: `list   /filter   FRIENDS  `<br>
+   Expected: Same as above.
+
+1. Test case: `list /filter Nobody`<br>
+   Expected: An empty list. The status message shows `No contacts found with this tag.`
+
+1. Test case: `list /filter`<br>
+   Expected: The list is unchanged. Error: `Tag cannot be empty.`
+
+1. Other incorrect commands to try: `list 3`, `list friends`, `list /filterfriends`<br>
+   Expected: The list is unchanged. Error: `Invalid command format. Usage: <output command> /filter <tagName>`
 
 ### Saving data
 

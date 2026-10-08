@@ -1,5 +1,6 @@
 package seedu.address.commons.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -138,6 +139,21 @@ public class StringUtilTest {
     @Test
     public void getDetails_nullGiven_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> StringUtil.getDetails(null));
+    }
+
+    //---------------- Tests for collapseWhitespace --------------------------------------
+
+    @Test
+    public void collapseWhitespace_nullGiven_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> StringUtil.collapseWhitespace(null));
+    }
+
+    @Test
+    public void collapseWhitespace() {
+        assertEquals("", StringUtil.collapseWhitespace("")); // empty string
+        assertEquals("", StringUtil.collapseWhitespace(" \t\n ")); // whitespace only
+        assertEquals("RA", StringUtil.collapseWhitespace("RA")); // nothing to collapse
+        assertEquals("Resident Fellow", StringUtil.collapseWhitespace("  Resident \t  Fellow \n"));
     }
 
 }

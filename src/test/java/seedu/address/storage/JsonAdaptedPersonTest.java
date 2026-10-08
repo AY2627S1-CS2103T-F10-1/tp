@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.storage.JsonAdaptedPerson.MISSING_FIELD_MESSAGE_FORMAT;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.BENSON;
+import static seedu.address.testutil.TypicalPersons.JANE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,11 +16,12 @@ import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 
 public class JsonAdaptedPersonTest {
     private static final String INVALID_NAME = "R@chel";
-    private static final String INVALID_PHONE = "+651234";
+    private static final String INVALID_PHONE = "+65#1234";
     private static final String INVALID_ADDRESS = " ";
     private static final String INVALID_EMAIL = "example.com";
     private static final String INVALID_TAG = "#friend";
@@ -105,6 +107,30 @@ public class JsonAdaptedPersonTest {
         JsonAdaptedPerson person =
                 new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, invalidTags);
         assertThrows(IllegalValueException.class, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_atTagLimit_returnsPerson() throws Exception {
+        assertEquals(JANE, new JsonAdaptedPerson(JANE).toModelType());
+    }
+
+    @Test
+    public void toModelType_overTagLimit_throwsIllegalValueException() {
+        List<JsonAdaptedTag> tagsOverLimit = JANE.getTags().stream()
+                .map(JsonAdaptedTag::new)
+                .collect(Collectors.toCollection(ArrayList::new));
+        tagsOverLimit.add(new JsonAdaptedTag("Staff"));
+        JsonAdaptedPerson person =
+                new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, tagsOverLimit);
+        assertThrows(IllegalValueException.class, Person.MESSAGE_TAG_LIMIT_REACHED, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_duplicateTagsDifferingInCase_mergedIntoOne() throws Exception {
+        List<JsonAdaptedTag> duplicateTags = List.of(new JsonAdaptedTag("RA"), new JsonAdaptedTag("ra"));
+        JsonAdaptedPerson person =
+                new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, duplicateTags);
+        assertEquals(1, person.toModelType().getTags().size());
     }
 
 }
