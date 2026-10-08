@@ -59,7 +59,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.<br>
   The exception is [tagging a contact](#tagging-a-contact-tag), which has no command word and must be typed as `CONTACT_NAME /tag TAG`, in that order.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
+* Extraneous parameters for commands that take no parameters, such as `help`, `exit`, and `clear`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -88,11 +88,19 @@ Examples:
 * `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01`
 * `add n/Betsy Crowe t/friend e/betsycrowe@example.com a/Newgate Prison p/1234567 t/criminal`
 
-### Listing all persons: `list`
+### Listing persons: `list`
 
-Shows a list of all persons in the address book.
+Shows a list of all persons in the address book, or only those with a given tag.
 
-Format: `list`
+Format: `list [/filter TAG]`
+
+* `/filter TAG` shows only contacts with that tag. It is not case-sensitive and extra spaces are ignored.
+* If no contact has the tag, an empty list is shown with `No contacts found with this tag.`
+* Any other text after `list` is rejected, so a mistyped filter never silently shows everyone.
+
+Examples:
+* `list` shows all contacts.
+* `list /filter Resident` shows only contacts tagged `Resident`.
 
 ### Editing a person: `edit`
 
@@ -212,5 +220,5 @@ Action | Format, Examples
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
 **Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List** | `list`
+**List** | `list [/filter TAG]`<br> e.g., `list /filter Resident`
 **Help** | `help`
