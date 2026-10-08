@@ -82,6 +82,30 @@ public class TagTest {
     }
 
     @Test
+    public void matchesName() {
+        Tag tag = new Tag("Resident Fellow");
+
+        assertThrows(NullPointerException.class, () -> tag.matchesName(null));
+
+        assertTrue(tag.matchesName("Resident Fellow"));
+        assertTrue(tag.matchesName("  resident   FELLOW ")); // different case and spacing
+
+        assertFalse(tag.matchesName("Resident")); // partial name
+        assertFalse(tag.matchesName("")); // empty string
+        assertFalse(tag.matchesName("Resident/Fellow")); // cannot be a tag name
+        assertFalse(tag.matchesName(INVALID_TAG_TOO_LONG));
+    }
+
+    @Test
+    public void toComparisonKey() {
+        assertThrows(NullPointerException.class, () -> Tag.toComparisonKey(null));
+
+        assertEquals("resident fellow", Tag.toComparisonKey("  Resident   FELLOW "));
+        assertEquals("", Tag.toComparisonKey("   ")); // whitespace only
+        assertEquals("ra/staff", Tag.toComparisonKey("RA/Staff")); // accepts values that are not valid tags
+    }
+
+    @Test
     public void hashCode_differentCase_sameHashCode() {
         assertEquals(new Tag("RA").hashCode(), new Tag("ra").hashCode());
         assertNotEquals(new Tag("RA").hashCode(), new Tag("Resident").hashCode());

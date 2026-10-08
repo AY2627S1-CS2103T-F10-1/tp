@@ -90,10 +90,17 @@ Examples:
 
 ### Listing all contacts: `list`
 
-Shows all stored contacts in numbered order, including their available details.
-This restores the full list after a search and does not change any stored contact.
+Shows a list of all persons in the address book, or only those with a given tag.
 
-Format: `list`
+Format: `list [/filter TAG]`
+
+* `/filter TAG` shows only contacts with that tag. It is not case-sensitive and extra spaces are ignored.
+* If no contact has the tag, an empty list is shown with `No contacts found with this tag.`
+* Any other text after `list` is rejected, so a mistyped filter never silently shows everyone.
+
+Examples:
+* `list` shows all contacts.
+* `list /filter Resident` shows only contacts tagged `Resident`.
 
 * The keyword is case-insensitive: `list`, `LIST`, and `LiSt` work the same way.
 * Leading and trailing spaces are ignored.
@@ -135,34 +142,46 @@ Examples:
 
 ### Locating persons by name: `find`
 
-Finds persons whose names contain any of the given keywords.
+Finds persons whose full name is exactly the given name.
 
-Format: `find KEYWORD [MORE_KEYWORDS]`
+Format: `find /name NAME`
 
-* The search is case-insensitive; for example, `hans` matches `Hans`.
-* Keyword order does not matter; for example, `Hans Bo` matches `Bo Hans`.
+* The `/name` prefix is required, and nothing may be typed before it.
+* Everything after `/name` is treated as one full name. It is not split into separate keywords.
+* The search is case-sensitive; for example, `find /name alex yeoh` does not match `Alex Yeoh`.
+* The whole name must match; for example, `find /name Alex` does not match `Alex Yeoh`.
 * The search considers only names.
-* Only full words match; for example, `Han` does not match `Hans`.
-* Persons matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
+* Spaces before and after `NAME` are ignored. Spaces inside the name are matched as typed.
+* If no person matches, the message `No contacts found` is shown and the list is empty. Otherwise, the number of persons listed is shown.
+* If `/name` is missing or `NAME` is empty, an invalid command format message is shown.
 
 Examples:
-* `find John` returns `john` and `John Doe`
-* `find alex david` returns `Alex Yeoh`, `David Li`<br>
-  ![result for 'find alex david'](images/findAlexDavidResult.png)
+* `find /name Alex Yeoh` returns `Alex Yeoh`
+* `find /name Alex` returns no persons, because `Alex` is not the full name
 
 ### Deleting a person: `delete`
 
 Deletes the specified person from the address book.
 
-Format: `delete INDEX`
+Format: `delete INDEX` or `delete KEYWORD [MORE_KEYWORDS]`
 
 * Deletes the person at the specified `INDEX`.
 * The index refers to the index number shown in the displayed person list.
 * The index **must be a positive integer** 1, 2, 3, …​
+* Name deletion searches **all contacts**, even when the displayed list is filtered.
+* Name matching is identical to `find`: case-insensitive, complete words, matching **any** supplied keyword.
+* Exactly one match is deleted immediately. With no matches, nothing is deleted.
+* With multiple matches, nothing is deleted; the matching contacts are displayed with their indexes.
+  Continue with `delete INDEX` or a unique name keyword.
+* For example, `delete Alice Tan` still matches both `Alice Tan` and `Alice Lee` because both contain `Alice`.
+  Use `delete Tan` if that keyword is unique, or select a displayed index.
+* The search results remain displayed; deleting the only match leaves an empty list. Use `list` to show all contacts.
+* Purely numeric input is treated as an index, so purely numeric names cannot be deleted by name.
+
 
 Examples:
 * `list` followed by `delete 2` deletes the 2nd person in the address book.
-* `find Betsy` followed by `delete 1` deletes the 1st person in the results of the `find` command.
+* `find /name Betsy Crower` followed by `delete 1` deletes the 1st person in the results of the `find` command.
 
 ### Clearing all entries: `clear`
 
@@ -217,8 +236,9 @@ Action | Format, Examples
 **Add** | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 t/friend t/colleague`
 **Tag** | `CONTACT_NAME /tag TAG`<br> e.g., `Sarah Tan /tag Resident Fellow`
 **Clear** | `clear`
-**Delete** | `delete INDEX`<br> e.g., `delete 3`
+**Delete** | `delete INDEX` or `delete KEYWORD [MORE_KEYWORDS]`<br> e.g., `delete 3`, `delete Alice`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
+**Find** | `find /name NAME`<br> e.g., `find /name James Jake`
 **Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List** | `list`
+**List** | `list [/filter TAG]`<br> e.g., `list /filter Resident`
 **Help** | `help`
