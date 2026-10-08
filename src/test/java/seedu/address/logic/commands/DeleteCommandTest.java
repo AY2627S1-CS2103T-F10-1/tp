@@ -25,6 +25,12 @@ import seedu.address.model.person.Person;
  */
 public class DeleteCommandTest {
 
+    // TODO(delete-by-name): Test unique-match deletion, zero matches and multiple matches.
+    // Assert ambiguous searches preserve all contacts, display the matching list and report its count.
+    // Test follow-up deletion by displayed index and by a unique keyword, and searches for contacts
+    // hidden by a previous filter. Verify case-insensitive whole-word OR matching: Alice Tan also
+    // matches Alice Lee, while Ali does not match Alice. Check the retained filter after deletion,
+    // zero-match feedback, and equals/toString for name targets; retain existing index tests.
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
     @Test

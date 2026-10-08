@@ -18,6 +18,10 @@ import seedu.address.logic.commands.DeleteCommand;
  */
 public class DeleteCommandParserTest {
 
+    // TODO(delete-by-name): Add parsing cases for single/multiple name keywords and whitespace.
+    // Keep valid index coverage; verify blank input, 0, negative and overflowing indexes fail.
+    // Replace the existing rejection of "a" below with a successful name-target parsing test,
+    // and revise the class documentation to reflect the new index/name parsing branches.
     private DeleteCommandParser parser = new DeleteCommandParser();
 
     @Test
