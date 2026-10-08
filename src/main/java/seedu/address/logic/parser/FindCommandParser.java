@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_FIND_NAME;
 
 import java.util.List;
 
@@ -19,13 +20,16 @@ public class FindCommandParser implements Parser<FindCommand> {
      * @throws ParseException if the user input does not conform to the expected format
      */
     public FindCommand parse(String args) throws ParseException {
-        String trimmedArgs = args.trim();
-        if (trimmedArgs.isEmpty()) {
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_FIND_NAME);
+
+        if (!argMultimap.getPreamble().isEmpty()
+                || argMultimap.getValue(PREFIX_FIND_NAME).isEmpty()
+                || argMultimap.getValue(PREFIX_FIND_NAME).get().isEmpty()) {
             throw new ParseException(
                     String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE));
         }
 
-        String[] nameKeywords = trimmedArgs.split("\\s+");
+        String[] nameKeywords = argMultimap.getValue(PREFIX_FIND_NAME).get().split("\\s+");
 
         return new FindCommand(new NameContainsKeywordsPredicate(List.of(nameKeywords)));
     }

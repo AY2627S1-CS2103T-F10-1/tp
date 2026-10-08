@@ -21,14 +21,29 @@ public class FindCommandParserTest {
     }
 
     @Test
+    public void parse_missingPrefixOrKeywords_throwsParseException() {
+        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE);
+
+        // no prefix
+        assertParseFailure(parser, "Alice Bob", expectedMessage);
+
+        // prefix with no keywords
+        assertParseFailure(parser, " /name", expectedMessage);
+        assertParseFailure(parser, " /name   ", expectedMessage);
+
+        // text before prefix
+        assertParseFailure(parser, " Alice /name Bob", expectedMessage);
+    }
+
+    @Test
     public void parse_validArgs_returnsFindCommand() {
         // no leading and trailing whitespaces
         FindCommand expectedFindCommand =
                 new FindCommand(new NameContainsKeywordsPredicate(List.of("Alice", "Bob")));
-        assertParseSuccess(parser, "Alice Bob", expectedFindCommand);
+        assertParseSuccess(parser, " /name Alice Bob", expectedFindCommand);
 
         // multiple whitespaces between keywords
-        assertParseSuccess(parser, " \n Alice \n \t Bob  \t", expectedFindCommand);
+        assertParseSuccess(parser, " /name \n Alice \n \t Bob  \t", expectedFindCommand);
     }
 
 }
