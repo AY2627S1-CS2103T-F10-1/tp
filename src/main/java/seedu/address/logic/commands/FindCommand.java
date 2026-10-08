@@ -6,24 +6,24 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_FIND_NAME;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.model.Model;
-import seedu.address.model.person.NameContainsKeywordsPredicate;
+import seedu.address.model.person.NameEqualsPredicate;
 
 /**
- * Finds and lists all persons in the address book whose name contains any of the argument keywords.
- * Keyword matching is case insensitive.
+ * Finds and lists all persons in the address book whose full name is exactly equal to the given name.
+ * Matching is case sensitive.
  */
 public class FindCommand extends Command {
 
     public static final String COMMAND_WORD = "find";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds all persons whose names contain any of "
-            + "the specified keywords (case-insensitive) and displays them as a list with index numbers.\n"
-            + "Parameters: " + PREFIX_FIND_NAME + " KEYWORD [MORE_KEYWORDS]...\n"
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds all persons whose full name is exactly "
+            + "the specified name (case-sensitive) and displays them as a list with index numbers.\n"
+            + "Parameters: " + PREFIX_FIND_NAME + " NAME\n"
             + "Example: " + COMMAND_WORD + " " + PREFIX_FIND_NAME + " Sarah Tan";
 
-    private final NameContainsKeywordsPredicate predicate;
+    private final NameEqualsPredicate predicate;
 
-    public FindCommand(NameContainsKeywordsPredicate predicate) {
+    public FindCommand(NameEqualsPredicate predicate) {
         this.predicate = predicate;
     }
 
