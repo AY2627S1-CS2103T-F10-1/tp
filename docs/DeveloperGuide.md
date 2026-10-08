@@ -356,6 +356,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *` | user with new residents | archive a contact | can keep an old entry out of my list and searches without losing it |
 | `* *` | user with archived contacts | list my archived contacts | can still look someone up when a query about last year comes in |
 | `* *` | user with archived contacts | restore an archived contact to my main list | can bring a resident back if they return to the block |
+| `* *` | user | hide private contact details | can minimize the chance of someone else seeing them by accident |
 | `*` | user | use a short form of a long command | can enter commands with fewer keystrokes |
 | `*` | user | bring back my previous command with a keypress | can repeat or amend a lookup without typing it again |
 | `*` | user | redo a command I have undone | can get back a change I undid by accident |
@@ -412,11 +413,34 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
+**Use case: Find a contact by full name**
+
+**MSS**
+
+1.  User requests to find a contact by entering `find /name` followed by the contact's full name.
+2.  RAcontact lists the contacts whose full name exactly matches the entered name (case-sensitive) and shows the number of contacts listed.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. The `/name` prefix is missing, the name is empty, or there is text before `/name`.
+
+    * 1a1. RAcontact shows an invalid command format error with the usage of `find`.
+
+      Use case resumes at step 1.
+
+* 2a. No contact has a full name that exactly matches the entered name.
+
+    * 2a1. RAcontact shows the message `No contacts found` and an empty list.
+
+      Use case ends.
+
 **Use case: Find contacts during an emergency**
 
 **MSS**
 
-1.  User requests to find a resident.
+1.  User requests to find a resident by full name.
 2.  RAcontact shows the resident's details.
 3.  User requests to view the resident's emergency contact.
 4.  RAcontact shows the emergency contact's details.
@@ -429,7 +453,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 2a. The resident cannot be found.
 
-    * 2a1. RAcontact shows a message that no contact was found.
+    * 2a1. RAcontact shows the message `No contacts found`.
 
       Use case resumes at step 1.
 

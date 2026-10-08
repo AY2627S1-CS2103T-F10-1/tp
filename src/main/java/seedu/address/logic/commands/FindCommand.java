@@ -1,28 +1,29 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_FIND_NAME;
 
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.model.Model;
-import seedu.address.model.person.NameContainsKeywordsPredicate;
+import seedu.address.model.person.NameEqualsPredicate;
 
 /**
- * Finds and lists all persons in the address book whose name contains any of the argument keywords.
- * Keyword matching is case insensitive.
+ * Finds and lists all persons in the address book whose full name is exactly equal to the given name.
+ * Matching is case sensitive.
  */
 public class FindCommand extends Command {
 
     public static final String COMMAND_WORD = "find";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds all persons whose names contain any of "
-            + "the specified keywords (case-insensitive) and displays them as a list with index numbers.\n"
-            + "Parameters: KEYWORD [MORE_KEYWORDS]...\n"
-            + "Example: " + COMMAND_WORD + " alice bob charlie";
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds all persons whose full name is exactly "
+            + "the specified name (case-sensitive) and displays them as a list with index numbers.\n"
+            + "Parameters: " + PREFIX_FIND_NAME + " NAME\n"
+            + "Example: " + COMMAND_WORD + " " + PREFIX_FIND_NAME + " Sarah Tan";
 
-    private final NameContainsKeywordsPredicate predicate;
+    private final NameEqualsPredicate predicate;
 
-    public FindCommand(NameContainsKeywordsPredicate predicate) {
+    public FindCommand(NameEqualsPredicate predicate) {
         this.predicate = predicate;
     }
 
@@ -30,8 +31,11 @@ public class FindCommand extends Command {
     public CommandResult execute(Model model) {
         requireNonNull(model);
         model.updateFilteredPersonList(predicate);
-        return new CommandResult(
-                String.format(Messages.MESSAGE_PERSONS_LISTED_OVERVIEW, model.getFilteredPersonList().size()));
+        int count = model.getFilteredPersonList().size();
+        if (count == 0) {
+            return new CommandResult(Messages.MESSAGE_NO_PERSONS_FOUND);
+        }
+        return new CommandResult(String.format(Messages.MESSAGE_PERSONS_LISTED_OVERVIEW, count));
     }
 
     @Override

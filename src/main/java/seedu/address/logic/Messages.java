@@ -17,6 +17,7 @@ public class Messages {
     public static final String MESSAGE_INVALID_PERSON_DISPLAYED_INDEX = "The person index provided is invalid.";
     public static final String MESSAGE_CONTACT_NOT_FOUND = "Contact not found.";
     public static final String MESSAGE_PERSONS_LISTED_OVERVIEW = "%1$d person(s) listed!";
+    public static final String MESSAGE_NO_PERSONS_FOUND = "No contacts found";
     public static final String MESSAGE_DUPLICATE_FIELDS =
                 "Multiple values specified for the following single-valued field(s): ";
 
