@@ -56,7 +56,8 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
   For example, `[t/TAG]…​` may be omitted, or written as `t/friend` or `t/friend t/family`.
 
 * Parameters can be in any order.<br>
-  For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
+  For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.<br>
+  The exception is [tagging a contact](#tagging-a-contact-tag), which has no command word and must be typed as `CONTACT_NAME /tag TAG`, in that order.
 
 * Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
@@ -80,7 +81,7 @@ Adds a person to the address book.
 Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​`
 
 <div markdown="span" class="alert alert-primary">:bulb: **Tip:**
-A person can have any number of tags, including zero.
+A person can have up to 5 tags, including zero. Tags follow the rules in [Tagging a contact](#tagging-a-contact-tag).
 </div>
 
 Examples:
@@ -108,6 +109,21 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`
 Examples:
 *  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st person to be `91234567` and `johndoe@example.com` respectively.
 *  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd person to be `Betsy Crower` and clears all existing tags.
+
+### Tagging a contact: `/tag`
+
+Adds one tag to an existing contact, to show their category at a glance (e.g., `Resident`, `Resident Fellow`, `Staff`).
+
+Format: `CONTACT_NAME /tag TAG`
+
+* `CONTACT_NAME` is the contact's full name. It is not case-sensitive and extra spaces are ignored.
+* Only one tag can be added per command. Spaces inside the tag are allowed, so `Resident Fellow` is one tag.
+* Tags may contain letters, digits, spaces and hyphens (`-`), up to 50 characters. They are not case-sensitive, and are displayed with the first letter of each word capitalized.
+* A contact can have at most 5 tags, and cannot have the same tag twice.
+
+Examples:
+* `Sarah Tan /tag Resident Fellow` adds the tag `Resident Fellow` to Sarah Tan.
+* `daniel lim /tag RA` adds the tag `RA` to Daniel Lim.
 
 ### Locating persons by name: `find`
 
@@ -162,6 +178,7 @@ AddressBook data is saved automatically as a JSON file `[JAR file location]/data
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
+A contact with more than 5 distinct tags also makes the data file invalid.<br>
 Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
@@ -190,6 +207,7 @@ _Details coming soon ..._
 Action | Format, Examples
 --------|------------------
 **Add** | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 t/friend t/colleague`
+**Tag** | `CONTACT_NAME /tag TAG`<br> e.g., `Sarah Tan /tag Resident Fellow`
 **Clear** | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
