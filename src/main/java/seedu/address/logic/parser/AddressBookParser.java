@@ -17,6 +17,7 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.TagCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
@@ -32,6 +33,8 @@ public class AddressBookParser {
 
     /**
      * Parses user input into command for execution.
+     * Input that does not start with a command word but contains {@value TagCommand#COMMAND_KEYWORD}
+     * is parsed as a {@code TagCommand}, so existing commands keep priority.
      *
      * @param userInput full user input string
      * @return the command based on the user input
@@ -64,6 +67,9 @@ public class AddressBookParser {
             case ExitCommand.COMMAND_WORD -> new ExitCommand();
             case HelpCommand.COMMAND_WORD -> new HelpCommand();
             default -> {
+                if (TagCommandParser.isTagCommand(userInput)) {
+                    yield new TagCommandParser().parse(userInput);
+                }
                 logger.finer("This user input caused a ParseException: " + userInput);
                 throw new ParseException(MESSAGE_UNKNOWN_COMMAND);
             }
