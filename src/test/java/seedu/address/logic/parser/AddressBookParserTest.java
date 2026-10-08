@@ -21,6 +21,7 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.ListEmergencyCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
@@ -84,7 +85,28 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_list() throws Exception {
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD) instanceof ListCommand);
-        assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD + " 3") instanceof ListCommand);
+        assertTrue(parser.parseCommand("  LiSt  ") instanceof ListCommand);
+    }
+
+    @Test
+    public void parseCommand_listWithArguments_throwsParseException() {
+        assertThrows(ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, () -> parser.parseCommand("list 3"));
+        assertThrows(ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, () -> parser.parseCommand("LIST abc"));
+    }
+
+    @Test
+    public void parseCommand_listEmergency() throws Exception {
+        assertTrue(parser.parseCommand("list emerg") instanceof ListEmergencyCommand);
+        assertTrue(parser.parseCommand("  LIST   EMERG  ") instanceof ListEmergencyCommand);
+        assertTrue(parser.parseCommand("LiSt\tEmErG") instanceof ListEmergencyCommand);
+    }
+
+    @Test
+    public void parseCommand_listEmergencyWithExtraArguments_throwsParseException() {
+        assertThrows(ParseException.class, ListEmergencyCommand.MESSAGE_INVALID_FORMAT, ()
+                -> parser.parseCommand("list emerg friend"));
+        assertThrows(ParseException.class, ListEmergencyCommand.MESSAGE_INVALID_FORMAT, ()
+                -> parser.parseCommand("LIST EMERG 1"));
     }
 
     @Test
