@@ -10,12 +10,15 @@ import seedu.address.model.Model;
 import seedu.address.model.person.PersonHasTagPredicate;
 
 /**
- * Lists all persons in the address book to the user, or only those with a given tag.
+ * Lists all contacts in the address book to the user, or only those with a given tag.
  */
 public class ListCommand extends Command {
 
     public static final String COMMAND_WORD = "list";
 
+    public static final String MESSAGE_USAGE = COMMAND_WORD;
+    public static final String MESSAGE_INVALID_FORMAT = "Invalid command format. Usage: " + MESSAGE_USAGE;
+    public static final String MESSAGE_EMPTY = "No contacts found.";
     public static final String MESSAGE_SUCCESS = "Listed all persons.";
     public static final String MESSAGE_FILTER_SUCCESS = "%1$d contact(s) tagged %2$s listed.";
     public static final String MESSAGE_NO_CONTACTS_WITH_TAG = "No contacts found with this tag.";
@@ -41,9 +44,11 @@ public class ListCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
+
         if (tagFilter == null) {
             model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
-            return new CommandResult(MESSAGE_SUCCESS);
+            return new CommandResult(
+                    model.getFilteredPersonList().isEmpty() ? MESSAGE_EMPTY : MESSAGE_SUCCESS);
         }
 
         model.updateFilteredPersonList(tagFilter);
@@ -51,7 +56,8 @@ public class ListCommand extends Command {
         if (matchCount == 0) {
             return new CommandResult(MESSAGE_NO_CONTACTS_WITH_TAG);
         }
-        return new CommandResult(String.format(MESSAGE_FILTER_SUCCESS, matchCount, tagFilter.getTagName()));
+        return new CommandResult(
+                String.format(MESSAGE_FILTER_SUCCESS, matchCount, tagFilter.getTagName()));
     }
 
     @Override

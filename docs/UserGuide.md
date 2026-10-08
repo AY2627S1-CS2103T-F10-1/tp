@@ -59,7 +59,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.<br>
   The exception is [tagging a contact](#tagging-a-contact-tag), which has no command word and must be typed as `CONTACT_NAME /tag TAG`, in that order.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `exit`, and `clear`, are ignored.<br>
+* Extraneous parameters for `help`, `exit`, and `clear` are ignored. The `list` command rejects extra parameters.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -88,7 +88,7 @@ Examples:
 * `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01`
 * `add n/Betsy Crowe t/friend e/betsycrowe@example.com a/Newgate Prison p/1234567 t/criminal`
 
-### Listing persons: `list`
+### Listing all contacts: `list`
 
 Shows a list of all persons in the address book, or only those with a given tag.
 
@@ -101,6 +101,13 @@ Format: `list [/filter TAG]`
 Examples:
 * `list` shows all contacts.
 * `list /filter Resident` shows only contacts tagged `Resident`.
+
+* The keyword is case-insensitive: `list`, `LIST`, and `LiSt` work the same way.
+* Leading and trailing spaces are ignored.
+* Extra arguments, such as `list abc`, are rejected with `Invalid command format. Usage: list`.
+  The displayed list stays unchanged when the command is rejected.
+* When there are no stored contacts, the list is empty and the result message is `No contacts found.`.
+* Otherwise, the result message is `Listed all contacts.`.
 
 ### Editing a person: `edit`
 
