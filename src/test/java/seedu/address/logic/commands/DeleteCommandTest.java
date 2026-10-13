@@ -117,7 +117,7 @@ public class DeleteCommandTest {
     @Test
     public void execute_nameSearch_handlesAmbiguityAndFollowUp() throws Exception {
         Person aliceTan = new PersonBuilder().withName("Alice Tan").build();
-        Person aliceLee = new PersonBuilder().withName("Alice Lee").build();
+        Person aliceLee = new PersonBuilder().withName("Alice Tan").withPhone("81234567").build();
         Person bob = new PersonBuilder().withName("Bob Smith").build();
         model = new ModelManager(new AddressBook(), new UserPrefs());
         model.addPerson(aliceTan);
@@ -126,30 +126,30 @@ public class DeleteCommandTest {
         model.updateFilteredPersonList(person -> person.equals(bob));
         DeleteCommandParser parser = new DeleteCommandParser();
 
-        // Search all contacts with the same OR matching as find, despite the previous filter.
-        CommandResult result = parser.parse("aLiCe Tan").execute(model);
+        // Search all contacts by exact name, despite the previous filter.
+        CommandResult result = parser.parse("/name Alice Tan").execute(model);
         assertEquals(String.format(DeleteCommand.MESSAGE_MULTIPLE_MATCHES, 2), result.getFeedbackToUser());
         assertEquals(List.of(aliceTan, aliceLee), model.getFilteredPersonList());
         assertEquals(List.of(aliceTan, aliceLee, bob), model.getAddressBook().getPersonList());
 
         parser.parse("1").execute(model);
         assertEquals(List.of(aliceLee, bob), model.getAddressBook().getPersonList());
-        parser.parse("Smith").execute(model);
+        parser.parse("/name Bob Smith").execute(model);
         assertEquals(List.of(aliceLee), model.getAddressBook().getPersonList());
         assertTrue(model.getFilteredPersonList().isEmpty());
     }
 
     @Test
-    public void execute_uniqueKeywordAfterAmbiguity_deletesOnlyMatch() throws Exception {
+    public void execute_exactNameAfterNoMatch_deletesOnlyMatch() throws Exception {
         Person aliceTan = new PersonBuilder().withName("Alice Tan").build();
         Person aliceLee = new PersonBuilder().withName("Alice Lee").build();
         model = new ModelManager(new AddressBook(), new UserPrefs());
         model.addPerson(aliceTan);
         model.addPerson(aliceLee);
         DeleteCommandParser parser = new DeleteCommandParser();
-        parser.parse("Alice").execute(model);
+        parser.parse("/name Alice").execute(model);
 
-        CommandResult result = parser.parse("tan").execute(model);
+        CommandResult result = parser.parse("/name Alice Tan").execute(model);
         assertEquals(String.format(DeleteCommand.MESSAGE_DELETE_PERSON_SUCCESS, Messages.format(aliceTan)),
                 result.getFeedbackToUser());
         assertEquals(List.of(aliceLee), model.getAddressBook().getPersonList());
@@ -157,12 +157,12 @@ public class DeleteCommandTest {
     }
 
     @Test
-    public void execute_noWholeWordMatch_preservesContacts() throws Exception {
+    public void execute_partialName_preservesContacts() throws Exception {
         Person alice = new PersonBuilder().withName("Alice Tan").build();
         model = new ModelManager(new AddressBook(), new UserPrefs());
         model.addPerson(alice);
 
-        CommandResult result = new DeleteCommandParser().parse("Ali").execute(model);
+        CommandResult result = new DeleteCommandParser().parse("/name Ali").execute(model);
         assertEquals(DeleteCommand.MESSAGE_NO_MATCHES, result.getFeedbackToUser());
         assertEquals(List.of(alice), model.getAddressBook().getPersonList());
         assertTrue(model.getFilteredPersonList().isEmpty());
@@ -171,9 +171,9 @@ public class DeleteCommandTest {
     @Test
     public void equalsAndToString_nameTargets() throws Exception {
         DeleteCommandParser parser = new DeleteCommandParser();
-        DeleteCommand alice = parser.parse("Alice");
-        assertEquals(alice, parser.parse("Alice"));
-        assertFalse(alice.equals(parser.parse("Bob")));
+        DeleteCommand alice = parser.parse("/name Alice");
+        assertEquals(alice, parser.parse("/name Alice"));
+        assertFalse(alice.equals(parser.parse("/name Bob")));
         assertFalse(alice.equals(parser.parse("1")));
         assertFalse(parser.parse("1").equals(alice));
         assertTrue(alice.toString().contains("nameSearch="));
