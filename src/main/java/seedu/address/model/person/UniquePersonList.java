@@ -13,10 +13,9 @@ import seedu.address.model.person.exceptions.PersonNotFoundException;
 
 /**
  * A list of persons that enforces uniqueness between its elements and does not allow nulls.
- * A person is considered unique by comparing using {@code Person#isSamePerson(Person)}. As such, adding and updating of
- * persons uses Person#isSamePerson(Person) for equality so as to ensure that the person being added or updated is
- * unique in terms of identity in the UniquePersonList. However, the removal of a person uses Person#equals(Object) so
- * as to ensure that the person with exactly the same fields will be removed.
+ * Adding and loading contacts uses {@link Person#isSameContact(Person)} (name and phone).
+ * Legacy contains and update checks retain {@link Person#isSamePerson(Person)} (name).
+ * Removal uses {@link Person#equals(Object)} to remove the exact contact.
  *
  * Supports a minimal set of list operations.
  *
@@ -42,7 +41,7 @@ public class UniquePersonList implements Iterable<Person> {
      */
     public void add(Person toAdd) {
         requireNonNull(toAdd);
-        if (contains(toAdd)) {
+        if (internalList.stream().anyMatch(toAdd::isSameContact)) {
             throw new DuplicatePersonException();
         }
         internalList.add(toAdd);
@@ -65,7 +64,9 @@ public class UniquePersonList implements Iterable<Person> {
             throw new DuplicatePersonException();
         }
 
-        internalList.set(index, editedPerson);
+        Person replacement = new Person(editedPerson.getName(), editedPerson.getPhone(), editedPerson.getEmail(),
+                editedPerson.getAddress(), editedPerson.getTags(), target.getRoom());
+        internalList.set(index, replacement);
     }
 
     /**
@@ -139,7 +140,7 @@ public class UniquePersonList implements Iterable<Person> {
     private boolean personsAreUnique(List<Person> persons) {
         for (int i = 0; i < persons.size() - 1; i++) {
             for (int j = i + 1; j < persons.size(); j++) {
-                if (persons.get(i).isSamePerson(persons.get(j))) {
+                if (persons.get(i).isSameContact(persons.get(j))) {
                     return false;
                 }
             }

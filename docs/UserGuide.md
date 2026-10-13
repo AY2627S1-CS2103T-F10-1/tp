@@ -28,7 +28,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
    * `list` : Lists all contacts.
 
-   * `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01` : Adds a contact named `John Doe` to the Address Book.
+   * `add John Doe /phone 98765432` : Adds a contact named `John Doe` to the Address Book.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
@@ -74,19 +74,34 @@ Shows a message explaining how to access the help page.
 Format: `help`
 
 
-### Adding a person: `add`
+### Adding a contact: `add`
 
-Adds a person to the address book.
+Adds a contact with a required name and phone number, and optional room and tags.
 
-Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​`
+Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]?`
 
-<div markdown="span" class="alert alert-primary">:bulb: **Tip:**
-A person can have up to 5 tags, including zero. Tags follow the rules in [Tagging a contact](#tagging-a-contact-tag).
-</div>
+* Name is required and can contain up to 100 characters. Existing name character rules apply.
+* Phone is required and can contain up to 20 characters: digits, spaces, `+`, hyphens and parentheses.
+* Room is optional for any contact, regardless of tags. It can contain up to 20 characters:
+  letters, digits, spaces and hyphens.
+* Repeat `/tag` to supply up to five tags. Tags follow the rules in [Tagging a contact](#tagging-a-contact-tag).
+  Duplicate tags, including tags differing only in case or extra spaces, are rejected.
+* Enter the name first, then `/phone`. Optional `/room` and `/tag` fields follow the phone in either order.
+  `/phone` and `/room` cannot be repeated.
+* Leading and trailing spaces are trimmed, and extra whitespace is collapsed into one space.
+* Supplying `/room` or `/tag` without a value is rejected.
+* A contact is a duplicate when its name and phone both match an existing contact.
+  Names are compared without case sensitivity and with whitespace normalized; spaces, hyphens and
+  parentheses are ignored when comparing phone numbers. Room and tags do not affect duplicate detection.
+* Contacts with the same name but different phones are allowed. Different names may share a phone.
+* On success, the contact appears in the list with its supplied room and tags, and
+  `Contact NAME added successfully.` is shown. On failure, no contact is added.
 
 Examples:
-* `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01`
-* `add n/Betsy Crowe t/friend e/betsycrowe@example.com a/Newgate Prison p/1234567 t/criminal`
+
+* `add Sarah Tan /phone 9123 4567`
+* `add Daniel Lim /phone +65 8123 4567 /room B-204`
+* `add Sarah Tan /phone 91234567 /room B-204 /tag Resident /tag BlockB`
 
 ### Listing all contacts: `list`
 
