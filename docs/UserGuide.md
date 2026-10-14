@@ -56,8 +56,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
   For example, `[t/TAG]…​` may be omitted, or written as `t/friend` or `t/friend t/family`.
 
 * Parameters can be in any order.<br>
-  For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.<br>
-  The exception is [tagging a contact](#tagging-a-contact-tag), which has no command word and must be typed as `CONTACT_NAME /tag TAG`, in that order.
+  For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
 
 * Extraneous parameters for `help`, `exit`, and `clear` are ignored. The `list` command rejects extra parameters.<br>
   For example, `help 123` is interpreted as `help`.
@@ -76,17 +75,18 @@ Format: `help`
 
 ### Adding a person: `add`
 
-Adds a person to the address book.
+Adds a person to the address book, optionally with tags to show their category at a glance (e.g., `Resident`, `Resident Fellow`, `Staff`).
 
-Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​`
+Format: `add NAME /phone PHONE [/tag TAG[, TAG]…​]`
 
-<div markdown="span" class="alert alert-primary">:bulb: **Tip:**
-A person can have up to 5 tags, including zero. Tags follow the rules in [Tagging a contact](#tagging-a-contact-tag).
-</div>
+* `/phone` and `/tag` can be given in either order, but each only once.
+* Separate tags with commas. Spaces inside a tag are allowed, so `Resident Fellow` is one tag.
+* Tags may contain letters, digits, spaces and hyphens (`-`), up to 50 characters. They are not case-sensitive, and are displayed with the first letter of each word capitalized.
+* A person can have at most 5 tags. A tag typed twice, such as `RA, ra`, is only added once.
 
 Examples:
-* `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01`
-* `add n/Betsy Crowe t/friend e/betsycrowe@example.com a/Newgate Prison p/1234567 t/criminal`
+* `add Sarah Tan /phone 9123 4567`
+* `add Daniel Lim /phone 8123 4567 /tag Resident Fellow, Floor 3`
 
 ### Listing all contacts: `list`
 
@@ -124,21 +124,6 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`
 Examples:
 *  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st person to be `91234567` and `johndoe@example.com` respectively.
 *  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd person to be `Betsy Crower` and clears all existing tags.
-
-### Tagging a contact: `/tag`
-
-Adds one tag to an existing contact, to show their category at a glance (e.g., `Resident`, `Resident Fellow`, `Staff`).
-
-Format: `CONTACT_NAME /tag TAG`
-
-* `CONTACT_NAME` is the contact's full name. It is not case-sensitive and extra spaces are ignored.
-* Only one tag can be added per command. Spaces inside the tag are allowed, so `Resident Fellow` is one tag.
-* Tags may contain letters, digits, spaces and hyphens (`-`), up to 50 characters. They are not case-sensitive, and are displayed with the first letter of each word capitalized.
-* A contact can have at most 5 tags, and cannot have the same tag twice.
-
-Examples:
-* `Sarah Tan /tag Resident Fellow` adds the tag `Resident Fellow` to Sarah Tan.
-* `daniel lim /tag RA` adds the tag `RA` to Daniel Lim.
 
 ### Locating persons by name: `find`
 
@@ -233,8 +218,7 @@ _Details coming soon ..._
 
 Action | Format, Examples
 --------|------------------
-**Add** | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 t/friend t/colleague`
-**Tag** | `CONTACT_NAME /tag TAG`<br> e.g., `Sarah Tan /tag Resident Fellow`
+**Add** | `add NAME /phone PHONE [/tag TAG[, TAG]…​]` <br> e.g., `add Daniel Lim /phone 8123 4567 /tag Resident Fellow, Floor 3`
 **Clear** | `clear`
 **Delete** | `delete INDEX` or `delete KEYWORD [MORE_KEYWORDS]`<br> e.g., `delete 3`, `delete Alice`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`

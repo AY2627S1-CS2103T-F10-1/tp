@@ -4,9 +4,12 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
@@ -19,10 +22,16 @@ import seedu.address.model.tag.Tag;
 public class PersonUtil {
 
     /**
-     * Returns an add command string for adding the {@code person}.
+     * Returns an add command string for adding the {@code person}, including their tags if they have any.
      */
     public static String getAddCommand(Person person) {
-        return AddCommand.COMMAND_WORD + " " + person.getName().fullName + " /phone " + person.getPhone().value;
+        String command = AddCommand.COMMAND_WORD + " " + person.getName().fullName
+                + " " + PREFIX_PHONE_COMMAND + " " + person.getPhone().value;
+        if (person.getTags().isEmpty()) {
+            return command;
+        }
+        String tags = person.getTags().stream().map(tag -> tag.tagName).collect(Collectors.joining(", "));
+        return command + " " + PREFIX_TAG_COMMAND + " " + tags;
     }
 
     /**

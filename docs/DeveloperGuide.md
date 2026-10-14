@@ -157,36 +157,34 @@ This section describes some noteworthy details on how certain features are imple
 
 ### Tag feature
 
-The tag feature lets the user add one tag to an existing contact with `CONTACT_NAME /tag TAG`.
+Tags are added to a contact when it is created, with `add NAME /phone PHONE /tag TAG[, TAG]...`.
 
 #### Implementation
 
-Unlike other commands, this input has no leading command word. `AddressBookParser#parseCommand()` first tries the usual command words. Only if the first word matches none of them does it call `TagCommandParser#isTagCommand()`, which checks whether `/tag` appears as a standalone word. If so, the whole input goes to `TagCommandParser`. Because known command words are tried first, existing commands behave exactly as before.
+`AddCommandParser` uses `ArgumentTokenizer` with the `/phone` and `/tag` keywords, so they can be given in either order, and `ArgumentMultimap#verifyNoDuplicatePrefixesFor()` rejects a keyword given twice. The text before the first keyword is the name. `/tag` is optional; if it is given, its value is split at every comma, keeping empty entries, and the parts are passed to `ParserUtil#parseTags()`.
 
-`TagCommandParser` splits the input at the first `/tag`. The part before is the contact's name, and the part after is passed to `ParserUtil#parseTag()`. That method collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. `add` and `edit` use the same method for `t/`, so tags follow the same rules everywhere.
+For each part, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. So `/tag`, `/tag RA,,Staff` and `/tag RA,` are all reported as an empty tag. `ParserUtil#parseTags()` then collects the tags into a `LinkedHashSet`, which quietly merges repeated tags, and rejects more than `Person.MAX_TAGS` tags.
 
-The sequence diagram below shows how `Sarah Tan /tag RA` is parsed and executed.
-
-![Interactions Inside the Logic Component for the `Sarah Tan /tag RA` Command](images/TagSequenceDiagram.png)
-
-`TagCommand#execute()` then:
-
-1. Finds the contact in the full person list, not just the displayed one, whose name matches the given name. An exact match is preferred, then a match ignoring case and extra spaces. If there is none, it throws `Contact not found.`
-1. Rejects the tag if `Person#hasTag()` is true, then if `Person#isTagLimitReached()` is true.
-1. Replaces the contact with `Person#withAddedTag()`, which returns a new `Person` with the tag appended.
-
-`Tag` compares tag names ignoring case and stores them with the first letter of each word capitalized. `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were added. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
+`Tag` compares tag names ignoring case and stores them with the first letter of each word capitalized. `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were typed. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
 
 #### Design considerations
 
-**Aspect: how the contact is identified**
+**Aspect: how tags are given**
 
-* **Alternative 1 (current choice):** the contact's full name.
-  * Pros: the RA can tag a contact without first finding their index, and tagging still works when the contact is hidden by a filter.
-  * Cons: it takes more typing than an index.
-* **Alternative 2:** the index in the displayed list, like `edit` and `delete`.
-  * Pros: it is shorter and consistent with other commands.
-  * Cons: the RA needs to `list` or `find` first to see the index.
+* **Alternative 1 (current choice):** as part of `add`, with one `/tag` keyword followed by a comma-separated list.
+  * Pros: every command starts with a command word, and a new contact can be fully set up in one command.
+  * Cons: tags cannot yet be added to an existing contact without replacing all of its tags with `edit`.
+* **Alternative 2:** a separate command, typed as `CONTACT_NAME /tag TAG`, with no command word.
+  * Pros: tags can be added to an existing contact.
+  * Cons: it is the only command without a command word, so `AddressBookParser` needs a special case to recognize it, and it adds only one tag per command.
+
+**Aspect: how several tags are separated**
+
+* **Alternative 1 (current choice):** commas, as in `/tag RA, Floor 3`.
+  * Pros: it is short to type, and commas cannot appear in a tag name.
+* **Alternative 2:** repeating the keyword, as in `/tag RA /tag Floor 3`.
+  * Pros: it matches how AB3 repeats `t/`.
+  * Cons: it takes more typing for each extra tag.
 
 **Aspect: how a data file with more than 5 tags on a contact is handled**
 
@@ -546,37 +544,36 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `list`<br>
       Expected: An empty list and `No contacts found.`.
-### Tagging a contact
+### Adding a contact with tags
 
-1. Tagging a contact
+1. Adding a contact with tags
 
-   1. Prerequisites: Start with the sample data and run `list`.
+   1. Prerequisites: Start with the sample data.
 
-   1. Test case: `Alex Yeoh /tag Resident Fellow`<br>
-      Expected: `Resident Fellow` appears after Alex Yeoh's existing tags. The status message shows `Tag added to Alex Yeoh.`
+   1. Test case: `add Sarah Tan /phone 9123 4567 /tag Resident Fellow, Floor 3`<br>
+      Expected: Sarah Tan is added with the tags `Resident Fellow` and `Floor 3`, in that order.
 
-   1. Test case: `  alex   YEOH  /tag RESIDENT fellow`<br>
-      Expected: No change. Error: `Contact already has this tag.`
+   1. Test case: `add Daniel Lim /tag ra,  STAFF , RA /phone 8123 4567`<br>
+      Expected: Daniel Lim is added with the tags `Ra` and `STAFF`. The repeated `RA` is merged into the first one.
 
-   1. Test case: `Nobody Here /tag RA`<br>
-      Expected: No change. Error: `Contact not found.`
+   1. Test case: `add Ben Ong /phone 9876 5432 /tag T1, T2, T3, T4, T5`<br>
+      Expected: Ben Ong is added with 5 tags.
 
-   1. Other incorrect commands to try: `Alex Yeoh /tag`, `/tag RA`, `Alex Yeoh /tag RA/Staff`, `Alex Yeoh /tag` followed by 51 letters<br>
-      Expected: No change. The status message shows the matching error.
+1. Adding a contact with invalid tags
 
-1. Tagging a contact at the tag limit
+   1. Test case: `add Ben Ong /phone 9876 5432 /tag T1, T2, T3, T4, T5, T6`<br>
+      Expected: No contact is added. Error: `Tag limit reached (max 5)`
 
-   1. Prerequisites: Tag Alex Yeoh with new tags (e.g., `T1`, `T2`, ...) until the card shows 5 tags.
+   1. Test case: `add Ben Ong /phone 9876 5432 /tag RA,,Staff`<br>
+      Expected: No contact is added. Error: `Tag cannot be empty.`
 
-   1. Test case: `Alex Yeoh /tag Staff`<br>
-      Expected: No change. Error: `Tag limit reached (max 5)`
+   1. Other incorrect commands to try: `add Ben Ong /phone 9876 5432 /tag`, `add Ben Ong /phone 9876 5432 /tag RA,`, `add Ben Ong /phone 9876 5432 /tag RA/Staff`, `add Ben Ong /phone 9876 5432 /tag RA /tag Staff`, `add Ben Ong /phone 9876 5432 /tag` followed by 51 letters<br>
+      Expected: No contact is added. The status message shows the matching error.
 
-1. Tagging a contact hidden by a filter
+1. Typing the old tag command
 
-   1. Prerequisites: Run `find Bernice`, so that Charlotte Oliveiro is not shown.
-
-   1. Test case: `Charlotte Oliveiro /tag Hall-Staff`<br>
-      Expected: The status message shows `Tag added to Charlotte Oliveiro.` Run `list` to see the new tag.
+   1. Test case: `Alex Yeoh /tag RA`<br>
+      Expected: No change. Error: `Unknown command.`
 
 ### Filtering by tag
 
