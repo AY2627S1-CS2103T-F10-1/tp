@@ -46,7 +46,8 @@ public class AddCommandParser implements Parser<AddCommand> {
 
         Name name = ParserUtil.parseName(nameValue);
         Phone phone = ParserUtil.parsePhone(phoneValue);
-        Set<Tag> tags = parseTagList(argMultimap.getValue(PREFIX_TAG_COMMAND));
+        Optional<String> tagList = argMultimap.getValue(PREFIX_TAG_COMMAND);
+        Set<Tag> tags = tagList.isPresent() ? parseTagList(tagList.get()) : Set.of();
 
         // Email and address remain legacy model fields until the edit workflow is redesigned.
         Person person = new Person(name, phone, new Email(""), new Address(""), tags);
@@ -55,15 +56,12 @@ public class AddCommandParser implements Parser<AddCommand> {
     }
 
     /**
-     * Parses the comma-separated value of {@code /tag} into a set of tags, or no tags if {@code /tag} was not given.
+     * Parses the comma-separated value of {@code /tag} into a set of tags.
      *
      * @throws ParseException if any tag is invalid or there are more than {@link Person#MAX_TAGS} tags.
      */
-    private static Set<Tag> parseTagList(Optional<String> tagList) throws ParseException {
-        if (tagList.isEmpty()) {
-            return Set.of();
-        }
-        return ParserUtil.parseTags(Arrays.asList(tagList.get().split(TAG_SEPARATOR, SPLIT_KEEP_TRAILING_EMPTY)));
+    private static Set<Tag> parseTagList(String tagList) throws ParseException {
+        return ParserUtil.parseTags(Arrays.asList(tagList.split(TAG_SEPARATOR, SPLIT_KEEP_TRAILING_EMPTY)));
     }
 
 }

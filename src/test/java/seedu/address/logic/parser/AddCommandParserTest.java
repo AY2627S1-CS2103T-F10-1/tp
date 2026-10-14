@@ -18,6 +18,8 @@ import seedu.address.testutil.PersonBuilder;
 
 public class AddCommandParserTest {
     private static final String VALID_NAME_AND_PHONE = "Sarah Tan /phone 9123 4567";
+    private static final String MESSAGE_INVALID_FORMAT =
+            String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
 
     private final AddCommandParser parser = new AddCommandParser();
 
@@ -37,10 +39,9 @@ public class AddCommandParserTest {
 
     @Test
     public void parse_missingNameOrPhone_failure() {
-        String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
-        assertParseFailure(parser, "/phone 91234567", expected);
-        assertParseFailure(parser, "Sarah Tan", expected);
-        assertParseFailure(parser, "Sarah Tan /phone", expected);
+        assertParseFailure(parser, "/phone 91234567", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "Sarah Tan", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "Sarah Tan /phone", MESSAGE_INVALID_FORMAT);
     }
 
     @Test
@@ -51,8 +52,7 @@ public class AddCommandParserTest {
 
     @Test
     public void parse_wrongPrefix_failure() {
-        String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
-        assertParseFailure(parser, "Sarah Tan p/91234567", expected);
+        assertParseFailure(parser, "Sarah Tan p/91234567", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, "n/Sarah Tan /phone 91234567", Name.MESSAGE_CONSTRAINTS);
     }
 
@@ -120,9 +120,8 @@ public class AddCommandParserTest {
 
     @Test
     public void parse_tagsWithoutNameOrPhone_failure() {
-        String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
-        assertParseFailure(parser, " /phone 91234567 /tag RA", expected);
-        assertParseFailure(parser, "Sarah Tan /tag RA", expected);
+        assertParseFailure(parser, " /phone 91234567 /tag RA", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "Sarah Tan /tag RA", MESSAGE_INVALID_FORMAT);
     }
 
     /**
