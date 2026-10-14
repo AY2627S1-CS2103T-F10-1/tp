@@ -88,6 +88,12 @@ public class AddCommandParserTest {
         assertParseFailure(parser, command + " /room B1 /room B2",
                 String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE));
         assertParseFailure(parser, "A".repeat(101) + " /phone 91234567", AddCommandParser.MESSAGE_LONG_NAME);
+        assertParseFailure(parser, "Sarah Tan /room B-204 /phone 91234567",
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE));
+        assertParseFailure(parser, "Sarah Tan /tag Resident /phone 91234567",
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE));
+        assertParseFailure(parser, "Sarah Tan /phone 91234567 /unknown value",
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE));
     }
 
 }

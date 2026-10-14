@@ -95,6 +95,17 @@ public class PersonTest {
     }
 
     @Test
+    public void isSameContact_matchesNormalizedNameAndPhone() {
+        Person sameContact = new PersonBuilder(ALICE).withName("Alice   Pauline")
+                .withPhone("(" + ALICE.getPhone().value + ")").build();
+        Person differentPhone = new PersonBuilder(ALICE).withPhone("12345678").build();
+
+        assertTrue(ALICE.isSameContact(sameContact));
+        assertFalse(ALICE.isSameContact(differentPhone));
+        assertFalse(ALICE.isSameContact(null));
+    }
+
+    @Test
     public void equals() {
         // same values -> returns true
         Person aliceCopy = new PersonBuilder(ALICE).build();
@@ -131,6 +142,11 @@ public class PersonTest {
         // different tags -> returns false
         editedAlice = new PersonBuilder(ALICE).withTags(VALID_TAG_HUSBAND).build();
         assertFalse(ALICE.equals(editedAlice));
+
+        // different room -> returns false
+        editedAlice = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
+                ALICE.getTags(), new Room("B-204"));
+        assertFalse(ALICE.equals(editedAlice));
     }
 
     @Test
@@ -138,5 +154,9 @@ public class PersonTest {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
                 + ", email=" + ALICE.getEmail() + ", address=" + ALICE.getAddress() + ", tags=" + ALICE.getTags() + "}";
         assertEquals(expected, ALICE.toString());
+
+        Person aliceWithRoom = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
+                ALICE.getTags(), new Room("B-204"));
+        assertTrue(aliceWithRoom.toString().contains("room=B-204"));
     }
 }
