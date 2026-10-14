@@ -95,17 +95,6 @@ public class PersonTest {
     }
 
     @Test
-    public void isSameContact_matchesNormalizedNameAndPhone() {
-        Person sameContact = new PersonBuilder(ALICE).withName("Alice   Pauline")
-                .withPhone("(" + ALICE.getPhone().value + ")").build();
-        Person differentPhone = new PersonBuilder(ALICE).withPhone("12345678").build();
-
-        assertTrue(ALICE.isSameContact(sameContact));
-        assertFalse(ALICE.isSameContact(differentPhone));
-        assertFalse(ALICE.isSameContact(null));
-    }
-
-    @Test
     public void equals() {
         // same values -> returns true
         Person aliceCopy = new PersonBuilder(ALICE).build();

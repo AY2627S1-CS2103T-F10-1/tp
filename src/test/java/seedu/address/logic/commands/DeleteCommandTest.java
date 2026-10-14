@@ -115,9 +115,9 @@ public class DeleteCommandTest {
     }
 
     @Test
-    public void execute_nameSearch_handlesAmbiguityAndFollowUp() throws Exception {
+    public void execute_nameSearch_deletesExactMatch() throws Exception {
         Person aliceTan = new PersonBuilder().withName("Alice Tan").build();
-        Person aliceLee = new PersonBuilder().withName("Alice Tan").withPhone("81234567").build();
+        Person aliceLee = new PersonBuilder().withName("Alice Lee").build();
         Person bob = new PersonBuilder().withName("Bob Smith").build();
         model = new ModelManager(new AddressBook(), new UserPrefs());
         model.addPerson(aliceTan);
@@ -128,15 +128,9 @@ public class DeleteCommandTest {
 
         // Search all contacts by exact name, despite the previous filter.
         CommandResult result = parser.parse("/name Alice Tan").execute(model);
-        assertEquals(String.format(DeleteCommand.MESSAGE_MULTIPLE_MATCHES, 2), result.getFeedbackToUser());
-        assertEquals(List.of(aliceTan, aliceLee), model.getFilteredPersonList());
-        assertEquals(List.of(aliceTan, aliceLee, bob), model.getAddressBook().getPersonList());
-
-        parser.parse("1").execute(model);
+        assertEquals(String.format(DeleteCommand.MESSAGE_DELETE_PERSON_SUCCESS, Messages.format(aliceTan)),
+                result.getFeedbackToUser());
         assertEquals(List.of(aliceLee, bob), model.getAddressBook().getPersonList());
-        parser.parse("/name Bob Smith").execute(model);
-        assertEquals(List.of(aliceLee), model.getAddressBook().getPersonList());
-        assertTrue(model.getFilteredPersonList().isEmpty());
     }
 
     @Test

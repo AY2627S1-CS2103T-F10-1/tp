@@ -112,7 +112,7 @@ public class JsonAddressBookStorageTest {
         seedu.address.logic.parser.AddCommandParser parser = new seedu.address.logic.parser.AddCommandParser();
         seedu.address.model.Model model = new seedu.address.model.ModelManager();
         parser.parse("Sarah Tan /phone 91234567 /room B-204 /tag Resident").execute(model);
-        parser.parse("Sarah Tan /phone 81234567").execute(model);
+        parser.parse("Daniel Lim /phone 81234567").execute(model);
         Path filePath = testFolder.resolve("contactsWithRooms.json");
         JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
         storage.saveAddressBook(model.getAddressBook());

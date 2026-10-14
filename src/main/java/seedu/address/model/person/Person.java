@@ -9,7 +9,6 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import seedu.address.commons.util.StringUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.model.tag.Tag;
 
@@ -67,14 +66,6 @@ public class Person {
 
     public Room getRoom() {
         return room;
-    }
-
-    /** Matches the name and phone identity used when adding and loading contacts. */
-    public boolean isSameContact(Person other) {
-        return other != null
-                && StringUtil.collapseWhitespace(name.fullName).equalsIgnoreCase(
-                        StringUtil.collapseWhitespace(other.name.fullName))
-                && phone.value.replaceAll("[ ()-]", "").equals(other.phone.value.replaceAll("[ ()-]", ""));
     }
 
     public Address getAddress() {
