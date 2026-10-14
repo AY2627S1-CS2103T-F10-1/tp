@@ -72,6 +72,9 @@ public class ListCommandTest {
     @Test
     public void execute_nullModel_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new ListCommand().execute(null));
+    }
+
+    @Test
     public void execute_tagFilter_showsOnlyTaggedPersons() {
         expectedModel.updateFilteredPersonList(FRIENDS_FILTER);
 
