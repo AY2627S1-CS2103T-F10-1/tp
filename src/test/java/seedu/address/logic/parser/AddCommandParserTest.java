@@ -38,6 +38,12 @@ public class AddCommandParserTest {
     }
 
     @Test
+    public void parse_emptyArgs_failure() {
+        assertParseFailure(parser, "", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "   ", MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
     public void parse_missingNameOrPhone_failure() {
         assertParseFailure(parser, "/phone 91234567", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, "Sarah Tan", MESSAGE_INVALID_FORMAT);
@@ -81,6 +87,14 @@ public class AddCommandParserTest {
                 addCommandWithTags("RA", "Resident Fellow"));
         assertParseSuccess(parser, VALID_NAME_AND_PHONE + " /tag   RA  ,   Resident   Fellow  ",
                 addCommandWithTags("RA", "Resident Fellow"));
+        assertParseSuccess(parser, VALID_NAME_AND_PHONE + " /tag Hall-Staff, Block4",
+                addCommandWithTags("Hall-Staff", "Block4"));
+    }
+
+    @Test
+    public void parse_tagAtMaxLength_success() {
+        String longestTag = "a".repeat(Tag.MAX_LENGTH);
+        assertParseSuccess(parser, VALID_NAME_AND_PHONE + " /tag " + longestTag, addCommandWithTags(longestTag));
     }
 
     @Test
@@ -99,6 +113,12 @@ public class AddCommandParserTest {
                 addCommandWithTags("T1", "T2", "T3", "T4", "T5"));
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag T1, T2, T3, T4, T5, T6",
                 Person.MESSAGE_TAG_LIMIT_REACHED);
+    }
+
+    @Test
+    public void parse_repeatedTagAtLimit_countedOnce() {
+        assertParseSuccess(parser, VALID_NAME_AND_PHONE + " /tag T1, T2, T3, T4, T5, t1",
+                addCommandWithTags("T1", "T2", "T3", "T4", "T5"));
     }
 
     @Test
