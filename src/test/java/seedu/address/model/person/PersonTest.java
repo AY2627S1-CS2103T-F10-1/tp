@@ -14,6 +14,7 @@ import static seedu.address.testutil.TypicalPersons.BOB;
 import static seedu.address.testutil.TypicalPersons.JANE;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,15 @@ public class PersonTest {
 
         assertThrows(IllegalArgumentException.class, () -> new Person(JANE.getName(), JANE.getPhone(),
                 JANE.getEmail(), JANE.getAddress(), tagsOverLimit));
+    }
+
+    @Test
+    public void constructor_tags_keepsGivenOrder() {
+        List<Tag> tagsInGivenOrder = List.of(new Tag("Staff"), new Tag("RA"), new Tag("Block4"));
+        Person person = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
+                new LinkedHashSet<>(tagsInGivenOrder));
+
+        assertEquals(tagsInGivenOrder, List.copyOf(person.getTags()));
     }
 
     @Test
