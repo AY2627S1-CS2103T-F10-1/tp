@@ -1,6 +1,5 @@
 package seedu.address.model.person;
 
-import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
@@ -67,35 +66,6 @@ public class Person {
      */
     public Set<Tag> getTags() {
         return Collections.unmodifiableSet(tags);
-    }
-
-    /**
-     * Returns true if this person already has {@code tag}, ignoring case.
-     */
-    public boolean hasTag(Tag tag) {
-        requireNonNull(tag);
-        return tags.contains(tag);
-    }
-
-    /**
-     * Returns true if this person already has {@link #MAX_TAGS} tags.
-     */
-    public boolean isTagLimitReached() {
-        return tags.size() >= MAX_TAGS;
-    }
-
-    /**
-     * Returns a copy of this person with {@code tag} added after the existing tags.
-     * The caller must ensure the tag is new and the tag limit has not been reached.
-     */
-    public Person withAddedTag(Tag tag) {
-        requireNonNull(tag);
-        assert !hasTag(tag) : "Tag should not already be present";
-        assert !isTagLimitReached() : "Tag limit should not already be reached";
-
-        Set<Tag> updatedTags = new LinkedHashSet<>(tags);
-        updatedTags.add(tag);
-        return new Person(name, phone, email, address, updatedTags);
     }
 
     /**
