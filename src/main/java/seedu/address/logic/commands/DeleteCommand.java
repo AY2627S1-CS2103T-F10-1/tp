@@ -1,9 +1,11 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
@@ -13,25 +15,25 @@ import seedu.address.model.Model;
 import seedu.address.model.person.Person;
 
 /**
- * Deletes a person identified by displayed index or uniquely matching name keywords.
+ * Deletes a person identified by displayed index or by an exactly matching full name.
  */
 public class DeleteCommand extends Command {
 
     public static final String COMMAND_WORD = "delete";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Deletes a person by displayed index or uniquely matching name keywords.\n"
-            + "Parameters: INDEX (positive integer) or KEYWORD [MORE_KEYWORDS]...\n"
-            + "Example: " + COMMAND_WORD + " 1";
+            + ": Deletes a person by displayed index or by full name (case-sensitive).\n"
+            + "Parameters: INDEX (positive integer) or " + PREFIX_NAME_COMMAND + " NAME\n"
+            + "Examples: " + COMMAND_WORD + " 1, " + COMMAND_WORD + " /name Alice Tan";
 
     public static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted person: %1$s";
 
-    public static final String MESSAGE_NO_MATCHES = "No contacts found matching that name. No contacts deleted.";
-    public static final String MESSAGE_MULTIPLE_MATCHES = "%1$d contacts found matching that name. "
-            + "No contacts deleted. Use delete INDEX from the displayed list or delete with a unique name keyword.";
+    public static final String MESSAGE_NO_MATCHES = "No contacts found matching that search. No contacts deleted.";
+    public static final String MESSAGE_MULTIPLE_MATCHES = "%1$d contacts found matching that search. "
+            + "No contacts deleted. Use delete INDEX from the displayed list.";
 
     private final Index targetIndex;
-    private final FindCommand nameSearch;
+    private final Predicate<Person> nameSearch;
 
     /**
      * Creates a command that deletes the person at the given displayed index.
@@ -44,7 +46,7 @@ public class DeleteCommand extends Command {
     /**
      * Creates a command that deletes only when the given name search finds exactly one person.
      */
-    public DeleteCommand(FindCommand nameSearch) {
+    public DeleteCommand(Predicate<Person> nameSearch) {
         this.targetIndex = null;
         this.nameSearch = requireNonNull(nameSearch);
     }
@@ -53,7 +55,7 @@ public class DeleteCommand extends Command {
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
         if (nameSearch != null) {
-            nameSearch.execute(model);
+            model.updateFilteredPersonList(nameSearch);
             int matchCount = model.getFilteredPersonList().size();
             if (matchCount == 1) {
                 return new DeleteCommand(Index.fromOneBased(1)).execute(model);

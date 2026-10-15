@@ -198,9 +198,7 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
 
 ### Filter by tag feature
 
-`list /filter TAG` shows only contacts with the given tag. `ListCommandParser` passes any arguments to `TagFilterParser#parse()`, which returns a `PersonHasTagPredicate`. `ListCommand` then applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any value is accepted and a value that is not a valid tag simply matches nobody.
-
-To let another output command filter by tag, such as `find`, call `TagFilterParser#parse()` from its parser and apply the predicate the same way.
+`find /tag TAG` shows only contacts with the given tag. `FindCommandParser` creates a `PersonHasTagPredicate` from the value after `/tag`, and `FindCommand` applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any non-empty value is accepted and a value that is not a valid tag simply matches nobody.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -429,7 +427,42 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
+* 1b. The `/name` prefix is given more than once.
+
+    * 1b1. RAcontact shows a message naming the repeated prefix.
+
+      Use case resumes at step 1.
+
 * 2a. No contact has a full name that exactly matches the entered name.
+
+    * 2a1. RAcontact shows the message `No contacts found` and an empty list.
+
+      Use case ends.
+
+**Use case: Find contacts by tag**
+
+**MSS**
+
+1.  User requests to find contacts by entering `find /tag` followed by a tag.
+2.  RAcontact lists the contacts who have exactly that tag (case-insensitive) and shows the number of contacts listed.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. The `/tag` prefix is missing, the tag is empty, there is text before `/tag`, the prefix is directly followed by text (such as `/tagfriends`), or `/name` is also given.
+
+    * 1a1. RAcontact shows an invalid command format error with the usage of `find`.
+
+      Use case resumes at step 1.
+
+* 1b. The `/tag` prefix is given more than once.
+
+    * 1b1. RAcontact shows a message naming the repeated prefix.
+
+      Use case resumes at step 1.
+
+* 2a. No contact has the entered tag.
 
     * 2a1. RAcontact shows the message `No contacts found` and an empty list.
 
@@ -583,20 +616,23 @@ testers are expected to do more *exploratory* testing.
 
 1. Prerequisites: Start with the sample data.
 
-1. Test case: `list /filter friends`<br>
+1. Test case: `find /tag friends`<br>
    Expected: Only contacts tagged `Friends` are shown. The status message shows how many are listed.
 
-1. Test case: `list   /filter   FRIENDS  `<br>
+1. Test case: `find   /tag   FRIENDS  `<br>
    Expected: Same as above.
 
-1. Test case: `list /filter Nobody`<br>
-   Expected: An empty list. The status message shows `No contacts found with this tag.`
+1. Test case: `find /tag Nobody`<br>
+   Expected: An empty list. The status message shows `No contacts found`.
 
-1. Test case: `list /filter`<br>
-   Expected: The list is unchanged. Error: `Tag cannot be empty.`
+1. Test case: `find /tag`<br>
+   Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
 
-1. Other incorrect commands to try: `list 3`, `list friends`, `list /filterfriends`<br>
-   Expected: The list is unchanged. Error: `Invalid command format. Usage: <output command> /filter <tagName>`
+1. Other incorrect commands to try: `find friends`, `find /tag friends /name Alex`, `find /tag friends /tag family`<br>
+   Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
+
+1. Test case: `list /filter friends`<br>
+   Expected: The list is unchanged. Error: `Invalid command format. Usage: list`
 
 ### Saving data
 

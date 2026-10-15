@@ -106,17 +106,11 @@ Examples:
 
 ### Listing all contacts: `list`
 
-Shows a list of all persons in the address book, or only those with a given tag.
+Shows a list of all persons in the address book.
 
-Format: `list [/filter TAG]`
+Format: `list`
 
-* `/filter TAG` shows only contacts with that tag. It is not case-sensitive and extra spaces are ignored.
-* If no contact has the tag, an empty list is shown with `No contacts found with this tag.`
-* Any other text after `list` is rejected, so a mistyped filter never silently shows everyone.
-
-Examples:
-* `list` shows all contacts.
-* `list /filter Resident` shows only contacts tagged `Resident`.
+* Any text after `list` is rejected. To show only contacts with a given tag, use [`find /tag`](#locating-persons-by-name-or-tag-find).
 
 * The keyword is case-insensitive: `list`, `LIST`, and `LiSt` work the same way.
 * Leading and trailing spaces are ignored.
@@ -141,43 +135,52 @@ Examples:
 *  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st person to be `91234567` and `johndoe@example.com` respectively.
 *  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd person to be `Betsy Crower` and clears all existing tags.
 
-### Locating persons by name: `find`
+### Locating persons by name or tag: `find`
 
-Finds persons whose full name is exactly the given name.
+Finds persons whose full name is exactly the given name, or who have the given tag.
 
-Format: `find /name NAME`
+Format: `find /name NAME` or `find /tag TAG`
 
-* The `/name` prefix is required, and nothing may be typed before it.
-* Everything after `/name` is treated as one full name. It is not split into separate keywords.
-* The search is case-sensitive; for example, `find /name alex yeoh` does not match `Alex Yeoh`.
-* The whole name must match; for example, `find /name Alex` does not match `Alex Yeoh`.
-* The search considers only names.
-* Spaces before and after `NAME` are ignored. Spaces inside the name are matched as typed.
+* Exactly one of `/name` and `/tag` must be given, and nothing may be typed before it.
+* Name search is case-sensitive; for example, `find /name alex yeoh` does not match `Alex Yeoh`.
+* Tag search ignores case and extra spaces; for example, `find /tag Friends` matches the tag `friends`.
+* Spaces before and after `NAME` or `TAG` are ignored.
 * If no person matches, the message `No contacts found` is shown and the list is empty. Otherwise, the number of persons listed is shown.
-* If `/name` is missing or `NAME` is empty, an invalid command format message is shown.
+* A prefix must be followed by a space, so `find /tagfriends` is not recognised as a tag search.
+* If the prefix is missing or not followed by a space (such as `/tagfriends`), both prefixes are given, or `NAME` or `TAG` is empty, an invalid command format message is shown.
+* If `/name` or `/tag` is repeated, a message listing the repeated prefix is shown.
+
+Finding by name (`/name`):
+* Everything after `/name` is treated as one full name. It is not split into separate keywords.
+* The whole name must match; for example, `find /name Alex` does not match `Alex Yeoh`.
+* Spaces inside the name are matched as typed.
+
+Finding by tag (`/tag`):
+* Only one tag can be searched at a time, so `find /tag friends /tag family` is rejected.
+* Any non-empty `TAG` is accepted. A value that is not a valid tag, or that no contact has, simply matches nobody.
+* A person is listed if any one of their tags is exactly `TAG`; for example, `find /tag friends` matches a person tagged `friends` and `owesMoney`, but not one tagged `friends2`.
 
 Examples:
 * `find /name Alex Yeoh` returns `Alex Yeoh`
 * `find /name Alex` returns no persons, because `Alex` is not the full name
+* `find /tag friends` returns all persons who have the tag `friends`
 
 ### Deleting a person: `delete`
 
 Deletes the specified person from the address book.
 
-Format: `delete INDEX` or `delete KEYWORD [MORE_KEYWORDS]`
+Format: `delete INDEX` or `delete /name NAME`
 
 * Deletes the person at the specified `INDEX`.
 * The index refers to the index number shown in the displayed person list.
 * The index **must be a positive integer** 1, 2, 3, …​
 * Name deletion searches **all contacts**, even when the displayed list is filtered.
-* Name matching is identical to `find`: case-insensitive, complete words, matching **any** supplied keyword.
+* `/name NAME` must be the contact's full name, matched case-sensitively, the same way as [`find /name`](#locating-persons-by-name-or-tag-find).
+* If `/name` is missing or repeated, `NAME` is empty or there is text before `/name`, an invalid command format message is shown.
 * Exactly one match is deleted immediately. With no matches, nothing is deleted.
-* With multiple matches, nothing is deleted; the matching contacts are displayed with their indexes.
-  Continue with `delete INDEX` or a unique name keyword.
-* For example, `delete Alice Tan` still matches both `Alice Tan` and `Alice Lee` because both contain `Alice`.
-  Use `delete Tan` if that keyword is unique, or select a displayed index.
+* If more than one contact matches, nothing is deleted. The matching contacts are displayed with their indexes; continue with `delete INDEX`.
 * The search results remain displayed; deleting the only match leaves an empty list. Use `list` to show all contacts.
-* Purely numeric input is treated as an index, so purely numeric names cannot be deleted by name.
+* Purely numeric input is treated as an index, so `delete 1` can never be a name search.
 
 
 Examples:
@@ -236,9 +239,8 @@ Action | Format, Examples
 --------|------------------
 **Add** | `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​` <br> e.g., `add Daniel Lim /phone 8123 4567 /room B-204 /tag Resident Fellow /tag Floor 3`
 **Clear** | `clear`
-**Delete** | `delete INDEX` or `delete KEYWORD [MORE_KEYWORDS]`<br> e.g., `delete 3`, `delete Alice`
+**Delete** | `delete INDEX` or `delete /name NAME`<br> e.g., `delete 3`, `delete /name Alice Tan`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
-**Find** | `find /name NAME`<br> e.g., `find /name James Jake`
-**Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List** | `list [/filter TAG]`<br> e.g., `list /filter Resident`
+**Find** | `find /name NAME` or `find /tag TAG`<br> e.g., `find /name James Jake`, `find /tag friends`
+**List** | `list`
 **Help** | `help`

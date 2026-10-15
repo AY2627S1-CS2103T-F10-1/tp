@@ -8,15 +8,12 @@ public class CliSyntax {
     /* Prefix definitions */
     public static final Prefix PREFIX_NAME = new Prefix("n/");
     public static final Prefix PREFIX_PHONE = new Prefix("p/");
-    public static final Prefix PREFIX_PHONE_COMMAND = new Prefix("/phone");
+    public static final Prefix PREFIX_PHONE_COMMAND = new Prefix("/phone", true);
     public static final Prefix PREFIX_EMAIL = new Prefix("e/");
     public static final Prefix PREFIX_ADDRESS = new Prefix("a/");
     public static final Prefix PREFIX_TAG = new Prefix("t/");
-    public static final Prefix PREFIX_TAG_COMMAND = new Prefix("/tag");
-    public static final Prefix PREFIX_ROOM_COMMAND = new Prefix("/room");
-    public static final Prefix PREFIX_FIND_NAME = new Prefix("/name");
-
-    /* Keyword definitions */
-    public static final String KEYWORD_FILTER = "/filter";
+    public static final Prefix PREFIX_NAME_COMMAND = new Prefix("/name", true);
+    public static final Prefix PREFIX_TAG_COMMAND = new Prefix("/tag", true);
+    public static final Prefix PREFIX_ROOM_COMMAND = new Prefix("/room", true);
 
 }

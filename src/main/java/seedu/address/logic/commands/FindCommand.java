@@ -1,29 +1,34 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_FIND_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
+
+import java.util.function.Predicate;
 
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.model.Model;
-import seedu.address.model.person.NameEqualsPredicate;
+import seedu.address.model.person.Person;
 
 /**
- * Finds and lists all persons in the address book whose full name is exactly equal to the given name.
- * Matching is case sensitive.
+ * Finds and lists all persons in the address book whose full name is exactly equal to the given name,
+ * or who have the given tag. Name matching is case sensitive; tag matching ignores case and extra spaces.
  */
 public class FindCommand extends Command {
 
     public static final String COMMAND_WORD = "find";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds all persons whose full name is exactly "
-            + "the specified name (case-sensitive) and displays them as a list with index numbers.\n"
-            + "Parameters: " + PREFIX_FIND_NAME + " NAME\n"
-            + "Example: " + COMMAND_WORD + " " + PREFIX_FIND_NAME + " Sarah Tan";
+            + "the specified name (case-sensitive), or who have the specified tag (ignoring case), "
+            + "and displays them as a list with index numbers.\n"
+            + "Parameters: " + PREFIX_NAME_COMMAND + " NAME or " + PREFIX_TAG_COMMAND + " TAG\n"
+            + "Examples: " + COMMAND_WORD + " " + PREFIX_NAME_COMMAND + " Sarah Tan, "
+            + COMMAND_WORD + " " + PREFIX_TAG_COMMAND + " friends";
 
-    private final NameEqualsPredicate predicate;
+    private final Predicate<Person> predicate;
 
-    public FindCommand(NameEqualsPredicate predicate) {
+    public FindCommand(Predicate<Person> predicate) {
         this.predicate = predicate;
     }
 

@@ -1,11 +1,15 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_FIND_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
+
+import java.util.Optional;
 
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.NameEqualsPredicate;
+import seedu.address.model.person.PersonHasTagPredicate;
 
 /**
  * Parses input arguments and creates a new FindCommand object
@@ -15,21 +19,31 @@ public class FindCommandParser implements Parser<FindCommand> {
     /**
      * Parses the given {@code String} of arguments in the context of the FindCommand
      * and returns a FindCommand object for execution.
+     * Exactly one of the {@code /name} and {@code /tag} prefixes must be given.
+     * Only one name or tag may be searched at a time, so repeating {@code /name} or {@code /tag} is rejected.
+     * Any non-empty tag value is accepted, since a value no contact has simply matches nobody.
+     *
      * @throws ParseException if the user input does not conform to the expected format
      */
     public FindCommand parse(String args) throws ParseException {
-        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_FIND_NAME);
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_NAME_COMMAND, PREFIX_TAG_COMMAND);
 
-        if (!argMultimap.getPreamble().isEmpty()
-                || argMultimap.getValue(PREFIX_FIND_NAME).isEmpty()
-                || argMultimap.getValue(PREFIX_FIND_NAME).get().isEmpty()) {
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME_COMMAND, PREFIX_TAG_COMMAND);
+
+        Optional<String> name = argMultimap.getValue(PREFIX_NAME_COMMAND);
+        Optional<String> tag = argMultimap.getValue(PREFIX_TAG_COMMAND);
+
+        boolean hasExactlyOnePrefix = name.isPresent() != tag.isPresent();
+        if (!argMultimap.getPreamble().isEmpty() || !hasExactlyOnePrefix
+                || name.orElse(tag.orElse("")).isEmpty()) {
             throw new ParseException(
                     String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE));
         }
 
-        String name = argMultimap.getValue(PREFIX_FIND_NAME).get();
-
-        return new FindCommand(new NameEqualsPredicate(name));
+        if (name.isPresent()) {
+            return new FindCommand(new NameEqualsPredicate(name.get()));
+        }
+        return new FindCommand(new PersonHasTagPredicate(tag.get()));
     }
 
 }

@@ -47,11 +47,11 @@ public class ArgumentTokenizer {
     private static List<PrefixPosition> findPrefixPositions(String argsString, Prefix prefix) {
         List<PrefixPosition> positions = new ArrayList<>();
 
-        int prefixPosition = findPrefixPosition(argsString, prefix.getPrefix(), 0);
+        int prefixPosition = findPrefixPosition(argsString, prefix, 0);
         while (prefixPosition != -1) {
             PrefixPosition extendedPrefix = new PrefixPosition(prefix, prefixPosition);
             positions.add(extendedPrefix);
-            prefixPosition = findPrefixPosition(argsString, prefix.getPrefix(), prefixPosition);
+            prefixPosition = findPrefixPosition(argsString, prefix, prefixPosition);
         }
 
         return positions;
@@ -68,11 +68,28 @@ public class ArgumentTokenizer {
      * occurrences of "p/" with whitespace before it. However, if
      * {@code argsString} = "e/hi p/900", {@code prefix} = "p/" and
      * {@code fromIndex} = 0, this method returns 5.
+     *
+     * A keyword prefix must also be followed by whitespace or the end of {@code argsString}. E.g. if
+     * {@code argsString} = " /tagfriends" and {@code prefix} = "/tag", this method returns -1.
      */
-    private static int findPrefixPosition(String argsString, String prefix, int fromIndex) {
-        int prefixIndex = argsString.indexOf(" " + prefix, fromIndex);
-        return prefixIndex == -1 ? -1
-                : prefixIndex + 1; // +1 as offset for whitespace
+    private static int findPrefixPosition(String argsString, Prefix prefix, int fromIndex) {
+        int searchFrom = fromIndex;
+        while (true) {
+            int prefixIndex = argsString.indexOf(" " + prefix.getPrefix(), searchFrom);
+            if (prefixIndex == -1) {
+                return -1;
+            }
+            int prefixStart = prefixIndex + 1; // +1 as offset for whitespace
+            int valueStart = prefixStart + prefix.getPrefix().length();
+            if (!prefix.isKeyword() || isFollowedByWhitespaceOrEnd(argsString, valueStart)) {
+                return prefixStart;
+            }
+            searchFrom = prefixStart;
+        }
+    }
+
+    private static boolean isFollowedByWhitespaceOrEnd(String argsString, int index) {
+        return index >= argsString.length() || Character.isWhitespace(argsString.charAt(index));
     }
 
     /**
