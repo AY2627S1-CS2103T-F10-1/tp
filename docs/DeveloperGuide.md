@@ -283,6 +283,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | user                                       | delete a person                | remove entries that I no longer need                                   |
 | `* * *`  | user                                       | find a person by full name     | locate details of persons without having to go through the entire list |
 | `* *`    | user                                       | hide private contact details   | minimize chance of someone else seeing them by accident                |
+| `* *`    | user                                       | find persons by tag            | see everyone in a group, such as friends or family                     |
 | `*`      | user with many persons in the address book | sort persons by name           | locate a person easily                                                 |
 
 *{More to be added}*
@@ -353,6 +354,35 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
       Use case resumes at step 1.
 
 * 2a. No contact has a full name that exactly matches the entered name.
+
+    * 2a1. RAcontact shows the message `No contacts found` and an empty list.
+
+      Use case ends.
+
+**Use case: Find contacts by tag**
+
+**MSS**
+
+1.  User requests to find contacts by entering `find /tag` followed by a tag.
+2.  RAcontact lists the contacts who have exactly that tag (case-insensitive) and shows the number of contacts listed.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. The `/tag` prefix is missing, the tag is empty, there is text before `/tag`, or `/name` is also given.
+
+    * 1a1. RAcontact shows an invalid command format error with the usage of `find`.
+
+      Use case resumes at step 1.
+
+* 1b. The tag is not a single alphanumeric word.
+
+    * 1b1. RAcontact shows the tag constraints message.
+
+      Use case resumes at step 1.
+
+* 2a. No contact has the entered tag.
 
     * 2a1. RAcontact shows the message `No contacts found` and an empty list.
 

@@ -109,24 +109,32 @@ Examples:
 *  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st person to be `91234567` and `johndoe@example.com` respectively.
 *  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd person to be `Betsy Crower` and clears all existing tags.
 
-### Locating persons by name: `find`
+### Locating persons by name or tag: `find`
 
-Finds persons whose full name is exactly the given name.
+Finds persons whose full name is exactly the given name, or who have the given tag.
 
-Format: `find /name NAME`
+Format: `find /name NAME` or `find /tag TAG`
 
-* The `/name` prefix is required, and nothing may be typed before it.
-* Everything after `/name` is treated as one full name. It is not split into separate keywords.
-* The search is case-sensitive; for example, `find /name alex yeoh` does not match `Alex Yeoh`.
-* The whole name must match; for example, `find /name Alex` does not match `Alex Yeoh`.
-* The search considers only names.
-* Spaces before and after `NAME` are ignored. Spaces inside the name are matched as typed.
+* Exactly one of `/name` and `/tag` must be given, and nothing may be typed before it.
+* Name search is case-sensitive; for example, `find /name alex yeoh` does not match `Alex Yeoh`.
+* Tag search is case-insensitive; for example, `find /tag Friends` matches the tag `friends`.
+* Spaces before and after `NAME` or `TAG` are ignored.
 * If no person matches, the message `No contacts found` is shown and the list is empty. Otherwise, the number of persons listed is shown.
-* If `/name` is missing or `NAME` is empty, an invalid command format message is shown.
+* If the prefix is missing, both prefixes are given, or `NAME` or `TAG` is empty, an invalid command format message is shown.
+
+Finding by name (`/name`):
+* Everything after `/name` is treated as one full name. It is not split into separate keywords.
+* The whole name must match; for example, `find /name Alex` does not match `Alex Yeoh`.
+* Spaces inside the name are matched as typed.
+
+Finding by tag (`/tag`):
+* `TAG` must be a single alphanumeric tag, as in `add` and `edit`; otherwise the tag constraints message is shown.
+* A person is listed if any one of their tags is exactly `TAG`; for example, `find /tag friends` matches a person tagged `friends` and `owesMoney`, but not one tagged `friends2`.
 
 Examples:
 * `find /name Alex Yeoh` returns `Alex Yeoh`
 * `find /name Alex` returns no persons, because `Alex` is not the full name
+* `find /tag friends` returns all persons who have the tag `friends`
 
 ### Deleting a person: `delete`
 
@@ -195,6 +203,6 @@ Action | Format, Examples
 **Clear** | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
-**Find** | `find /name NAME`<br> e.g., `find /name James Jake`
+**Find** | `find /name NAME` or `find /tag TAG`<br> e.g., `find /name James Jake`, `find /tag friends`
 **List** | `list`
 **Help** | `help`
