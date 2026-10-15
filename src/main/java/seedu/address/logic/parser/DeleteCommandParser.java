@@ -21,7 +21,8 @@ public class DeleteCommandParser implements Parser<DeleteCommand> {
             String trimmedArgs = args.trim();
             // Signed integers must remain index inputs even when they are invalid or overflow.
             if (!trimmedArgs.isEmpty() && !trimmedArgs.matches("[+-]?[0-9]+")) {
-                return new DeleteCommand(new FindCommandParser().parse(trimmedArgs));
+                // The tokenizer only recognises a prefix that follows whitespace, so restore the leading space.
+                return new DeleteCommand(new FindCommandParser().parse(" " + trimmedArgs));
             }
             Index index = ParserUtil.parseIndex(args);
             return new DeleteCommand(index);

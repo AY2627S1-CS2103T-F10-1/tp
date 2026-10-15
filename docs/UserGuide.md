@@ -150,20 +150,18 @@ Examples:
 
 Deletes the specified person from the address book.
 
-Format: `delete INDEX` or `delete KEYWORD [MORE_KEYWORDS]`
+Format: `delete INDEX` or `delete /name NAME`
 
 * Deletes the person at the specified `INDEX`.
 * The index refers to the index number shown in the displayed person list.
 * The index **must be a positive integer** 1, 2, 3, …​
 * Name deletion searches **all contacts**, even when the displayed list is filtered.
-* Name matching is identical to `find`: case-insensitive, complete words, matching **any** supplied keyword.
+* `/name NAME` is matched exactly as in [`find /name`](#locating-persons-by-name-or-tag-find): the whole name must match, and the match is case-sensitive.
 * Exactly one match is deleted immediately. With no matches, nothing is deleted.
-* With multiple matches, nothing is deleted; the matching contacts are displayed with their indexes.
-  Continue with `delete INDEX` or a unique name keyword.
-* For example, `delete Alice Tan` still matches both `Alice Tan` and `Alice Lee` because both contain `Alice`.
-  Use `delete Tan` if that keyword is unique, or select a displayed index.
+* If more than one contact matches, nothing is deleted. The matching contacts are displayed with their indexes; continue with `delete INDEX`.
 * The search results remain displayed; deleting the only match leaves an empty list. Use `list` to show all contacts.
-* Purely numeric input is treated as an index, so purely numeric names cannot be deleted by name.
+* Anything `find` accepts is also accepted here, so `delete /tag TAG` deletes the contact only if exactly one contact has that tag.
+* Purely numeric input is treated as an index, so `delete 1` can never be a name search.
 
 
 Examples:
@@ -223,7 +221,7 @@ Action | Format, Examples
 **Add** | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 t/friend t/colleague`
 **Tag** | `CONTACT_NAME /tag TAG`<br> e.g., `Sarah Tan /tag Resident Fellow`
 **Clear** | `clear`
-**Delete** | `delete INDEX` or `delete KEYWORD [MORE_KEYWORDS]`<br> e.g., `delete 3`, `delete Alice`
+**Delete** | `delete INDEX` or `delete /name NAME`<br> e.g., `delete 3`, `delete /name Alice Tan`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
 **Find** | `find /name NAME` or `find /tag TAG`<br> e.g., `find /name James Jake`, `find /tag friends`
 **List** | `list`

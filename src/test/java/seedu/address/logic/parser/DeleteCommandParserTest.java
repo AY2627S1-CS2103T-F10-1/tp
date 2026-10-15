@@ -23,15 +23,17 @@ public class DeleteCommandParserTest {
 
     @Test
     public void parse_invalidArgs_throwsParseException() {
-        for (String input : new String[]{"", "   ", "0", "-1", "+1", "999999999999999999999"}) {
+        String[] invalidInputs = {"", "   ", "0", "-1", "+1", "999999999999999999999",
+            "Alice", "/name", "Alice /name Tan"};
+        for (String input : invalidInputs) {
             assertParseFailure(parser, input,
                     String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteCommand.MESSAGE_USAGE));
         }
     }
     @Test
-    public void parse_nameKeywords_returnsNameDeleteCommand() throws Exception {
-        for (String input : new String[]{"a", "Alice", " Alice  Tan ", "Alice\tLee"}) {
-            assertParseSuccess(parser, input, new DeleteCommand(new FindCommandParser().parse(input)));
+    public void parse_findArgs_returnsNameDeleteCommand() throws Exception {
+        for (String input : new String[]{"/name a", "/name Alice", " /name  Alice Tan ", "/tag friends"}) {
+            assertParseSuccess(parser, input, new DeleteCommand(new FindCommandParser().parse(" " + input.trim())));
         }
     }
 }

@@ -73,7 +73,7 @@ public class LogicManagerTest {
         Person otherPerson = new PersonBuilder().withName("Other Contact").build();
         model.addPerson(AMY);
         model.addPerson(otherPerson);
-        logic.execute("find Amy");
+        logic.execute("find /name " + AMY.getName().fullName);
 
         CommandResult result = logic.execute("  LiSt  ");
 
@@ -87,7 +87,7 @@ public class LogicManagerTest {
     @Test
     public void execute_invalidList_preservesFilteredList() throws Exception {
         model.addPerson(AMY);
-        logic.execute("find Nobody");
+        logic.execute("find /name Nobody");
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         expectedModel.updateFilteredPersonList(person -> false);
 
