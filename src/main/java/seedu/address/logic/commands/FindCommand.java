@@ -13,14 +13,14 @@ import seedu.address.model.person.Person;
 
 /**
  * Finds and lists all persons in the address book whose full name is exactly equal to the given name,
- * or who have the given tag. Name matching is case sensitive; tag matching is case insensitive.
+ * or who have the given tag. Name matching is case sensitive; tag matching ignores case and extra spaces.
  */
 public class FindCommand extends Command {
 
     public static final String COMMAND_WORD = "find";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds all persons whose full name is exactly "
-            + "the specified name (case-sensitive), or who have the specified tag (case-insensitive), "
+            + "the specified name (case-sensitive), or who have the specified tag (ignoring case), "
             + "and displays them as a list with index numbers.\n"
             + "Parameters: " + PREFIX_FIND_NAME + " NAME or " + PREFIX_FIND_TAG + " TAG\n"
             + "Examples: " + COMMAND_WORD + " " + PREFIX_FIND_NAME + " Sarah Tan, "

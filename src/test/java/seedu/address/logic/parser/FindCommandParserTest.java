@@ -8,8 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.model.person.NameEqualsPredicate;
-import seedu.address.model.person.TagEqualsPredicate;
-import seedu.address.model.tag.Tag;
+import seedu.address.model.person.PersonHasTagPredicate;
 
 public class FindCommandParserTest {
 
@@ -47,21 +46,22 @@ public class FindCommandParserTest {
     }
 
     @Test
-    public void parse_invalidTag_throwsParseException() {
-        assertParseFailure(parser, " /tag best friends", Tag.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, " /tag fr!ends", Tag.MESSAGE_CONSTRAINTS);
-    }
-
-    @Test
     public void parse_validTag_returnsFindCommand() {
-        FindCommand expectedFindCommand = new FindCommand(new TagEqualsPredicate(new Tag("friends")));
+        FindCommand expectedFindCommand = new FindCommand(new PersonHasTagPredicate("friends"));
         assertParseSuccess(parser, " /tag friends", expectedFindCommand);
 
         // leading and trailing whitespaces around the tag are trimmed
         assertParseSuccess(parser, " /tag   friends  \t", expectedFindCommand);
 
-        // case is preserved
-        assertParseSuccess(parser, " /tag Friends", new FindCommand(new TagEqualsPredicate(new Tag("Friends"))));
+        // multi-word tag
+        assertParseSuccess(parser, " /tag best   friends",
+                new FindCommand(new PersonHasTagPredicate("best friends")));
+
+        // a value that is not a valid tag is accepted and simply matches nobody
+        assertParseSuccess(parser, " /tag fr!ends", new FindCommand(new PersonHasTagPredicate("fr!ends")));
+
+        // case is ignored when comparing tags
+        assertParseSuccess(parser, " /tag Friends", new FindCommand(new PersonHasTagPredicate("Friends")));
     }
 
     @Test

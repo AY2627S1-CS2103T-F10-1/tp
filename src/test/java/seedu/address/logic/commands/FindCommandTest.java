@@ -20,8 +20,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.NameEqualsPredicate;
-import seedu.address.model.person.TagEqualsPredicate;
-import seedu.address.model.tag.Tag;
+import seedu.address.model.person.PersonHasTagPredicate;
 
 /**
  * Contains integration tests (interaction with the Model) for {@code FindCommand}.
@@ -95,7 +94,7 @@ public class FindCommandTest {
     @Test
     public void execute_tagInAddressBook_multiplePersonsFound() {
         String expectedMessage = String.format(MESSAGE_PERSONS_LISTED_OVERVIEW, 3);
-        TagEqualsPredicate predicate = new TagEqualsPredicate(new Tag("friends"));
+        PersonHasTagPredicate predicate = new PersonHasTagPredicate("friends");
         FindCommand command = new FindCommand(predicate);
         expectedModel.updateFilteredPersonList(predicate);
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
@@ -104,7 +103,7 @@ public class FindCommandTest {
 
     @Test
     public void execute_tagNotInAddressBook_noPersonFound() {
-        TagEqualsPredicate predicate = new TagEqualsPredicate(new Tag("nobody"));
+        PersonHasTagPredicate predicate = new PersonHasTagPredicate("nobody");
         FindCommand command = new FindCommand(predicate);
         expectedModel.updateFilteredPersonList(predicate);
         assertCommandSuccess(command, model, MESSAGE_NO_PERSONS_FOUND, expectedModel);

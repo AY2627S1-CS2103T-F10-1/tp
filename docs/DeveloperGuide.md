@@ -199,9 +199,7 @@ The sequence diagram below shows how `Sarah Tan /tag RA` is parsed and executed.
 
 ### Filter by tag feature
 
-`list /filter TAG` shows only contacts with the given tag. `ListCommandParser` passes any arguments to `TagFilterParser#parse()`, which returns a `PersonHasTagPredicate`. `ListCommand` then applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any value is accepted and a value that is not a valid tag simply matches nobody.
-
-To let another output command filter by tag, such as `find`, call `TagFilterParser#parse()` from its parser and apply the predicate the same way.
+`find /tag TAG` shows only contacts with the given tag. `FindCommandParser` creates a `PersonHasTagPredicate` from the value after `/tag`, and `FindCommand` applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any non-empty value is accepted and a value that is not a valid tag simply matches nobody.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -453,12 +451,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 1b. The tag is not a single alphanumeric word.
-
-    * 1b1. RAcontact shows the tag constraints message.
-
-      Use case resumes at step 1.
-
 * 2a. No contact has the entered tag.
 
     * 2a1. RAcontact shows the message `No contacts found` and an empty list.
@@ -611,20 +603,23 @@ testers are expected to do more *exploratory* testing.
 
 1. Prerequisites: Start with the sample data.
 
-1. Test case: `list /filter friends`<br>
+1. Test case: `find /tag friends`<br>
    Expected: Only contacts tagged `Friends` are shown. The status message shows how many are listed.
 
-1. Test case: `list   /filter   FRIENDS  `<br>
+1. Test case: `find   /tag   FRIENDS  `<br>
    Expected: Same as above.
 
-1. Test case: `list /filter Nobody`<br>
-   Expected: An empty list. The status message shows `No contacts found with this tag.`
+1. Test case: `find /tag Nobody`<br>
+   Expected: An empty list. The status message shows `No contacts found`.
 
-1. Test case: `list /filter`<br>
-   Expected: The list is unchanged. Error: `Tag cannot be empty.`
+1. Test case: `find /tag`<br>
+   Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
 
-1. Other incorrect commands to try: `list 3`, `list friends`, `list /filterfriends`<br>
-   Expected: The list is unchanged. Error: `Invalid command format. Usage: <output command> /filter <tagName>`
+1. Other incorrect commands to try: `find friends`, `find /tag friends /name Alex`<br>
+   Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
+
+1. Test case: `list /filter friends`<br>
+   Expected: The list is unchanged. Error: `Invalid command format. Usage: list`
 
 ### Saving data
 

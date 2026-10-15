@@ -133,7 +133,7 @@ Format: `find /name NAME` or `find /tag TAG`
 
 * Exactly one of `/name` and `/tag` must be given, and nothing may be typed before it.
 * Name search is case-sensitive; for example, `find /name alex yeoh` does not match `Alex Yeoh`.
-* Tag search is case-insensitive; for example, `find /tag Friends` matches the tag `friends`.
+* Tag search ignores case and extra spaces; for example, `find /tag Friends` matches the tag `friends`.
 * Spaces before and after `NAME` or `TAG` are ignored.
 * If no person matches, the message `No contacts found` is shown and the list is empty. Otherwise, the number of persons listed is shown.
 * If the prefix is missing, both prefixes are given, or `NAME` or `TAG` is empty, an invalid command format message is shown.
@@ -144,7 +144,7 @@ Finding by name (`/name`):
 * Spaces inside the name are matched as typed.
 
 Finding by tag (`/tag`):
-* `TAG` must be a single alphanumeric tag, as in `add` and `edit`; otherwise the tag constraints message is shown.
+* Any non-empty `TAG` is accepted. A value that is not a valid tag, or that no contact has, simply matches nobody.
 * A person is listed if any one of their tags is exactly `TAG`; for example, `find /tag friends` matches a person tagged `friends` and `owesMoney`, but not one tagged `friends2`.
 
 Examples:
