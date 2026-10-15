@@ -57,7 +57,7 @@ public class AddressBookParser {
 
         return switch (commandWord) {
             case AddCommand.COMMAND_WORD -> new AddCommandParser().parse(arguments);
-//            case EditCommand.COMMAND_WORD -> new EditCommandParser().parse(arguments);
+            // case EditCommand.COMMAND_WORD -> new EditCommandParser().parse(arguments);
             case EditCommand.COMMAND_WORD -> throw new ParseException("Edit not currently supported");
             case DeleteCommand.COMMAND_WORD -> new DeleteCommandParser().parse(arguments);
             case ClearCommand.COMMAND_WORD -> new ClearCommand();
