@@ -90,7 +90,7 @@ Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]?`
   `/phone` and `/room` cannot be repeated.
 * Leading and trailing spaces are trimmed, and extra whitespace is collapsed into one space.
 * Supplying `/room` or `/tag` without a value is rejected.
-* A contact is a duplicate when its name matches an existing contact under the existing name comparison rule.
+* A contact is a duplicate when its name matches an existing contact (case-sensitive).
   The add command trims and collapses whitespace before comparing names. Phone number, room and tags do not
   affect duplicate detection.
 * Contacts with the same name cannot be added, even when their phone numbers differ.
