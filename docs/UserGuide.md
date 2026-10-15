@@ -110,7 +110,7 @@ Shows a list of all persons in the address book.
 
 Format: `list`
 
-* Any text after `list` is rejected. To show only contacts with a given tag, use [`find /tag`](#locating-persons-by-name-or-tag-find).
+* Any text after `list` is rejected. To show only contacts with a given tag, use [`find /tag`](#locating-persons-by-name-tag-or-phone-find).
 
 * The keyword is case-insensitive: `list`, `LIST`, and `LiSt` work the same way.
 * Leading and trailing spaces are ignored.
@@ -135,25 +135,32 @@ Examples:
 *  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st person to be `91234567` and `johndoe@example.com` respectively.
 *  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd person to be `Betsy Crower` and clears all existing tags.
 
-### Locating persons by name or tag: `find`
+### Locating persons by name, tag or phone: `find`
 
-Finds persons whose full name is exactly the given name, or who have the given tag.
+Finds persons whose full name is exactly the given name, or who have the given tag or phone number.
 
-Format: `find /name NAME` or `find /tag TAG`
+Format: `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`
 
-* Exactly one of `/name` and `/tag` must be given, and nothing may be typed before it.
+* Exactly one of `/name`, `/tag` and `/phone` must be given, and nothing may be typed before it.
 * Name search is case-sensitive; for example, `find /name alex yeoh` does not match `Alex Yeoh`.
 * Tag search ignores case and extra spaces; for example, `find /tag Friends` matches the tag `friends`.
-* Spaces before and after `NAME` or `TAG` are ignored.
+* Spaces before and after `NAME`, `TAG` or `NUMBER` are ignored.
 * If no person matches, the message `No contacts found` is shown and the list is empty. Otherwise, the number of persons listed is shown.
 * A prefix must be followed by a space, so `find /tagfriends` is not recognised as a tag search.
-* If the prefix is missing or not followed by a space (such as `/tagfriends`), both prefixes are given, or `NAME` or `TAG` is empty, an invalid command format message is shown.
-* If `/name` or `/tag` is repeated, a message listing the repeated prefix is shown.
+* If the prefix is missing or not followed by a space (such as `/tagfriends`), multiple search prefixes are given, or `NAME`, `TAG` or `NUMBER` is empty, an invalid command format message is shown.
+* If `/name`, `/tag` or `/phone` is repeated, a message listing the repeated prefix is shown.
 
 Finding by name (`/name`):
 * Everything after `/name` is treated as one full name. It is not split into separate keywords.
 * The whole name must match; for example, `find /name Alex` does not match `Alex Yeoh`.
 * Spaces inside the name are matched as typed.
+
+Finding by phone (`/phone`):
+* Searches all contacts for an exact phone number, including contacts hidden by an earlier search.
+* Extra spaces are ignored, as when storing phone numbers. Other formatting must match:
+  `+65 9123 4567` does not match `+6591234567`, and `9123` does not match `91234567`.
+* All contacts sharing the number are listed. Any non-empty value is accepted; an unknown value matches nobody.
+* Example: `find /phone 91234567` lists contacts whose phone number is `91234567`.
 
 Finding by tag (`/tag`):
 * Only one tag can be searched at a time, so `find /tag friends /tag family` is rejected.
@@ -175,7 +182,7 @@ Format: `delete INDEX` or `delete /name NAME`
 * The index refers to the index number shown in the displayed person list.
 * The index **must be a positive integer** 1, 2, 3, …​
 * Name deletion searches **all contacts**, even when the displayed list is filtered.
-* `/name NAME` must be the contact's full name, matched case-sensitively, the same way as [`find /name`](#locating-persons-by-name-or-tag-find).
+* `/name NAME` must be the contact's full name, matched case-sensitively, the same way as [`find /name`](#locating-persons-by-name-tag-or-phone-find).
 * If `/name` is missing or repeated, `NAME` is empty or there is text before `/name`, an invalid command format message is shown.
 * Exactly one match is deleted immediately. With no matches, nothing is deleted.
 * If more than one contact matches, nothing is deleted. The matching contacts are displayed with their indexes; continue with `delete INDEX`.
@@ -241,6 +248,6 @@ Action | Format, Examples
 **Clear** | `clear`
 **Delete** | `delete INDEX` or `delete /name NAME`<br> e.g., `delete 3`, `delete /name Alice Tan`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
-**Find** | `find /name NAME` or `find /tag TAG`<br> e.g., `find /name James Jake`, `find /tag friends`
+**Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /tag friends`
 **List** | `list`
 **Help** | `help`
