@@ -88,8 +88,9 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_listWithArguments_throwsParseException() throws Exception {
-        assertThrows(ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, () -> parser.parseCommand("list 3"));
-        assertThrows(ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, () -> parser.parseCommand("LIST abc"));
+        assertThrows(ParseException.class, TagFilterParser.MESSAGE_INVALID_FORMAT, () -> parser.parseCommand("list 3"));
+        assertThrows(ParseException.class, TagFilterParser.MESSAGE_INVALID_FORMAT, ()
+                -> parser.parseCommand("LIST abc"));
         assertEquals(new ListCommand(), parser.parseCommand(ListCommand.COMMAND_WORD));
         assertEquals(new ListCommand(new PersonHasTagPredicate("RA")),
                 parser.parseCommand(ListCommand.COMMAND_WORD + " " + KEYWORD_FILTER + " RA"));

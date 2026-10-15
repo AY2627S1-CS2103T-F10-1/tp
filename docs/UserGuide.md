@@ -28,7 +28,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
    * `list` : Lists all contacts.
 
-   * `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01` : Adds a contact named `John Doe` to the Address Book.
+   * `add John Doe /phone 98765432` : Adds a contact named `John Doe` to the Address Book.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
@@ -73,20 +73,36 @@ Shows a message explaining how to access the help page.
 Format: `help`
 
 
-### Adding a person: `add`
+### Adding a contact: `add`
 
-Adds a person to the address book, optionally with tags to show their category at a glance (e.g., `Resident`, `Resident Fellow`, `Staff`).
+Adds a contact with a required name and phone number, and optional room and tags. Tags show a contact's category at a glance (e.g., `Resident`, `Resident Fellow`, `Staff`).
 
-Format: `add NAME /phone PHONE [/tag TAG[, TAG]…​]`
+Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​`
 
-* `/phone` and `/tag` can be given in either order, but each only once.
-* Separate tags with commas. Spaces inside a tag are allowed, so `Resident Fellow` is one tag.
-* Tags may contain letters, digits, spaces and hyphens (`-`), up to 50 characters. They are not case-sensitive, and are displayed with the first letter of each word capitalized.
-* A person can have at most 5 tags. A tag typed twice, such as `RA, ra`, is only added once.
+* Name is required and can contain up to 100 characters. Existing name character rules apply.
+* Phone is required and can contain up to 20 characters: digits, spaces, `+`, hyphens and parentheses.
+* Room is optional for any contact, regardless of tags. It can contain up to 20 characters:
+  letters, digits, spaces and hyphens.
+* Enter the name first. `/phone`, `/room` and `/tag` can then be given in any order.
+  `/phone` and `/room` cannot be repeated.
+* Repeat `/tag` once per tag, up to five tags. Spaces inside a tag are allowed, so `/tag Resident Fellow` is one tag.
+* Tags may contain letters, digits, spaces and hyphens (`-`), up to 50 characters. They are not case-sensitive,
+  and are displayed with the first letter of each word capitalized.
+* Duplicate tags, including tags differing only in case or extra spaces (e.g., `/tag RA /tag ra`), are rejected.
+* Leading and trailing spaces are trimmed, and extra whitespace is collapsed into one space.
+* Supplying `/room` or `/tag` without a value is rejected.
+* A contact is a duplicate when its name matches an existing contact (case-sensitive).
+  The add command trims and collapses whitespace before comparing names. Phone number, room and tags do not
+  affect duplicate detection.
+* Contacts with the same name cannot be added, even when their phone numbers differ.
+* On success, the contact appears in the list with its supplied room and tags, and
+  `Contact NAME added successfully.` is shown. On failure, no contact is added.
 
 Examples:
+
 * `add Sarah Tan /phone 9123 4567`
-* `add Daniel Lim /phone 8123 4567 /tag Resident Fellow, Floor 3`
+* `add Daniel Lim /phone +65 8123 4567 /room B-204`
+* `add Sarah Tan /phone 91234567 /room B-204 /tag Resident /tag Floor 3`
 
 ### Listing all contacts: `list`
 
@@ -218,7 +234,7 @@ _Details coming soon ..._
 
 Action | Format, Examples
 --------|------------------
-**Add** | `add NAME /phone PHONE [/tag TAG[, TAG]…​]` <br> e.g., `add Daniel Lim /phone 8123 4567 /tag Resident Fellow, Floor 3`
+**Add** | `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​` <br> e.g., `add Daniel Lim /phone 8123 4567 /room B-204 /tag Resident Fellow /tag Floor 3`
 **Clear** | `clear`
 **Delete** | `delete INDEX` or `delete KEYWORD [MORE_KEYWORDS]`<br> e.g., `delete 3`, `delete Alice`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`

@@ -27,11 +27,9 @@ public class PersonUtil {
     public static String getAddCommand(Person person) {
         String command = AddCommand.COMMAND_WORD + " " + person.getName().fullName
                 + " " + PREFIX_PHONE_COMMAND + " " + person.getPhone().value;
-        if (person.getTags().isEmpty()) {
-            return command;
-        }
-        String tags = person.getTags().stream().map(tag -> tag.tagName).collect(Collectors.joining(", "));
-        return command + " " + PREFIX_TAG_COMMAND + " " + tags;
+        return command + person.getTags().stream()
+                .map(tag -> " " + PREFIX_TAG_COMMAND + " " + tag.tagName)
+                .collect(Collectors.joining());
     }
 
     /**

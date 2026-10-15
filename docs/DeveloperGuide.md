@@ -157,13 +157,13 @@ This section describes some noteworthy details on how certain features are imple
 
 ### Tag feature
 
-Tags are added to a contact when it is created, with `add NAME /phone PHONE /tag TAG[, TAG]...`.
+Tags are added to a contact when it is created, with `add NAME /phone PHONE [/room ROOM] [/tag TAG]...`.
 
 #### Implementation
 
-`AddCommandParser` uses `ArgumentTokenizer` with the `/phone` and `/tag` keywords, so they can be given in either order, and `ArgumentMultimap#verifyNoDuplicatePrefixesFor()` rejects a keyword given twice. The text before the first keyword is the name. `/tag` is optional; if it is given, its value is split at every comma, keeping empty entries, and the parts are passed to `ParserUtil#parseTags()`.
+`AddCommandParser` uses `ArgumentTokenizer` with the `/phone`, `/room` and `/tag` keywords, so they can be given in any order. The text before the first keyword is the name. `/phone` must be given exactly once and `/room` at most once; a word starting with `/` that is not one of these keywords is rejected. `/tag` is optional and may be repeated, once per tag.
 
-For each part, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. So `/tag`, `/tag RA,,Staff` and `/tag RA,` are all reported as an empty tag. `ParserUtil#parseTags()` then collects the tags into a `LinkedHashSet`, which quietly merges repeated tags, and rejects more than `Person.MAX_TAGS` tags.
+For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. So `/tag` with no value is reported as an empty tag, and `/tag RA, Staff` as invalid characters. `AddCommandParser` collects the tags into a `LinkedHashSet`, rejects a tag already given (`Contact already has this tag.`), and then rejects more than `Person.MAX_TAGS` tags.
 
 `Tag` compares tag names ignoring case and stores them with the first letter of each word capitalized. `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were typed. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
 
@@ -171,7 +171,7 @@ For each part, `ParserUtil#parseTag()` collapses extra whitespace and reports th
 
 **Aspect: how tags are given**
 
-* **Alternative 1 (current choice):** as part of `add`, with one `/tag` keyword followed by a comma-separated list.
+* **Alternative 1 (current choice):** as part of `add`, with one `/tag` keyword per tag.
   * Pros: every command starts with a command word, and a new contact can be fully set up in one command.
   * Cons: tags cannot yet be added to an existing contact without replacing all of its tags with `edit`.
 * **Alternative 2:** a separate command, typed as `CONTACT_NAME /tag TAG`, with no command word.
@@ -180,11 +180,12 @@ For each part, `ParserUtil#parseTag()` collapses extra whitespace and reports th
 
 **Aspect: how several tags are separated**
 
-* **Alternative 1 (current choice):** commas, as in `/tag RA, Floor 3`.
-  * Pros: it is short to type, and commas cannot appear in a tag name.
-* **Alternative 2:** repeating the keyword, as in `/tag RA /tag Floor 3`.
-  * Pros: it matches how AB3 repeats `t/`.
+* **Alternative 1 (current choice):** repeating the keyword, as in `/tag RA /tag Floor 3`.
+  * Pros: it matches how AB3 repeats `t/`, and each tag's value is exactly what follows its keyword, so there is no separator to get wrong.
   * Cons: it takes more typing for each extra tag.
+* **Alternative 2:** commas, as in `/tag RA, Floor 3`.
+  * Pros: it is short to type, and commas cannot appear in a tag name.
+  * Cons: stray commas (`/tag RA,,Staff`, `/tag RA,`) create empty tags that need their own error handling.
 
 **Aspect: how a data file with more than 5 tags on a contact is handled**
 
@@ -550,24 +551,27 @@ testers are expected to do more *exploratory* testing.
 
    1. Prerequisites: Start with the sample data.
 
-   1. Test case: `add Sarah Tan /phone 9123 4567 /tag Resident Fellow, Floor 3`<br>
+   1. Test case: `add Sarah Tan /phone 9123 4567 /tag Resident Fellow /tag Floor 3`<br>
       Expected: Sarah Tan is added with the tags `Resident Fellow` and `Floor 3`, in that order.
 
-   1. Test case: `add Daniel Lim /tag ra,  STAFF , RA /phone 8123 4567`<br>
-      Expected: Daniel Lim is added with the tags `Ra` and `STAFF`. The repeated `RA` is merged into the first one.
+   1. Test case: `add Daniel Lim /tag ra /room B-204 /tag  STAFF  /phone 8123 4567`<br>
+      Expected: Daniel Lim is added with room `B-204` and the tags `Ra` and `STAFF`.
 
-   1. Test case: `add Ben Ong /phone 9876 5432 /tag T1, T2, T3, T4, T5`<br>
+   1. Test case: `add Ben Ong /phone 9876 5432 /tag T1 /tag T2 /tag T3 /tag T4 /tag T5`<br>
       Expected: Ben Ong is added with 5 tags.
 
 1. Adding a contact with invalid tags
 
-   1. Test case: `add Ben Ong /phone 9876 5432 /tag T1, T2, T3, T4, T5, T6`<br>
+   1. Test case: `add Ben Ong /phone 9876 5432 /tag T1 /tag T2 /tag T3 /tag T4 /tag T5 /tag T6`<br>
       Expected: No contact is added. Error: `Tag limit reached (max 5)`
 
-   1. Test case: `add Ben Ong /phone 9876 5432 /tag RA,,Staff`<br>
+   1. Test case: `add Ben Ong /phone 9876 5432 /tag RA /tag ra`<br>
+      Expected: No contact is added. Error: `Contact already has this tag.`
+
+   1. Test case: `add Ben Ong /phone 9876 5432 /tag RA /tag`<br>
       Expected: No contact is added. Error: `Tag cannot be empty.`
 
-   1. Other incorrect commands to try: `add Ben Ong /phone 9876 5432 /tag`, `add Ben Ong /phone 9876 5432 /tag RA,`, `add Ben Ong /phone 9876 5432 /tag RA/Staff`, `add Ben Ong /phone 9876 5432 /tag RA /tag Staff`, `add Ben Ong /phone 9876 5432 /tag` followed by 51 letters<br>
+   1. Other incorrect commands to try: `add Ben Ong /phone 9876 5432 /tag RA, Staff`, `add Ben Ong /phone 9876 5432 /tag RA/Staff`, `add Ben Ong /phone 9876 5432 /tag` followed by 51 letters<br>
       Expected: No contact is added. The status message shows the matching error.
 
 1. Typing the old tag command

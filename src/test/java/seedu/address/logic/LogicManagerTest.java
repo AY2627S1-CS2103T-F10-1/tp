@@ -20,6 +20,7 @@ import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.TagFilterParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
@@ -73,7 +74,7 @@ public class LogicManagerTest {
         Person otherPerson = new PersonBuilder().withName("Other Contact").build();
         model.addPerson(AMY);
         model.addPerson(otherPerson);
-        logic.execute("find Amy");
+        logic.execute("find /name " + AMY.getName().fullName);
 
         CommandResult result = logic.execute("  LiSt  ");
 
@@ -87,11 +88,11 @@ public class LogicManagerTest {
     @Test
     public void execute_invalidList_preservesFilteredList() throws Exception {
         model.addPerson(AMY);
-        logic.execute("find Nobody");
+        logic.execute("find /name Nobody");
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         expectedModel.updateFilteredPersonList(person -> false);
 
-        assertCommandFailure("LIST abc", ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, expectedModel);
+        assertCommandFailure("LIST abc", ParseException.class, TagFilterParser.MESSAGE_INVALID_FORMAT, expectedModel);
     }
 
     @Test

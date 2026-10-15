@@ -28,6 +28,7 @@ public class Person {
 
     // Data fields
     private final Address address;
+    private final Room room;
     private final Set<Tag> tags = new LinkedHashSet<>();
 
     /**
@@ -35,12 +36,18 @@ public class Person {
      * Tags keep the iteration order of {@code tags}.
      */
     public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags) {
-        requireAllNonNull(name, phone, email, address, tags);
+        this(name, phone, email, address, tags, new Room(""));
+    }
+
+    /** Creates a contact with an optional room number. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room) {
+        requireAllNonNull(name, phone, email, address, tags, room);
         checkArgument(tags.size() <= MAX_TAGS, MESSAGE_TAG_LIMIT_REACHED);
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
+        this.room = room;
         this.tags.addAll(tags);
     }
 
@@ -54,6 +61,10 @@ public class Person {
 
     public Email getEmail() {
         return email;
+    }
+
+    public Room getRoom() {
+        return room;
     }
 
     public Address getAddress() {
@@ -100,24 +111,28 @@ public class Person {
                 && phone.equals(otherPerson.phone)
                 && email.equals(otherPerson.email)
                 && address.equals(otherPerson.address)
+                && room.equals(otherPerson.room)
                 && tags.equals(otherPerson.tags);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, tags);
+        return Objects.hash(name, phone, email, address, tags, room);
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this)
+        ToStringBuilder builder = new ToStringBuilder(this)
                 .add("name", name)
                 .add("phone", phone)
                 .add("email", email)
                 .add("address", address)
-                .add("tags", tags)
-                .toString();
+                .add("tags", tags);
+        if (!room.value.isEmpty()) {
+            builder.add("room", room);
+        }
+        return builder.toString();
     }
 
 }
