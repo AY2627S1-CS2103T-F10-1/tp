@@ -116,8 +116,8 @@ public class DeleteCommandTest {
 
     @Test
     public void execute_nameSearch_handlesAmbiguityAndFollowUp() throws Exception {
-        Person aliceTan = new PersonBuilder().withName("Alice Tan").withTags("friends").build();
-        Person aliceLee = new PersonBuilder().withName("Alice Lee").withTags("friends").build();
+        Person aliceTan = new PersonBuilder().withName("Alice Tan").build();
+        Person aliceLee = new PersonBuilder().withName("Alice Lee").build();
         Person bob = new PersonBuilder().withName("Bob Smith").build();
         model = new ModelManager(new AddressBook(), new UserPrefs());
         model.addPerson(aliceTan);
@@ -126,8 +126,9 @@ public class DeleteCommandTest {
         model.updateFilteredPersonList(person -> person.equals(bob));
         DeleteCommandParser parser = new DeleteCommandParser();
 
-        // Search all contacts, despite the previous filter; two people share the tag.
-        CommandResult result = parser.parse("/tag friends").execute(model);
+        // Search all contacts, despite the previous filter; a predicate matching two people deletes nobody.
+        DeleteCommand deleteAliceByName = new DeleteCommand(person -> person.getName().fullName.startsWith("Alice"));
+        CommandResult result = deleteAliceByName.execute(model);
         assertEquals(String.format(DeleteCommand.MESSAGE_MULTIPLE_MATCHES, 2), result.getFeedbackToUser());
         assertEquals(List.of(aliceTan, aliceLee), model.getFilteredPersonList());
         assertEquals(List.of(aliceTan, aliceLee, bob), model.getAddressBook().getPersonList());
@@ -141,13 +142,13 @@ public class DeleteCommandTest {
 
     @Test
     public void execute_uniqueNameAfterAmbiguity_deletesOnlyMatch() throws Exception {
-        Person aliceTan = new PersonBuilder().withName("Alice Tan").withTags("friends").build();
-        Person aliceLee = new PersonBuilder().withName("Alice Lee").withTags("friends").build();
+        Person aliceTan = new PersonBuilder().withName("Alice Tan").build();
+        Person aliceLee = new PersonBuilder().withName("Alice Lee").build();
         model = new ModelManager(new AddressBook(), new UserPrefs());
         model.addPerson(aliceTan);
         model.addPerson(aliceLee);
         DeleteCommandParser parser = new DeleteCommandParser();
-        parser.parse("/tag friends").execute(model);
+        new DeleteCommand(person -> true).execute(model);
 
         CommandResult result = parser.parse("/name Alice Tan").execute(model);
         assertEquals(String.format(DeleteCommand.MESSAGE_DELETE_PERSON_SUCCESS, Messages.format(aliceTan)),

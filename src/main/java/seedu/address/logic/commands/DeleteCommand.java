@@ -1,9 +1,11 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_FIND_NAME;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
@@ -13,15 +15,15 @@ import seedu.address.model.Model;
 import seedu.address.model.person.Person;
 
 /**
- * Deletes a person identified by displayed index or by a find search that matches exactly one person.
+ * Deletes a person identified by displayed index or by an exactly matching full name.
  */
 public class DeleteCommand extends Command {
 
     public static final String COMMAND_WORD = "delete";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Deletes a person by displayed index or by full name (the same matching as find).\n"
-            + "Parameters: INDEX (positive integer) or /name NAME (or /tag TAG, if exactly one person has it)\n"
+            + ": Deletes a person by displayed index or by full name (case-sensitive).\n"
+            + "Parameters: INDEX (positive integer) or " + PREFIX_FIND_NAME + " NAME\n"
             + "Examples: " + COMMAND_WORD + " 1, " + COMMAND_WORD + " /name Alice Tan";
 
     public static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted person: %1$s";
@@ -31,7 +33,7 @@ public class DeleteCommand extends Command {
             + "No contacts deleted. Use delete INDEX from the displayed list.";
 
     private final Index targetIndex;
-    private final FindCommand nameSearch;
+    private final Predicate<Person> nameSearch;
 
     /**
      * Creates a command that deletes the person at the given displayed index.
@@ -44,7 +46,7 @@ public class DeleteCommand extends Command {
     /**
      * Creates a command that deletes only when the given name search finds exactly one person.
      */
-    public DeleteCommand(FindCommand nameSearch) {
+    public DeleteCommand(Predicate<Person> nameSearch) {
         this.targetIndex = null;
         this.nameSearch = requireNonNull(nameSearch);
     }
@@ -53,7 +55,7 @@ public class DeleteCommand extends Command {
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
         if (nameSearch != null) {
-            nameSearch.execute(model);
+            model.updateFilteredPersonList(nameSearch);
             int matchCount = model.getFilteredPersonList().size();
             if (matchCount == 1) {
                 return new DeleteCommand(Index.fromOneBased(1)).execute(model);

@@ -156,11 +156,11 @@ Format: `delete INDEX` or `delete /name NAME`
 * The index refers to the index number shown in the displayed person list.
 * The index **must be a positive integer** 1, 2, 3, …​
 * Name deletion searches **all contacts**, even when the displayed list is filtered.
-* `/name NAME` is matched exactly as in [`find /name`](#locating-persons-by-name-or-tag-find): the whole name must match, and the match is case-sensitive.
+* `/name NAME` must be the contact's full name, matched case-sensitively, the same way as [`find /name`](#locating-persons-by-name-or-tag-find).
+* If `/name` is missing, `NAME` is empty or there is text before `/name`, an invalid command format message is shown.
 * Exactly one match is deleted immediately. With no matches, nothing is deleted.
 * If more than one contact matches, nothing is deleted. The matching contacts are displayed with their indexes; continue with `delete INDEX`.
 * The search results remain displayed; deleting the only match leaves an empty list. Use `list` to show all contacts.
-* Anything `find` accepts is also accepted here, so `delete /tag TAG` deletes the contact only if exactly one contact has that tag.
 * Purely numeric input is treated as an index, so `delete 1` can never be a name search.
 
 
