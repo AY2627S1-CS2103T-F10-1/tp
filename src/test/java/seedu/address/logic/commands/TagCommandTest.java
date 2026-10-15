@@ -97,7 +97,7 @@ public class TagCommandTest {
 
     @Test
     public void execute_exactCaseMatchPreferred_tagsExactMatch() {
-        Person lowerCaseBenson = new PersonBuilder(BENSON).withName("benson meier").build();
+        Person lowerCaseBenson = new PersonBuilder(BENSON).withName("benson meier").withPhone("12345678").build();
         model.addPerson(lowerCaseBenson);
 
         assertTagSuccess("benson meier", lowerCaseBenson, RESIDENT_FELLOW);

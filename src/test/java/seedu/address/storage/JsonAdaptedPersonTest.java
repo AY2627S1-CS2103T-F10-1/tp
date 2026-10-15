@@ -18,6 +18,7 @@ import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
+import seedu.address.model.person.Room;
 
 public class JsonAdaptedPersonTest {
     private static final String INVALID_NAME = "R@chel";
@@ -131,6 +132,13 @@ public class JsonAdaptedPersonTest {
         JsonAdaptedPerson person =
                 new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, duplicateTags);
         assertEquals(1, person.toModelType().getTags().size());
+    }
+
+    @Test
+    public void toModelType_invalidRoom_throwsIllegalValueException() {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS,
+                VALID_TAGS, "B#204");
+        assertThrows(IllegalValueException.class, Room.MESSAGE_INVALID_CHARACTERS, person::toModelType);
     }
 
 }

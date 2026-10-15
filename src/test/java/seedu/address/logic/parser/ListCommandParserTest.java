@@ -1,6 +1,5 @@
 package seedu.address.logic.parser;
 
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static seedu.address.logic.commands.CommandTestUtil.PREAMBLE_WHITESPACE;
 import static seedu.address.logic.parser.CliSyntax.KEYWORD_FILTER;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;

@@ -34,6 +34,8 @@ public class PersonCard extends UiPart<Region> {
     private Label phone;
     @FXML
     private FlowPane tags;
+    @FXML
+    private Label room;
 
     /**
      * Creates a {@code PersonCard} with the given {@code Person} and index to display.
@@ -44,6 +46,9 @@ public class PersonCard extends UiPart<Region> {
         id.setText(displayedIndex + ". ");
         name.setText(person.getName().fullName);
         phone.setText(person.getPhone().value);
+        room.setText("Room: " + person.getRoom().value);
+        room.setVisible(!person.getRoom().value.isEmpty());
+        room.setManaged(room.isVisible());
         person.getTags().forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
     }
 }

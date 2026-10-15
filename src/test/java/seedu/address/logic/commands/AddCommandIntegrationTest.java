@@ -34,7 +34,7 @@ public class AddCommandIntegrationTest {
 
         assertCommandSuccess(new AddCommand(validPerson), model,
                 String.format(AddCommand.MESSAGE_SUCCESS,
-                        validPerson.getName() + "; Phone: " + validPerson.getPhone()),
+                        validPerson.getName()),
                 expectedModel);
     }
 
@@ -43,6 +43,13 @@ public class AddCommandIntegrationTest {
         Person personInList = model.getAddressBook().getPersonList().get(0);
         assertCommandFailure(new AddCommand(personInList), model,
                 AddCommand.MESSAGE_DUPLICATE_PERSON);
+    }
+
+    @Test
+    public void execute_duplicateNameWithDifferentPhone_throwsCommandException() {
+        Person personInList = model.getAddressBook().getPersonList().get(0);
+        Person sameName = new PersonBuilder(personInList).withPhone("12345678").build();
+        assertCommandFailure(new AddCommand(sameName), model, AddCommand.MESSAGE_DUPLICATE_PERSON);
     }
 
 }

@@ -29,9 +29,10 @@ public class DeleteCommandParserTest {
         }
     }
     @Test
-    public void parse_nameKeywords_returnsNameDeleteCommand() throws Exception {
+    public void parse_fullName_returnsNameDeleteCommand() throws Exception {
         for (String input : new String[]{"a", "Alice", " Alice  Tan ", "Alice\tLee"}) {
-            assertParseSuccess(parser, input, new DeleteCommand(new FindCommandParser().parse(input)));
+            String args = " /name " + input;
+            assertParseSuccess(parser, args, new DeleteCommand(new FindCommandParser().parse(args)));
         }
     }
 }
