@@ -8,7 +8,7 @@ import seedu.address.logic.commands.ListEmergencyCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
- * Parses arguments for listing all contacts, emergency contacts, or contacts with a given tag.
+ * Parses arguments for listing all contacts or emergency contacts.
  */
 public class ListCommandParser implements Parser<Command> {
 
@@ -35,6 +35,6 @@ public class ListCommandParser implements Parser<Command> {
             throw new ParseException(ListEmergencyCommand.MESSAGE_INVALID_FORMAT);
         }
 
-        return new ListCommand(TagFilterParser.parse(args));
+        throw new ParseException(ListCommand.MESSAGE_INVALID_FORMAT);
     }
 }

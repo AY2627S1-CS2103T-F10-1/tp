@@ -1,6 +1,9 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -8,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.model.person.NameEqualsPredicate;
+import seedu.address.model.person.PersonHasTagPredicate;
 
 public class FindCommandParserTest {
 
@@ -31,6 +35,51 @@ public class FindCommandParserTest {
 
         // text before prefix
         assertParseFailure(parser, " Alice /name Bob", expectedMessage);
+
+        // prefix /tag with no tag
+        assertParseFailure(parser, " /tag", expectedMessage);
+        assertParseFailure(parser, " /tag   ", expectedMessage);
+
+        // text before /tag
+        assertParseFailure(parser, " Alice /tag friends", expectedMessage);
+
+        // prefix directly followed by the value
+        assertParseFailure(parser, " /tagfriends", expectedMessage);
+        assertParseFailure(parser, " /tags friends", expectedMessage);
+        assertParseFailure(parser, " /nameAlice", expectedMessage);
+
+        // more than one name
+        String duplicateNameMessage = getErrorMessageForDuplicatePrefixes(PREFIX_NAME_COMMAND);
+        assertParseFailure(parser, " /name Alice /name Bob", duplicateNameMessage);
+        assertParseFailure(parser, " /name Alice /name Alice", duplicateNameMessage);
+
+        // more than one tag
+        String duplicateTagMessage = getErrorMessageForDuplicatePrefixes(PREFIX_TAG_COMMAND);
+        assertParseFailure(parser, " /tag friends /tag family", duplicateTagMessage);
+        assertParseFailure(parser, " /tag friends /tag friends", duplicateTagMessage);
+
+        // both prefixes
+        assertParseFailure(parser, " /name Alice /tag friends", expectedMessage);
+        assertParseFailure(parser, " /tag friends /name Alice", expectedMessage);
+    }
+
+    @Test
+    public void parse_validTag_returnsFindCommand() {
+        FindCommand expectedFindCommand = new FindCommand(new PersonHasTagPredicate("friends"));
+        assertParseSuccess(parser, " /tag friends", expectedFindCommand);
+
+        // leading and trailing whitespaces around the tag are trimmed
+        assertParseSuccess(parser, " /tag   friends  \t", expectedFindCommand);
+
+        // multi-word tag
+        assertParseSuccess(parser, " /tag best   friends",
+                new FindCommand(new PersonHasTagPredicate("best friends")));
+
+        // a value that is not a valid tag is accepted and simply matches nobody
+        assertParseSuccess(parser, " /tag fr!ends", new FindCommand(new PersonHasTagPredicate("fr!ends")));
+
+        // case is ignored when comparing tags
+        assertParseSuccess(parser, " /tag Friends", new FindCommand(new PersonHasTagPredicate("Friends")));
     }
 
     @Test

@@ -137,6 +137,39 @@ public class ArgumentTokenizerTest {
     }
 
     @Test
+    public void tokenize_keywordPrefix_requiresWhitespaceAfterPrefix() {
+        Prefix slashName = new Prefix("/name", true);
+        Prefix slashTag = new Prefix("/tag", true);
+
+        // Followed by whitespace or the end of the input -> recognised
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(" /name Alice /tag", slashName, slashTag);
+        assertPreambleEmpty(argMultimap);
+        assertArgumentPresent(argMultimap, slashName, "Alice");
+        assertArgumentPresent(argMultimap, slashTag, "");
+
+        // Directly followed by text -> not recognised, so it stays in the preamble
+        argMultimap = ArgumentTokenizer.tokenize(" /tagfriends", slashName, slashTag);
+        assertPreamblePresent(argMultimap, "/tagfriends");
+        assertArgumentAbsent(argMultimap, slashTag);
+
+        // A glued occurrence does not hide a later valid one
+        argMultimap = ArgumentTokenizer.tokenize(" /tagfriends /tag family", slashName, slashTag);
+        assertPreamblePresent(argMultimap, "/tagfriends");
+        assertArgumentPresent(argMultimap, slashTag, "family");
+
+        // A glued occurrence after a valid prefix becomes part of that prefix's value
+        argMultimap = ArgumentTokenizer.tokenize(" /name Alice /tagfriends", slashName, slashTag);
+        assertArgumentPresent(argMultimap, slashName, "Alice /tagfriends");
+        assertArgumentAbsent(argMultimap, slashTag);
+    }
+
+    @Test
+    public void tokenize_nonKeywordPrefix_canBeFollowedByText() {
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(" p/12345", pSlash);
+        assertArgumentPresent(argMultimap, pSlash, "12345");
+    }
+
+    @Test
     public void equalsMethod() {
         Prefix aaa = new Prefix("aaa");
 

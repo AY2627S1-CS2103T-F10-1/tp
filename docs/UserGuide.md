@@ -58,8 +58,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
   For example, `[t/TAG]…​` may be omitted, or written as `t/friend` or `t/friend t/family`.
 
 * Parameters can be in any order.<br>
-  For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.<br>
-  The exception is [tagging a contact](#tagging-a-contact-tag), which has no command word and must be typed as `CONTACT_NAME /tag TAG`, in that order.
+  For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
 
 * Extraneous parameters for `help`, `exit`, and `clear` are ignored. The `list` command rejects extra parameters.<br>
   For example, `help 123` is interpreted as `help`.
@@ -78,18 +77,20 @@ Format: `help`
 
 ### Adding a contact: `add`
 
-Adds a contact with a required name and phone number, and optional room and tags.
+Adds a contact with a required name and phone number, and optional room and tags. Tags show a contact's category at a glance (e.g., `Resident`, `Resident Fellow`, `Staff`).
 
-Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]?`
+Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​`
 
 * Name is required and can contain up to 100 characters. Existing name character rules apply.
 * Phone is required and can contain up to 20 characters: digits, spaces, `+`, hyphens and parentheses.
 * Room is optional for any contact, regardless of tags. It can contain up to 20 characters:
   letters, digits, spaces and hyphens.
-* Repeat `/tag` to supply up to five tags. Tags follow the rules in [Tagging a contact](#tagging-a-contact-tag).
-  Duplicate tags, including tags differing only in case or extra spaces, are rejected.
-* Enter the name first, then `/phone`. Optional `/room` and `/tag` fields follow the phone in either order.
+* Enter the name first. `/phone`, `/room` and `/tag` can then be given in any order.
   `/phone` and `/room` cannot be repeated.
+* Repeat `/tag` once per tag, up to five tags. Spaces inside a tag are allowed, so `/tag Resident Fellow` is one tag.
+* Tags may contain letters, digits, spaces and hyphens (`-`), up to 50 characters. They are not case-sensitive,
+  and are displayed with the first letter of each word capitalized.
+* Duplicate tags, including tags differing only in case or extra spaces (e.g., `/tag RA /tag ra`), are rejected.
 * Leading and trailing spaces are trimmed, and extra whitespace is collapsed into one space.
 * Supplying `/room` or `/tag` without a value is rejected.
 * A contact is a duplicate when its name matches an existing contact (case-sensitive).
@@ -103,28 +104,21 @@ Examples:
 
 * `add Sarah Tan /phone 9123 4567`
 * `add Daniel Lim /phone +65 8123 4567 /room B-204`
-* `add Sarah Tan /phone 91234567 /room B-204 /tag Resident /tag BlockB`
+* `add Sarah Tan /phone 91234567 /room B-204 /tag Resident /tag Floor 3`
 
 ### Listing all contacts: `list`
 
-Shows a list of all persons in the address book, or only those with a given tag.
+Shows all stored contacts in numbered order, including their available details.
+This restores the full list after a search and does not change any stored contact.
 
-Format: `list [/filter TAG]`
-
-* `/filter TAG` shows only contacts with that tag. It is not case-sensitive and extra spaces are ignored.
-* If no contact has the tag, an empty list is shown with `No contacts found with this tag.`
-* `list emerg` is a shortcut to show emergency contacts, as described below.
-* Other unsupported arguments are rejected, so a mistyped filter never silently shows everyone.
-
-Examples:
-* `list` shows all contacts.
-* `list /filter Resident` shows only contacts tagged `Resident`.
+Format: `list`
 
 * The command keyword is case-sensitive: use lowercase `list`. `LIST` and `LiSt` are rejected as unknown commands.
 * Leading and trailing spaces are ignored.
-* Unsupported arguments, such as `list abc`, are rejected with
-  `Invalid command format. Usage: <output command> /filter <tagName>`.
-  The displayed list stays unchanged when the command is rejected.
+* Use `list emerg` for the emergency shortcut described below. To search by any tag, use
+  [`find /tag`](#locating-persons-by-name-or-tag-find).
+* Unsupported arguments, such as `list abc` or the retired `list /filter Emergency`, are rejected with
+  `Invalid command format. Usage: list`. The displayed list stays unchanged when the command is rejected.
 * When there are no stored contacts, the list is empty and the result message is `No contacts found.`.
 * Otherwise, the result message is `Listed all persons.`.
 
@@ -146,6 +140,7 @@ Format: `list emerg`
   The displayed list stays unchanged when the command is rejected.
 * When no emergency contacts exist, the list is empty and the message is `No emergency contacts found.`.
 * Otherwise, the result message is `Listed all emergency contacts.`.
+* `find /tag Emergency` displays the same contacts through the general tag search.
 * Run `list` to return to all contacts. `list` alone is a valid command to list everyone.
 
 Example using the existing tag syntax:
@@ -170,58 +165,52 @@ Examples:
 *  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st person to be `91234567` and `johndoe@example.com` respectively.
 *  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd person to be `Betsy Crower` and clears all existing tags.
 
-### Tagging a contact: `/tag`
+### Locating persons by name or tag: `find`
 
-Adds one tag to an existing contact, to show their category at a glance (e.g., `Resident`, `Resident Fellow`, `Staff`).
+Finds persons whose full name is exactly the given name, or who have the given tag.
 
-Format: `CONTACT_NAME /tag TAG`
+Format: `find /name NAME` or `find /tag TAG`
 
-* `CONTACT_NAME` is the contact's full name. It is not case-sensitive and extra spaces are ignored.
-* Only one tag can be added per command. Spaces inside the tag are allowed, so `Resident Fellow` is one tag.
-* Tags may contain letters, digits, spaces and hyphens (`-`), up to 50 characters. They are not case-sensitive, and are displayed with the first letter of each word capitalized.
-* A contact can have at most 5 tags, and cannot have the same tag twice.
-
-Examples:
-* `Sarah Tan /tag Resident Fellow` adds the tag `Resident Fellow` to Sarah Tan.
-* `daniel lim /tag RA` adds the tag `RA` to Daniel Lim.
-
-### Locating persons by name: `find`
-
-Finds persons whose full name is exactly the given name.
-
-Format: `find /name NAME`
-
-* The `/name` prefix is required, and nothing may be typed before it.
-* Everything after `/name` is treated as one full name. It is not split into separate keywords.
-* The search is case-sensitive; for example, `find /name alex yeoh` does not match `Alex Yeoh`.
-* The whole name must match; for example, `find /name Alex` does not match `Alex Yeoh`.
-* The search considers only names.
-* Spaces before and after `NAME` are ignored. Spaces inside the name are matched as typed.
+* Exactly one of `/name` and `/tag` must be given, and nothing may be typed before it.
+* Name search is case-sensitive; for example, `find /name alex yeoh` does not match `Alex Yeoh`.
+* Tag search ignores case and extra spaces; for example, `find /tag Friends` matches the tag `friends`.
+* Spaces before and after `NAME` or `TAG` are ignored.
 * If no person matches, the message `No contacts found` is shown and the list is empty. Otherwise, the number of persons listed is shown.
-* If `/name` is missing or `NAME` is empty, an invalid command format message is shown.
+* A prefix must be followed by a space, so `find /tagfriends` is not recognised as a tag search.
+* If the prefix is missing or not followed by a space (such as `/tagfriends`), both prefixes are given, or `NAME` or `TAG` is empty, an invalid command format message is shown.
+* If `/name` or `/tag` is repeated, a message listing the repeated prefix is shown.
+
+Finding by name (`/name`):
+* Everything after `/name` is treated as one full name. It is not split into separate keywords.
+* The whole name must match; for example, `find /name Alex` does not match `Alex Yeoh`.
+* Spaces inside the name are matched as typed.
+
+Finding by tag (`/tag`):
+* Only one tag can be searched at a time, so `find /tag friends /tag family` is rejected.
+* Any non-empty `TAG` is accepted. A value that is not a valid tag, or that no contact has, simply matches nobody.
+* A person is listed if any one of their tags is exactly `TAG`; for example, `find /tag friends` matches a person tagged `friends` and `owesMoney`, but not one tagged `friends2`.
 
 Examples:
 * `find /name Alex Yeoh` returns `Alex Yeoh`
 * `find /name Alex` returns no persons, because `Alex` is not the full name
+* `find /tag friends` returns all persons who have the tag `friends`
 
 ### Deleting a person: `delete`
 
 Deletes the specified person from the address book.
 
-Format: `delete INDEX` or `delete KEYWORD [MORE_KEYWORDS]`
+Format: `delete INDEX` or `delete /name NAME`
 
 * Deletes the person at the specified `INDEX`.
 * The index refers to the index number shown in the displayed person list.
 * The index **must be a positive integer** 1, 2, 3, …​
 * Name deletion searches **all contacts**, even when the displayed list is filtered.
-* Name matching is identical to `find`: case-insensitive, complete words, matching **any** supplied keyword.
+* `/name NAME` must be the contact's full name, matched case-sensitively, the same way as [`find /name`](#locating-persons-by-name-or-tag-find).
+* If `/name` is missing or repeated, `NAME` is empty or there is text before `/name`, an invalid command format message is shown.
 * Exactly one match is deleted immediately. With no matches, nothing is deleted.
-* With multiple matches, nothing is deleted; the matching contacts are displayed with their indexes.
-  Continue with `delete INDEX` or a unique name keyword.
-* For example, `delete Alice Tan` still matches both `Alice Tan` and `Alice Lee` because both contain `Alice`.
-  Use `delete Tan` if that keyword is unique, or select a displayed index.
+* If more than one contact matches, nothing is deleted. The matching contacts are displayed with their indexes; continue with `delete INDEX`.
 * The search results remain displayed; deleting the only match leaves an empty list. Use `list` to show all contacts.
-* Purely numeric input is treated as an index, so purely numeric names cannot be deleted by name.
+* Purely numeric input is treated as an index, so `delete 1` can never be a name search.
 
 
 Examples:
@@ -278,13 +267,11 @@ _Details coming soon ..._
 
 Action | Format, Examples
 --------|------------------
-**Add** | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 t/friend t/colleague`
-**Tag** | `CONTACT_NAME /tag TAG`<br> e.g., `Sarah Tan /tag Resident Fellow`
+**Add** | `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​` <br> e.g., `add Daniel Lim /phone 8123 4567 /room B-204 /tag Resident Fellow /tag Floor 3`
 **Clear** | `clear`
-**Delete** | `delete INDEX` or `delete KEYWORD [MORE_KEYWORDS]`<br> e.g., `delete 3`, `delete Alice`
+**Delete** | `delete INDEX` or `delete /name NAME`<br> e.g., `delete 3`, `delete /name Alice Tan`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
-**Find** | `find /name NAME`<br> e.g., `find /name James Jake`
-**Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List** | `list [/filter TAG]`<br> e.g., `list /filter Resident`
+**Find** | `find /name NAME` or `find /tag TAG`<br> e.g., `find /name James Jake`, `find /tag friends`
+**List** | `list`
 **List emergency contacts** | `list emerg`
 **Help** | `help`

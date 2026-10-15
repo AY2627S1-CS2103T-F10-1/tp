@@ -115,7 +115,7 @@ public class DeleteCommandTest {
     }
 
     @Test
-    public void execute_nameSearch_deletesExactMatch() throws Exception {
+    public void execute_nameSearch_handlesAmbiguityAndFollowUp() throws Exception {
         Person aliceTan = new PersonBuilder().withName("Alice Tan").build();
         Person aliceLee = new PersonBuilder().withName("Alice Lee").build();
         Person bob = new PersonBuilder().withName("Bob Smith").build();
@@ -126,22 +126,29 @@ public class DeleteCommandTest {
         model.updateFilteredPersonList(person -> person.equals(bob));
         DeleteCommandParser parser = new DeleteCommandParser();
 
-        // Search all contacts by exact name, despite the previous filter.
-        CommandResult result = parser.parse("/name Alice Tan").execute(model);
-        assertEquals(String.format(DeleteCommand.MESSAGE_DELETE_PERSON_SUCCESS, Messages.format(aliceTan)),
-                result.getFeedbackToUser());
+        // Search all contacts, despite the previous filter; a predicate matching two people deletes nobody.
+        DeleteCommand deleteAliceByName = new DeleteCommand(person -> person.getName().fullName.startsWith("Alice"));
+        CommandResult result = deleteAliceByName.execute(model);
+        assertEquals(String.format(DeleteCommand.MESSAGE_MULTIPLE_MATCHES, 2), result.getFeedbackToUser());
+        assertEquals(List.of(aliceTan, aliceLee), model.getFilteredPersonList());
+        assertEquals(List.of(aliceTan, aliceLee, bob), model.getAddressBook().getPersonList());
+
+        parser.parse("1").execute(model);
         assertEquals(List.of(aliceLee, bob), model.getAddressBook().getPersonList());
+        parser.parse("/name Bob Smith").execute(model);
+        assertEquals(List.of(aliceLee), model.getAddressBook().getPersonList());
+        assertTrue(model.getFilteredPersonList().isEmpty());
     }
 
     @Test
-    public void execute_exactNameAfterNoMatch_deletesOnlyMatch() throws Exception {
+    public void execute_uniqueNameAfterAmbiguity_deletesOnlyMatch() throws Exception {
         Person aliceTan = new PersonBuilder().withName("Alice Tan").build();
         Person aliceLee = new PersonBuilder().withName("Alice Lee").build();
         model = new ModelManager(new AddressBook(), new UserPrefs());
         model.addPerson(aliceTan);
         model.addPerson(aliceLee);
         DeleteCommandParser parser = new DeleteCommandParser();
-        parser.parse("/name Alice").execute(model);
+        new DeleteCommand(person -> true).execute(model);
 
         CommandResult result = parser.parse("/name Alice Tan").execute(model);
         assertEquals(String.format(DeleteCommand.MESSAGE_DELETE_PERSON_SUCCESS, Messages.format(aliceTan)),
@@ -151,15 +158,22 @@ public class DeleteCommandTest {
     }
 
     @Test
-    public void execute_partialName_preservesContacts() throws Exception {
+    public void execute_partialOrDifferentCaseName_preservesContacts() throws Exception {
         Person alice = new PersonBuilder().withName("Alice Tan").build();
         model = new ModelManager(new AddressBook(), new UserPrefs());
         model.addPerson(alice);
+        DeleteCommandParser parser = new DeleteCommandParser();
 
-        CommandResult result = new DeleteCommandParser().parse("/name Ali").execute(model);
+        // only part of the full name
+        CommandResult result = parser.parse("/name Alice").execute(model);
         assertEquals(DeleteCommand.MESSAGE_NO_MATCHES, result.getFeedbackToUser());
         assertEquals(List.of(alice), model.getAddressBook().getPersonList());
         assertTrue(model.getFilteredPersonList().isEmpty());
+
+        // different case
+        result = parser.parse("/name alice tan").execute(model);
+        assertEquals(DeleteCommand.MESSAGE_NO_MATCHES, result.getFeedbackToUser());
+        assertEquals(List.of(alice), model.getAddressBook().getPersonList());
     }
 
     @Test
