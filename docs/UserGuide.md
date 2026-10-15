@@ -28,6 +28,8 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
    * `list` : Lists all contacts.
 
+   * `list emerg` : Lists contacts tagged as emergency.
+
    * `add John Doe /phone 98765432` : Adds a contact named `John Doe` to the Address Book.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
@@ -106,18 +108,46 @@ Examples:
 
 ### Listing all contacts: `list`
 
-Shows a list of all persons in the address book.
+Shows all stored contacts in numbered order, including their available details.
+This restores the full list after a search and does not change any stored contact.
 
 Format: `list`
 
-* Any text after `list` is rejected. To show only contacts with a given tag, use [`find /tag`](#locating-persons-by-name-or-tag-find).
-
-* The keyword is case-insensitive: `list`, `LIST`, and `LiSt` work the same way.
+* The command keyword is case-sensitive: use lowercase `list`. `LIST` and `LiSt` are rejected as unknown commands.
 * Leading and trailing spaces are ignored.
-* Extra arguments, such as `list abc`, are rejected with `Invalid command format. Usage: list`.
-  The displayed list stays unchanged when the command is rejected.
+* Use `list emerg` for the emergency shortcut described below. To search by any tag, use
+  [`find /tag`](#locating-persons-by-name-or-tag-find).
+* Unsupported arguments, such as `list abc` or the retired `list /filter Emergency`, are rejected with
+  `Invalid command format. Usage: list`. The displayed list stays unchanged when the command is rejected.
 * When there are no stored contacts, the list is empty and the result message is `No contacts found.`.
-* Otherwise, the result message is `Listed all contacts.`.
+* Otherwise, the result message is `Listed all persons.`.
+
+### Listing emergency contacts: `list emerg`
+
+Shows only contacts carrying the complete tag `emergency`, in numbered order with their available details.
+It searches all stored contacts, including those hidden by a previous search.
+The command does not add, edit, delete, or deduplicate contacts.
+
+Format: `list emerg`
+
+* Both command keywords are case-sensitive: use lowercase `list emerg`.
+  `LIST emerg`, `List emerg`, and `list EMERG` are rejected.
+* Emergency tag matching is case-insensitive: tags such as `emergency`, `Emergency`, and `EMERGENCY` all match.
+* Leading and trailing spaces, and extra spaces between the keywords, are ignored.
+* A contact with several tags appears once if any tag is `emergency`.
+  Tags such as `emerg` or `emergencyservice` do not match.
+* Extra arguments, such as `list emerg friend`, are rejected with `Invalid command format. Usage: list emerg`.
+  The displayed list stays unchanged when the command is rejected.
+* When no emergency contacts exist, the list is empty and the message is `No emergency contacts found.`.
+* Otherwise, the result message is `Listed all emergency contacts.`.
+* `find /tag Emergency` displays the same contacts through the general tag search.
+* Run `list` to return to all contacts. `list` alone is a valid command to list everyone.
+
+Example using the existing tag syntax:
+
+1. `add Hall Security /phone 98765432 /tag Emergency`
+1. `list emerg` shows Hall Security and any other emergency contacts.
+1. `list` restores all contacts.
 
 ### Editing a person: `edit`
 
@@ -243,4 +273,5 @@ Action | Format, Examples
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
 **Find** | `find /name NAME` or `find /tag TAG`<br> e.g., `find /name James Jake`, `find /tag friends`
 **List** | `list`
+**List emergency contacts** | `list emerg`
 **Help** | `help`

@@ -2,26 +2,39 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 
+import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.ListEmergencyCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
- * Parses input arguments and creates a new ListCommand object.
+ * Parses arguments for listing all contacts or emergency contacts.
  */
-public class ListCommandParser implements Parser<ListCommand> {
+public class ListCommandParser implements Parser<Command> {
 
     /**
-     * Parses the given {@code String} of arguments in the context of the ListCommand
-     * and returns a ListCommand object for execution.
+     * Parses the given arguments and returns a list command for execution.
      *
-     * @throws ParseException if the arguments are not empty.
+     * @throws ParseException if the arguments do not match a supported list format.
      */
     @Override
-    public ListCommand parse(String args) throws ParseException {
+    public Command parse(String args) throws ParseException {
         requireNonNull(args);
-        if (!args.isBlank()) {
-            throw new ParseException(ListCommand.MESSAGE_INVALID_FORMAT);
+        String trimmedArgs = args.trim();
+
+        if (trimmedArgs.isEmpty()) {
+            return new ListCommand();
         }
-        return new ListCommand();
+
+        if (ListEmergencyCommand.EMERGENCY_KEYWORD.equals(trimmedArgs)) {
+            return new ListEmergencyCommand();
+        }
+
+        String firstArgument = trimmedArgs.split("\\s+", 2)[0];
+        if (ListEmergencyCommand.EMERGENCY_KEYWORD.equals(firstArgument)) {
+            throw new ParseException(ListEmergencyCommand.MESSAGE_INVALID_FORMAT);
+        }
+
+        throw new ParseException(ListCommand.MESSAGE_INVALID_FORMAT);
     }
 }

@@ -19,6 +19,7 @@ import org.junit.jupiter.api.io.TempDir;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.ListEmergencyCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
@@ -75,7 +76,7 @@ public class LogicManagerTest {
         model.addPerson(otherPerson);
         logic.execute("find /name " + AMY.getName().fullName);
 
-        CommandResult result = logic.execute("  LiSt  ");
+        CommandResult result = logic.execute("  list  ");
 
         assertEquals(ListCommand.MESSAGE_SUCCESS, result.getFeedbackToUser());
         assertEquals(List.of(AMY, otherPerson), logic.getFilteredPersonList());
@@ -91,7 +92,97 @@ public class LogicManagerTest {
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         expectedModel.updateFilteredPersonList(person -> false);
 
-        assertCommandFailure("LIST abc", ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, expectedModel);
+        assertCommandFailure("list abc", ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, expectedModel);
+    }
+
+    @Test
+    public void execute_listEmergencyAfterFind_filtersAllStoredContacts() throws Exception {
+        Person emergencyContact = new PersonBuilder(AMY).withTags("Emergency", "staff").build();
+        Person otherContact = new PersonBuilder().withName("Other Contact").build();
+        model.addPerson(emergencyContact);
+        model.addPerson(otherContact);
+        logic.execute("find /name Other Contact");
+
+        CommandResult result = logic.execute("  list   emerg  ");
+
+        assertEquals(ListEmergencyCommand.MESSAGE_SUCCESS, result.getFeedbackToUser());
+        assertEquals(List.of(emergencyContact), logic.getFilteredPersonList());
+        assertEquals(List.of(emergencyContact, otherContact), model.getAddressBook().getPersonList());
+        ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
+                .readAddressBook().orElseThrow();
+        assertEquals(model.getAddressBook(), savedAddressBook);
+        assertFalse(result.isShowHelp());
+        assertFalse(result.isExit());
+
+        logic.execute("list");
+        assertEquals(List.of(emergencyContact, otherContact), logic.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_invalidEmergencyList_preservesFilteredList() throws Exception {
+        Person emergencyContact = new PersonBuilder(AMY).withTags("emergency").build();
+        model.addPerson(emergencyContact);
+        model.addPerson(new PersonBuilder().withName("Other Contact").build());
+        logic.execute("list emerg");
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.updateFilteredPersonList(person -> person.equals(emergencyContact));
+
+        assertCommandFailure("list emerg friend", ParseException.class,
+                ListEmergencyCommand.MESSAGE_INVALID_FORMAT, expectedModel);
+    }
+
+    @Test
+    public void execute_wrongCaseEmergencyList_preservesFilteredList() throws Exception {
+        Person emergencyContact = new PersonBuilder(AMY).withTags("Emergency").build();
+        model.addPerson(emergencyContact);
+        model.addPerson(new PersonBuilder().withName("Other Contact").build());
+        logic.execute("list emerg");
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.updateFilteredPersonList(person -> person.equals(emergencyContact));
+
+        assertCommandFailure("LIST emerg", ParseException.class, MESSAGE_UNKNOWN_COMMAND, expectedModel);
+        assertCommandFailure("list EMERG", ParseException.class,
+                ListCommand.MESSAGE_INVALID_FORMAT, expectedModel);
+    }
+
+    @Test
+    public void execute_listEmergencyWithoutMatches_showsEmptyMessage() throws Exception {
+        model.addPerson(AMY);
+
+        CommandResult result = logic.execute("list emerg");
+
+        assertEquals(ListEmergencyCommand.MESSAGE_EMPTY, result.getFeedbackToUser());
+        assertEquals(List.of(), logic.getFilteredPersonList());
+        assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void execute_findTagAndEmergencyList_showSameContacts() throws Exception {
+        Person firstEmergency = new PersonBuilder(AMY).withTags("Emergency", "staff").build();
+        Person secondEmergency = new PersonBuilder().withName("Security").withTags("EMERGENCY").build();
+        model.addPerson(firstEmergency);
+        model.addPerson(new PersonBuilder().withName("Other Contact").withTags("staff").build());
+        model.addPerson(secondEmergency);
+
+        logic.execute("find /tag emergency");
+        List<Person> tagMatches = List.copyOf(logic.getFilteredPersonList());
+        assertEquals(List.of(firstEmergency, secondEmergency), tagMatches);
+
+        logic.execute("list emerg");
+        assertEquals(tagMatches, logic.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_removedListFilter_preservesFilteredList() throws Exception {
+        Person emergencyContact = new PersonBuilder(AMY).withTags("Emergency").build();
+        model.addPerson(emergencyContact);
+        model.addPerson(new PersonBuilder().withName("Other Contact").build());
+        logic.execute("find /tag Emergency");
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.updateFilteredPersonList(person -> person.equals(emergencyContact));
+
+        assertCommandFailure("list /filter Emergency", ParseException.class,
+                ListCommand.MESSAGE_INVALID_FORMAT, expectedModel);
     }
 
     @Test
