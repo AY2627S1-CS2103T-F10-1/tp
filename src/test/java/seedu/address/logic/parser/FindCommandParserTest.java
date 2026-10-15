@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.model.person.NameEqualsPredicate;
+import seedu.address.model.person.TagEqualsPredicate;
+import seedu.address.model.tag.Tag;
 
 public class FindCommandParserTest {
 
@@ -31,6 +33,35 @@ public class FindCommandParserTest {
 
         // text before prefix
         assertParseFailure(parser, " Alice /name Bob", expectedMessage);
+
+        // prefix /tag with no tag
+        assertParseFailure(parser, " /tag", expectedMessage);
+        assertParseFailure(parser, " /tag   ", expectedMessage);
+
+        // text before /tag
+        assertParseFailure(parser, " Alice /tag friends", expectedMessage);
+
+        // both prefixes
+        assertParseFailure(parser, " /name Alice /tag friends", expectedMessage);
+        assertParseFailure(parser, " /tag friends /name Alice", expectedMessage);
+    }
+
+    @Test
+    public void parse_invalidTag_throwsParseException() {
+        assertParseFailure(parser, " /tag best friends", Tag.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, " /tag fr!ends", Tag.MESSAGE_CONSTRAINTS);
+    }
+
+    @Test
+    public void parse_validTag_returnsFindCommand() {
+        FindCommand expectedFindCommand = new FindCommand(new TagEqualsPredicate(new Tag("friends")));
+        assertParseSuccess(parser, " /tag friends", expectedFindCommand);
+
+        // leading and trailing whitespaces around the tag are trimmed
+        assertParseSuccess(parser, " /tag   friends  \t", expectedFindCommand);
+
+        // case is preserved
+        assertParseSuccess(parser, " /tag Friends", new FindCommand(new TagEqualsPredicate(new Tag("Friends"))));
     }
 
     @Test
