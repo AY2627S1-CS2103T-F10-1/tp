@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
-import static seedu.address.logic.parser.CliSyntax.KEYWORD_FILTER;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 
@@ -23,7 +22,6 @@ import seedu.address.logic.commands.TagCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.NameEqualsPredicate;
 import seedu.address.model.person.Person;
-import seedu.address.model.person.PersonHasTagPredicate;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 import seedu.address.testutil.PersonBuilder;
@@ -85,21 +83,13 @@ public class AddressBookParserTest {
     public void parseCommand_list() throws Exception {
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD) instanceof ListCommand);
         assertTrue(parser.parseCommand("  LiSt  ") instanceof ListCommand);
+        assertEquals(new ListCommand(), parser.parseCommand(ListCommand.COMMAND_WORD));
     }
 
     @Test
     public void parseCommand_listWithArguments_throwsParseException() {
         assertThrows(ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, () -> parser.parseCommand("list 3"));
         assertThrows(ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, () -> parser.parseCommand("LIST abc"));
-        assertEquals(new ListCommand(), parser.parseCommand(ListCommand.COMMAND_WORD));
-        assertEquals(new ListCommand(new PersonHasTagPredicate("RA")),
-                parser.parseCommand(ListCommand.COMMAND_WORD + " " + KEYWORD_FILTER + " RA"));
-    }
-
-    @Test
-    public void parseCommand_listWithUnexpectedArgs_throwsParseException() {
-        assertThrows(ParseException.class, TagFilterParser.MESSAGE_INVALID_FORMAT, ()
-                -> parser.parseCommand(ListCommand.COMMAND_WORD + " 3"));
     }
 
     @Test

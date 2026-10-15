@@ -90,17 +90,11 @@ Examples:
 
 ### Listing all contacts: `list`
 
-Shows a list of all persons in the address book, or only those with a given tag.
+Shows a list of all persons in the address book.
 
-Format: `list [/filter TAG]`
+Format: `list`
 
-* `/filter TAG` shows only contacts with that tag. It is not case-sensitive and extra spaces are ignored.
-* If no contact has the tag, an empty list is shown with `No contacts found with this tag.`
-* Any other text after `list` is rejected, so a mistyped filter never silently shows everyone.
-
-Examples:
-* `list` shows all contacts.
-* `list /filter Resident` shows only contacts tagged `Resident`.
+* Any text after `list` is rejected. To show only contacts with a given tag, use [`find /tag`](#locating-persons-by-name-or-tag-find).
 
 * The keyword is case-insensitive: `list`, `LIST`, and `LiSt` work the same way.
 * Leading and trailing spaces are ignored.

@@ -15,7 +15,4 @@ public class CliSyntax {
     public static final Prefix PREFIX_FIND_NAME = new Prefix("/name");
     public static final Prefix PREFIX_FIND_TAG = new Prefix("/tag");
 
-    /* Keyword definitions */
-    public static final String KEYWORD_FILTER = "/filter";
-
 }
