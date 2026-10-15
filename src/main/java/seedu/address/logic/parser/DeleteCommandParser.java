@@ -36,11 +36,13 @@ public class DeleteCommandParser implements Parser<DeleteCommand> {
     /**
      * Parses {@code args} of the form {@code /name NAME} into a {@code NameEqualsPredicate}.
      *
-     * @throws ParseException if the {@code /name} prefix is missing, the name is empty or there is text before it.
+     * @throws ParseException if the {@code /name} prefix is missing or repeated, the name is empty
+     *                        or there is text before it.
      */
     private static NameEqualsPredicate parseName(String args) throws ParseException {
         // The tokenizer only recognises a prefix that follows whitespace, so restore the leading space.
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(" " + args, PREFIX_NAME_COMMAND);
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME_COMMAND);
         if (!argMultimap.getPreamble().isEmpty()
                 || argMultimap.getValue(PREFIX_NAME_COMMAND).isEmpty()
                 || argMultimap.getValue(PREFIX_NAME_COMMAND).get().isEmpty()) {

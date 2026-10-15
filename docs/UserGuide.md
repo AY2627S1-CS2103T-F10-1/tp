@@ -130,7 +130,9 @@ Format: `find /name NAME` or `find /tag TAG`
 * Tag search ignores case and extra spaces; for example, `find /tag Friends` matches the tag `friends`.
 * Spaces before and after `NAME` or `TAG` are ignored.
 * If no person matches, the message `No contacts found` is shown and the list is empty. Otherwise, the number of persons listed is shown.
-* If the prefix is missing, both prefixes are given, or `NAME` or `TAG` is empty, an invalid command format message is shown.
+* A prefix must be followed by a space, so `find /tagfriends` is not recognised as a tag search.
+* If the prefix is missing or not followed by a space (such as `/tagfriends`), both prefixes are given, or `NAME` or `TAG` is empty, an invalid command format message is shown.
+* If `/name` or `/tag` is repeated, a message listing the repeated prefix is shown.
 
 Finding by name (`/name`):
 * Everything after `/name` is treated as one full name. It is not split into separate keywords.
@@ -138,6 +140,7 @@ Finding by name (`/name`):
 * Spaces inside the name are matched as typed.
 
 Finding by tag (`/tag`):
+* Only one tag can be searched at a time, so `find /tag friends /tag family` is rejected.
 * Any non-empty `TAG` is accepted. A value that is not a valid tag, or that no contact has, simply matches nobody.
 * A person is listed if any one of their tags is exactly `TAG`; for example, `find /tag friends` matches a person tagged `friends` and `owesMoney`, but not one tagged `friends2`.
 
@@ -157,7 +160,7 @@ Format: `delete INDEX` or `delete /name NAME`
 * The index **must be a positive integer** 1, 2, 3, …​
 * Name deletion searches **all contacts**, even when the displayed list is filtered.
 * `/name NAME` must be the contact's full name, matched case-sensitively, the same way as [`find /name`](#locating-persons-by-name-or-tag-find).
-* If `/name` is missing, `NAME` is empty or there is text before `/name`, an invalid command format message is shown.
+* If `/name` is missing or repeated, `NAME` is empty or there is text before `/name`, an invalid command format message is shown.
 * Exactly one match is deleted immediately. With no matches, nothing is deleted.
 * If more than one contact matches, nothing is deleted. The matching contacts are displayed with their indexes; continue with `delete INDEX`.
 * The search results remain displayed; deleting the only match leaves an empty list. Use `list` to show all contacts.

@@ -428,6 +428,12 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
+* 1b. The `/name` prefix is given more than once.
+
+    * 1b1. RAcontact shows a message naming the repeated prefix.
+
+      Use case resumes at step 1.
+
 * 2a. No contact has a full name that exactly matches the entered name.
 
     * 2a1. RAcontact shows the message `No contacts found` and an empty list.
@@ -445,9 +451,15 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **Extensions**
 
-* 1a. The `/tag` prefix is missing, the tag is empty, there is text before `/tag`, or `/name` is also given.
+* 1a. The `/tag` prefix is missing, the tag is empty, there is text before `/tag`, the prefix is directly followed by text (such as `/tagfriends`), or `/name` is also given.
 
     * 1a1. RAcontact shows an invalid command format error with the usage of `find`.
+
+      Use case resumes at step 1.
+
+* 1b. The `/tag` prefix is given more than once.
+
+    * 1b1. RAcontact shows a message naming the repeated prefix.
 
       Use case resumes at step 1.
 
@@ -615,7 +627,7 @@ testers are expected to do more *exploratory* testing.
 1. Test case: `find /tag`<br>
    Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
 
-1. Other incorrect commands to try: `find friends`, `find /tag friends /name Alex`<br>
+1. Other incorrect commands to try: `find friends`, `find /tag friends /name Alex`, `find /tag friends /tag family`<br>
    Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
 
 1. Test case: `list /filter friends`<br>

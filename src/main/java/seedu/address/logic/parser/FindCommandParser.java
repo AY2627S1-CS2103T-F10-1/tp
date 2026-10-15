@@ -20,12 +20,15 @@ public class FindCommandParser implements Parser<FindCommand> {
      * Parses the given {@code String} of arguments in the context of the FindCommand
      * and returns a FindCommand object for execution.
      * Exactly one of the {@code /name} and {@code /tag} prefixes must be given.
+     * Only one name or tag may be searched at a time, so repeating {@code /name} or {@code /tag} is rejected.
      * Any non-empty tag value is accepted, since a value no contact has simply matches nobody.
      *
      * @throws ParseException if the user input does not conform to the expected format
      */
     public FindCommand parse(String args) throws ParseException {
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_NAME_COMMAND, PREFIX_FIND_TAG);
+
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME_COMMAND, PREFIX_FIND_TAG);
 
         Optional<String> name = argMultimap.getValue(PREFIX_NAME_COMMAND);
         Optional<String> tag = argMultimap.getValue(PREFIX_FIND_TAG);
