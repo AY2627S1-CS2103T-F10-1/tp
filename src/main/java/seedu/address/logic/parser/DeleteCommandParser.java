@@ -1,7 +1,7 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_FIND_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.DeleteCommand;
@@ -40,13 +40,13 @@ public class DeleteCommandParser implements Parser<DeleteCommand> {
      */
     private static NameEqualsPredicate parseName(String args) throws ParseException {
         // The tokenizer only recognises a prefix that follows whitespace, so restore the leading space.
-        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(" " + args, PREFIX_FIND_NAME);
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(" " + args, PREFIX_NAME_COMMAND);
         if (!argMultimap.getPreamble().isEmpty()
-                || argMultimap.getValue(PREFIX_FIND_NAME).isEmpty()
-                || argMultimap.getValue(PREFIX_FIND_NAME).get().isEmpty()) {
+                || argMultimap.getValue(PREFIX_NAME_COMMAND).isEmpty()
+                || argMultimap.getValue(PREFIX_NAME_COMMAND).get().isEmpty()) {
             throw new ParseException(MESSAGE_INVALID_COMMAND_FORMAT);
         }
-        return new NameEqualsPredicate(argMultimap.getValue(PREFIX_FIND_NAME).get());
+        return new NameEqualsPredicate(argMultimap.getValue(PREFIX_NAME_COMMAND).get());
     }
 
 }

@@ -1,7 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_FIND_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
 
 import java.util.List;
 import java.util.Objects;
@@ -23,7 +23,7 @@ public class DeleteCommand extends Command {
 
     public static final String MESSAGE_USAGE = COMMAND_WORD
             + ": Deletes a person by displayed index or by full name (case-sensitive).\n"
-            + "Parameters: INDEX (positive integer) or " + PREFIX_FIND_NAME + " NAME\n"
+            + "Parameters: INDEX (positive integer) or " + PREFIX_NAME_COMMAND + " NAME\n"
             + "Examples: " + COMMAND_WORD + " 1, " + COMMAND_WORD + " /name Alice Tan";
 
     public static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted person: %1$s";
