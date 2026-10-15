@@ -5,6 +5,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ROOM_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
 
@@ -22,12 +23,14 @@ import seedu.address.model.tag.Tag;
 public class PersonUtil {
 
     /**
-     * Returns an add command string for adding the {@code person}, including their tags if they have any.
+     * Returns an add command string for adding the {@code person}, including their room and tags if they have any.
      */
     public static String getAddCommand(Person person) {
         String command = AddCommand.COMMAND_WORD + " " + person.getName().fullName
                 + " " + PREFIX_PHONE_COMMAND + " " + person.getPhone().value;
-        return command + person.getTags().stream()
+        String roomValue = person.getRoom().value;
+        String room = roomValue.isEmpty() ? "" : " " + PREFIX_ROOM_COMMAND + " " + roomValue;
+        return command + room + person.getTags().stream()
                 .map(tag -> " " + PREFIX_TAG_COMMAND + " " + tag.tagName)
                 .collect(Collectors.joining());
     }

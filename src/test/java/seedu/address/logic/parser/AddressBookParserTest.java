@@ -34,7 +34,8 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_add() throws Exception {
-        Person person = new PersonBuilder().withEmail("").withAddress("").withTags("Resident", "Floor 3").build();
+        Person person = new PersonBuilder().withEmail("").withAddress("").withRoom("B-204")
+                .withTags("Resident", "Floor 3").build();
         AddCommand command = (AddCommand) parser.parseCommand(PersonUtil.getAddCommand(person));
         assertEquals(new AddCommand(person), command);
     }

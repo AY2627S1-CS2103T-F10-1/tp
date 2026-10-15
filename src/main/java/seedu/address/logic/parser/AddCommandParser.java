@@ -33,8 +33,9 @@ public class AddCommandParser implements Parser<AddCommand> {
     public static final String MESSAGE_INVALID_PHONE = "Phone number contains invalid characters.";
     public static final String MESSAGE_DUPLICATE_TAG = "Contact already has this tag.";
 
-    private static final int MAX_NAME_LENGTH = 100;
-    private static final int MAX_PHONE_LENGTH = 20;
+    public static final int MAX_NAME_LENGTH = 100;
+    public static final int MAX_PHONE_LENGTH = 20;
+
     private static final String PREFIX_MARKER = "/";
     private static final String WORD_SEPARATOR = " ";
     private static final Set<String> KNOWN_PREFIXES = Stream.of(PREFIX_PHONE_COMMAND, PREFIX_ROOM_COMMAND,
@@ -54,6 +55,7 @@ public class AddCommandParser implements Parser<AddCommand> {
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalized,
                 PREFIX_PHONE_COMMAND, PREFIX_ROOM_COMMAND, PREFIX_TAG_COMMAND);
         verifyFormat(normalized, argMultimap);
+        assert argMultimap.getValue(PREFIX_PHONE_COMMAND).isPresent() : "verifyFormat should ensure /phone is given";
 
         Name name = parseName(argMultimap.getPreamble());
         Phone phone = parsePhone(argMultimap.getValue(PREFIX_PHONE_COMMAND).orElseThrow());

@@ -114,8 +114,7 @@ public class PersonTest {
         assertFalse(ALICE.equals(editedAlice));
 
         // different room -> returns false
-        editedAlice = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
-                ALICE.getTags(), new Room("B-204"));
+        editedAlice = new PersonBuilder(ALICE).withRoom("B-204").build();
         assertFalse(ALICE.equals(editedAlice));
     }
 
@@ -125,8 +124,7 @@ public class PersonTest {
                 + ", email=" + ALICE.getEmail() + ", address=" + ALICE.getAddress() + ", tags=" + ALICE.getTags() + "}";
         assertEquals(expected, ALICE.toString());
 
-        Person aliceWithRoom = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
-                ALICE.getTags(), new Room("B-204"));
+        Person aliceWithRoom = new PersonBuilder(ALICE).withRoom("B-204").build();
         assertTrue(aliceWithRoom.toString().contains("room=B-204"));
     }
 }
