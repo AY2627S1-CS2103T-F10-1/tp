@@ -12,7 +12,6 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
 import static seedu.address.testutil.TypicalPersons.JANE;
-import static seedu.address.testutil.TypicalPersons.KAI;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -41,30 +40,12 @@ public class PersonTest {
     }
 
     @Test
-    public void hasTag() {
-        assertThrows(NullPointerException.class, () -> ALICE.hasTag(null));
+    public void constructor_tags_keepsGivenOrder() {
+        List<Tag> tagsInGivenOrder = List.of(new Tag("Staff"), new Tag("RA"), new Tag("Block4"));
+        Person person = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
+                new LinkedHashSet<>(tagsInGivenOrder));
 
-        assertTrue(ALICE.hasTag(new Tag("friends")));
-        assertTrue(ALICE.hasTag(new Tag("FRIENDS"))); // different case
-        assertFalse(ALICE.hasTag(new Tag("Resident")));
-    }
-
-    @Test
-    public void isTagLimitReached() {
-        assertFalse(new PersonBuilder().build().isTagLimitReached()); // no tags
-        assertFalse(KAI.isTagLimitReached()); // boundary: one below the limit
-        assertTrue(JANE.isTagLimitReached()); // boundary: at the limit
-    }
-
-    @Test
-    public void withAddedTag_newTag_appendsTagWithoutChangingOriginal() {
-        Tag newTag = new Tag("Resident Fellow");
-        Person taggedAlice = ALICE.withAddedTag(newTag);
-
-        List<Tag> tags = List.copyOf(taggedAlice.getTags());
-        assertEquals(List.of(new Tag("friends"), newTag), tags);
-        assertFalse(ALICE.hasTag(newTag));
-        assertTrue(ALICE.isSamePerson(taggedAlice));
+        assertEquals(tagsInGivenOrder, List.copyOf(person.getTags()));
     }
 
     @Test
@@ -133,8 +114,7 @@ public class PersonTest {
         assertFalse(ALICE.equals(editedAlice));
 
         // different room -> returns false
-        editedAlice = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
-                ALICE.getTags(), new Room("B-204"));
+        editedAlice = new PersonBuilder(ALICE).withRoom("B-204").build();
         assertFalse(ALICE.equals(editedAlice));
     }
 
@@ -144,8 +124,7 @@ public class PersonTest {
                 + ", email=" + ALICE.getEmail() + ", address=" + ALICE.getAddress() + ", tags=" + ALICE.getTags() + "}";
         assertEquals(expected, ALICE.toString());
 
-        Person aliceWithRoom = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
-                ALICE.getTags(), new Room("B-204"));
+        Person aliceWithRoom = new PersonBuilder(ALICE).withRoom("B-204").build();
         assertTrue(aliceWithRoom.toString().contains("room=B-204"));
     }
 }

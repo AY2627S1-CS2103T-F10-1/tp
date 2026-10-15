@@ -172,10 +172,9 @@ public class UniquePersonListTest {
     }
     @Test
     public void setPerson_existingRoom_preservesRoom() {
-        Person resident = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
-                ALICE.getTags(), new Room("B-204"));
+        Person resident = new PersonBuilder(ALICE).withRoom("B-204").build();
         uniquePersonList.add(resident);
-        Person updated = new PersonBuilder(resident).withPhone("12345678").build();
+        Person updated = new PersonBuilder(resident).withPhone("12345678").withRoom("C-101").build();
         uniquePersonList.setPerson(resident, updated);
         assertEquals(new Room("B-204"), uniquePersonList.asUnmodifiableObservableList().getFirst().getRoom());
     }
