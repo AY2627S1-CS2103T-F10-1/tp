@@ -1,18 +1,16 @@
 package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
-import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
-import static seedu.address.logic.commands.CommandTestUtil.EMAIL_DESC_AMY;
-import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
-import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.AMY;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,7 +65,33 @@ public class LogicManagerTest {
     @Test
     public void execute_validCommand_success() throws Exception {
         String listCommand = ListCommand.COMMAND_WORD;
-        assertCommandSuccess(listCommand, ListCommand.MESSAGE_SUCCESS, model);
+        assertCommandSuccess(listCommand, ListCommand.MESSAGE_EMPTY, model);
+    }
+
+    @Test
+    public void execute_listAfterFind_restoresAllContacts() throws Exception {
+        Person otherPerson = new PersonBuilder().withName("Other Contact").build();
+        model.addPerson(AMY);
+        model.addPerson(otherPerson);
+        logic.execute("find Amy");
+
+        CommandResult result = logic.execute("  LiSt  ");
+
+        assertEquals(ListCommand.MESSAGE_SUCCESS, result.getFeedbackToUser());
+        assertEquals(List.of(AMY, otherPerson), logic.getFilteredPersonList());
+        assertEquals(List.of(AMY, otherPerson), model.getAddressBook().getPersonList());
+        assertFalse(result.isShowHelp());
+        assertFalse(result.isExit());
+    }
+
+    @Test
+    public void execute_invalidList_preservesFilteredList() throws Exception {
+        model.addPerson(AMY);
+        logic.execute("find Nobody");
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.updateFilteredPersonList(person -> false);
+
+        assertCommandFailure("LIST abc", ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, expectedModel);
     }
 
     @Test
@@ -164,9 +188,9 @@ public class LogicManagerTest {
         logic = new LogicManager(model, storage);
 
         // Triggers the saveAddressBook method by executing an add command
-        String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY
-                + EMAIL_DESC_AMY + ADDRESS_DESC_AMY;
-        Person expectedPerson = new PersonBuilder(AMY).withTags().build();
+        String addCommand = AddCommand.COMMAND_WORD + " Amy Bee /phone 11111111";
+        Person expectedPerson = new PersonBuilder(AMY).withPhone("11111111").withEmail("").withAddress("")
+                .withTags().build();
         ModelManager expectedModel = new ModelManager();
         expectedModel.addPerson(expectedPerson);
         assertCommandFailure(addCommand, CommandException.class, expectedMessage, expectedModel);

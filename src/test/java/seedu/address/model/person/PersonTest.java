@@ -11,9 +11,16 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
+import static seedu.address.testutil.TypicalPersons.JANE;
+import static seedu.address.testutil.TypicalPersons.KAI;
+
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class PersonTest {
@@ -22,6 +29,42 @@ public class PersonTest {
     public void asObservableList_modifyList_throwsUnsupportedOperationException() {
         Person person = new PersonBuilder().build();
         assertThrows(UnsupportedOperationException.class, () -> person.getTags().remove(0));
+    }
+
+    @Test
+    public void constructor_overTagLimit_throwsIllegalArgumentException() {
+        Set<Tag> tagsOverLimit = new LinkedHashSet<>(JANE.getTags());
+        tagsOverLimit.add(new Tag("Staff"));
+
+        assertThrows(IllegalArgumentException.class, () -> new Person(JANE.getName(), JANE.getPhone(),
+                JANE.getEmail(), JANE.getAddress(), tagsOverLimit));
+    }
+
+    @Test
+    public void hasTag() {
+        assertThrows(NullPointerException.class, () -> ALICE.hasTag(null));
+
+        assertTrue(ALICE.hasTag(new Tag("friends")));
+        assertTrue(ALICE.hasTag(new Tag("FRIENDS"))); // different case
+        assertFalse(ALICE.hasTag(new Tag("Resident")));
+    }
+
+    @Test
+    public void isTagLimitReached() {
+        assertFalse(new PersonBuilder().build().isTagLimitReached()); // no tags
+        assertFalse(KAI.isTagLimitReached()); // boundary: one below the limit
+        assertTrue(JANE.isTagLimitReached()); // boundary: at the limit
+    }
+
+    @Test
+    public void withAddedTag_newTag_appendsTagWithoutChangingOriginal() {
+        Tag newTag = new Tag("Resident Fellow");
+        Person taggedAlice = ALICE.withAddedTag(newTag);
+
+        List<Tag> tags = List.copyOf(taggedAlice.getTags());
+        assertEquals(List.of(new Tag("friends"), newTag), tags);
+        assertFalse(ALICE.hasTag(newTag));
+        assertTrue(ALICE.isSamePerson(taggedAlice));
     }
 
     @Test
