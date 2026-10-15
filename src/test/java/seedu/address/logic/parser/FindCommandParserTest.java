@@ -2,8 +2,8 @@ package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_FIND_TAG;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -54,7 +54,7 @@ public class FindCommandParserTest {
         assertParseFailure(parser, " /name Alice /name Alice", duplicateNameMessage);
 
         // more than one tag
-        String duplicateTagMessage = getErrorMessageForDuplicatePrefixes(PREFIX_FIND_TAG);
+        String duplicateTagMessage = getErrorMessageForDuplicatePrefixes(PREFIX_TAG_COMMAND);
         assertParseFailure(parser, " /tag friends /tag family", duplicateTagMessage);
         assertParseFailure(parser, " /tag friends /tag friends", duplicateTagMessage);
 

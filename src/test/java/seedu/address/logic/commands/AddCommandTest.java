@@ -38,7 +38,7 @@ public class AddCommandTest {
         CommandResult commandResult = new AddCommand(validPerson).execute(modelStub);
 
         assertEquals(String.format(AddCommand.MESSAGE_SUCCESS,
-                validPerson.getName() + "; Phone: " + validPerson.getPhone()),
+                validPerson.getName()),
                 commandResult.getFeedbackToUser());
         assertEquals(List.of(validPerson), modelStub.personsAdded);
     }
@@ -181,7 +181,9 @@ public class AddCommandTest {
 
         @Override
         public ReadOnlyAddressBook getAddressBook() {
-            return new AddressBook();
+            AddressBook book = new AddressBook();
+            personsAdded.forEach(book::addPerson);
+            return book;
         }
     }
 

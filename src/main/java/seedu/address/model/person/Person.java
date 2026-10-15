@@ -1,6 +1,5 @@
 package seedu.address.model.person;
 
-import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
@@ -29,6 +28,7 @@ public class Person {
 
     // Data fields
     private final Address address;
+    private final Room room;
     private final Set<Tag> tags = new LinkedHashSet<>();
 
     /**
@@ -36,12 +36,18 @@ public class Person {
      * Tags keep the iteration order of {@code tags}.
      */
     public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags) {
-        requireAllNonNull(name, phone, email, address, tags);
+        this(name, phone, email, address, tags, new Room(""));
+    }
+
+    /** Creates a contact with an optional room number. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room) {
+        requireAllNonNull(name, phone, email, address, tags, room);
         checkArgument(tags.size() <= MAX_TAGS, MESSAGE_TAG_LIMIT_REACHED);
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
+        this.room = room;
         this.tags.addAll(tags);
     }
 
@@ -57,6 +63,10 @@ public class Person {
         return email;
     }
 
+    public Room getRoom() {
+        return room;
+    }
+
     public Address getAddress() {
         return address;
     }
@@ -67,35 +77,6 @@ public class Person {
      */
     public Set<Tag> getTags() {
         return Collections.unmodifiableSet(tags);
-    }
-
-    /**
-     * Returns true if this person already has {@code tag}, ignoring case.
-     */
-    public boolean hasTag(Tag tag) {
-        requireNonNull(tag);
-        return tags.contains(tag);
-    }
-
-    /**
-     * Returns true if this person already has {@link #MAX_TAGS} tags.
-     */
-    public boolean isTagLimitReached() {
-        return tags.size() >= MAX_TAGS;
-    }
-
-    /**
-     * Returns a copy of this person with {@code tag} added after the existing tags.
-     * The caller must ensure the tag is new and the tag limit has not been reached.
-     */
-    public Person withAddedTag(Tag tag) {
-        requireNonNull(tag);
-        assert !hasTag(tag) : "Tag should not already be present";
-        assert !isTagLimitReached() : "Tag limit should not already be reached";
-
-        Set<Tag> updatedTags = new LinkedHashSet<>(tags);
-        updatedTags.add(tag);
-        return new Person(name, phone, email, address, updatedTags);
     }
 
     /**
@@ -130,24 +111,28 @@ public class Person {
                 && phone.equals(otherPerson.phone)
                 && email.equals(otherPerson.email)
                 && address.equals(otherPerson.address)
+                && room.equals(otherPerson.room)
                 && tags.equals(otherPerson.tags);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, tags);
+        return Objects.hash(name, phone, email, address, tags, room);
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this)
+        ToStringBuilder builder = new ToStringBuilder(this)
                 .add("name", name)
                 .add("phone", phone)
                 .add("email", email)
                 .add("address", address)
-                .add("tags", tags)
-                .toString();
+                .add("tags", tags);
+        if (!room.value.isEmpty()) {
+            builder.add("room", room);
+        }
+        return builder.toString();
     }
 
 }

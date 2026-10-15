@@ -15,11 +15,11 @@ public class AddCommand extends Command {
     public static final String COMMAND_WORD = "add";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Adds a person to the address book. "
-            + "Parameters: NAME /phone PHONE\n"
-            + "Example: " + COMMAND_WORD + " Sarah Tan /phone 9123 4567";
+            + "Parameters: NAME /phone PHONE [/room ROOM] [/tag TAG]...\n"
+            + "Example: " + COMMAND_WORD + " Sarah Tan /phone 9123 4567 /room B-204 /tag Resident /tag Floor 3";
 
-    public static final String MESSAGE_SUCCESS = "New person added: %1$s";
-    public static final String MESSAGE_DUPLICATE_PERSON = "This person already exists in the address book.";
+    public static final String MESSAGE_SUCCESS = "Contact %1$s added successfully.";
+    public static final String MESSAGE_DUPLICATE_PERSON = "Contact already exists.";
 
     private final Person toAdd;
 
@@ -40,7 +40,7 @@ public class AddCommand extends Command {
         }
 
         model.addPerson(toAdd);
-        return new CommandResult(String.format(MESSAGE_SUCCESS, toAdd.getName() + "; Phone: " + toAdd.getPhone()));
+        return new CommandResult(String.format(MESSAGE_SUCCESS, toAdd.getName()));
     }
 
     @Override

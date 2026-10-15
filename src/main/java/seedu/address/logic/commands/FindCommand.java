@@ -1,8 +1,8 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_FIND_TAG;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
 
 import java.util.function.Predicate;
 
@@ -22,9 +22,9 @@ public class FindCommand extends Command {
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds all persons whose full name is exactly "
             + "the specified name (case-sensitive), or who have the specified tag (ignoring case), "
             + "and displays them as a list with index numbers.\n"
-            + "Parameters: " + PREFIX_NAME_COMMAND + " NAME or " + PREFIX_FIND_TAG + " TAG\n"
+            + "Parameters: " + PREFIX_NAME_COMMAND + " NAME or " + PREFIX_TAG_COMMAND + " TAG\n"
             + "Examples: " + COMMAND_WORD + " " + PREFIX_NAME_COMMAND + " Sarah Tan, "
-            + COMMAND_WORD + " " + PREFIX_FIND_TAG + " friends";
+            + COMMAND_WORD + " " + PREFIX_TAG_COMMAND + " friends";
 
     private final Predicate<Person> predicate;
 
