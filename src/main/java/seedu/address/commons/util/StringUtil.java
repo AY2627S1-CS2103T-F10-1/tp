@@ -12,6 +12,9 @@ import java.util.Arrays;
  */
 public class StringUtil {
 
+    private static final String WHITESPACE_RUN_REGEX = "\\s+";
+    private static final String SINGLE_SPACE = " ";
+
     /**
      * Returns true if the {@code sentence} contains the {@code word}.
      *   Ignores case, but a full word match is required.
@@ -36,6 +39,17 @@ public class StringUtil {
 
         return Arrays.stream(wordsInPreppedSentence)
                 .anyMatch(preppedWord::equalsIgnoreCase);
+    }
+
+    /**
+     * Returns {@code s} with leading and trailing whitespace removed and every inner run of whitespace
+     * replaced by a single space, e.g. {@code "  Resident   Fellow "} becomes {@code "Resident Fellow"}.
+     *
+     * @param s The string to normalize; cannot be null.
+     */
+    public static String collapseWhitespace(String s) {
+        requireNonNull(s);
+        return s.trim().replaceAll(WHITESPACE_RUN_REGEX, SINGLE_SPACE);
     }
 
     /**

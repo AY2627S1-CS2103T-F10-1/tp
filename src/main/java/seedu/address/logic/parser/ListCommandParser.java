@@ -8,29 +8,33 @@ import seedu.address.logic.commands.ListEmergencyCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
- * Parses input arguments and creates a command to list all or emergency contacts.
+ * Parses arguments for listing all contacts, emergency contacts, or contacts with a given tag.
  */
 public class ListCommandParser implements Parser<Command> {
 
     /**
-     * Parses the given arguments and returns a command to list all or emergency contacts.
+     * Parses the given arguments and returns a list command for execution.
      *
-     * @throws ParseException If the arguments are neither blank nor the fixed keyword emerg.
+     * @throws ParseException if the arguments do not match a supported list format.
      */
     @Override
     public Command parse(String args) throws ParseException {
         requireNonNull(args);
         String trimmedArgs = args.trim();
+
         if (trimmedArgs.isEmpty()) {
             return new ListCommand();
         }
-        if (ListEmergencyCommand.EMERGENCY_KEYWORD.equalsIgnoreCase(trimmedArgs)) {
+
+        if (ListEmergencyCommand.EMERGENCY_KEYWORD.equals(trimmedArgs)) {
             return new ListEmergencyCommand();
         }
+
         String firstArgument = trimmedArgs.split("\\s+", 2)[0];
-        if (ListEmergencyCommand.EMERGENCY_KEYWORD.equalsIgnoreCase(firstArgument)) {
+        if (ListEmergencyCommand.EMERGENCY_KEYWORD.equals(firstArgument)) {
             throw new ParseException(ListEmergencyCommand.MESSAGE_INVALID_FORMAT);
         }
-        throw new ParseException(ListCommand.MESSAGE_INVALID_FORMAT);
+
+        return new ListCommand(TagFilterParser.parse(args));
     }
 }

@@ -10,14 +10,19 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.Messages;
+import seedu.address.logic.parser.DeleteCommandParser;
+import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
+import seedu.address.testutil.PersonBuilder;
 
 /**
  * Contains integration tests (interaction with the Model) and unit tests for
@@ -107,6 +112,65 @@ public class DeleteCommandTest {
         DeleteCommand deleteCommand = new DeleteCommand(targetIndex);
         String expected = DeleteCommand.class.getCanonicalName() + "{targetIndex=" + targetIndex + "}";
         assertEquals(expected, deleteCommand.toString());
+    }
+
+    @Test
+    public void execute_nameSearch_deletesExactMatch() throws Exception {
+        Person aliceTan = new PersonBuilder().withName("Alice Tan").build();
+        Person aliceLee = new PersonBuilder().withName("Alice Lee").build();
+        Person bob = new PersonBuilder().withName("Bob Smith").build();
+        model = new ModelManager(new AddressBook(), new UserPrefs());
+        model.addPerson(aliceTan);
+        model.addPerson(aliceLee);
+        model.addPerson(bob);
+        model.updateFilteredPersonList(person -> person.equals(bob));
+        DeleteCommandParser parser = new DeleteCommandParser();
+
+        // Search all contacts by exact name, despite the previous filter.
+        CommandResult result = parser.parse("/name Alice Tan").execute(model);
+        assertEquals(String.format(DeleteCommand.MESSAGE_DELETE_PERSON_SUCCESS, Messages.format(aliceTan)),
+                result.getFeedbackToUser());
+        assertEquals(List.of(aliceLee, bob), model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void execute_exactNameAfterNoMatch_deletesOnlyMatch() throws Exception {
+        Person aliceTan = new PersonBuilder().withName("Alice Tan").build();
+        Person aliceLee = new PersonBuilder().withName("Alice Lee").build();
+        model = new ModelManager(new AddressBook(), new UserPrefs());
+        model.addPerson(aliceTan);
+        model.addPerson(aliceLee);
+        DeleteCommandParser parser = new DeleteCommandParser();
+        parser.parse("/name Alice").execute(model);
+
+        CommandResult result = parser.parse("/name Alice Tan").execute(model);
+        assertEquals(String.format(DeleteCommand.MESSAGE_DELETE_PERSON_SUCCESS, Messages.format(aliceTan)),
+                result.getFeedbackToUser());
+        assertEquals(List.of(aliceLee), model.getAddressBook().getPersonList());
+        assertTrue(model.getFilteredPersonList().isEmpty());
+    }
+
+    @Test
+    public void execute_partialName_preservesContacts() throws Exception {
+        Person alice = new PersonBuilder().withName("Alice Tan").build();
+        model = new ModelManager(new AddressBook(), new UserPrefs());
+        model.addPerson(alice);
+
+        CommandResult result = new DeleteCommandParser().parse("/name Ali").execute(model);
+        assertEquals(DeleteCommand.MESSAGE_NO_MATCHES, result.getFeedbackToUser());
+        assertEquals(List.of(alice), model.getAddressBook().getPersonList());
+        assertTrue(model.getFilteredPersonList().isEmpty());
+    }
+
+    @Test
+    public void equalsAndToString_nameTargets() throws Exception {
+        DeleteCommandParser parser = new DeleteCommandParser();
+        DeleteCommand alice = parser.parse("/name Alice");
+        assertEquals(alice, parser.parse("/name Alice"));
+        assertFalse(alice.equals(parser.parse("/name Bob")));
+        assertFalse(alice.equals(parser.parse("1")));
+        assertFalse(parser.parse("1").equals(alice));
+        assertTrue(alice.toString().contains("nameSearch="));
     }
 
     /**

@@ -155,6 +155,54 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Tag feature
+
+The tag feature lets the user add one tag to an existing contact with `CONTACT_NAME /tag TAG`.
+
+#### Implementation
+
+Unlike other commands, this input has no leading command word. `AddressBookParser#parseCommand()` first tries the usual command words. Only if the first word matches none of them does it call `TagCommandParser#isTagCommand()`, which checks whether `/tag` appears as a standalone word. If so, the whole input goes to `TagCommandParser`. Because known command words are tried first, existing commands behave exactly as before.
+
+`TagCommandParser` splits the input at the first `/tag`. The part before is the contact's name, and the part after is passed to `ParserUtil#parseTag()`. That method collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. `add` and `edit` use the same method for `t/`, so tags follow the same rules everywhere.
+
+The sequence diagram below shows how `Sarah Tan /tag RA` is parsed and executed.
+
+![Interactions Inside the Logic Component for the `Sarah Tan /tag RA` Command](images/TagSequenceDiagram.png)
+
+`TagCommand#execute()` then:
+
+1. Finds the contact in the full person list, not just the displayed one, whose name matches the given name. An exact match is preferred, then a match ignoring case and extra spaces. If there is none, it throws `Contact not found.`
+1. Rejects the tag if `Person#hasTag()` is true, then if `Person#isTagLimitReached()` is true.
+1. Replaces the contact with `Person#withAddedTag()`, which returns a new `Person` with the tag appended.
+
+`Tag` compares tag names ignoring case and stores them with the first letter of each word capitalized. `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were added. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
+
+#### Design considerations
+
+**Aspect: how the contact is identified**
+
+* **Alternative 1 (current choice):** the contact's full name.
+  * Pros: the RA can tag a contact without first finding their index, and tagging still works when the contact is hidden by a filter.
+  * Cons: it takes more typing than an index.
+* **Alternative 2:** the index in the displayed list, like `edit` and `delete`.
+  * Pros: it is shorter and consistent with other commands.
+  * Cons: the RA needs to `list` or `find` first to see the index.
+
+**Aspect: how a data file with more than 5 tags on a contact is handled**
+
+* **Alternative 1 (current choice):** treat the file as invalid, as for any other invalid field.
+  * Pros: it is consistent with the other fields, and every `Person` is guaranteed to have at most 5 tags.
+  * Cons: one bad edit makes the app start with an empty address book.
+* **Alternative 2:** load the extra tags and only enforce the limit when adding tags.
+  * Pros: no data is lost.
+  * Cons: the limit is no longer guaranteed, and contact cards can grow beyond 5 tags.
+
+### Filter by tag feature
+
+`list /filter TAG` shows only contacts with the given tag. `ListCommandParser` passes any arguments to `TagFilterParser#parse()`, which returns a `PersonHasTagPredicate`. `ListCommand` then applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any value is accepted and a value that is not a valid tag simply matches nobody.
+
+To let another output command filter by tag, such as `find`, call `TagFilterParser#parse()` from its parser and apply the predicate the same way.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -308,6 +356,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *` | user with new residents | archive a contact | can keep an old entry out of my list and searches without losing it |
 | `* *` | user with archived contacts | list my archived contacts | can still look someone up when a query about last year comes in |
 | `* *` | user with archived contacts | restore an archived contact to my main list | can bring a resident back if they return to the block |
+| `* *` | user | hide private contact details | can minimize the chance of someone else seeing them by accident |
 | `*` | user | use a short form of a long command | can enter commands with fewer keystrokes |
 | `*` | user | bring back my previous command with a keypress | can repeat or amend a lookup without typing it again |
 | `*` | user | redo a command I have undone | can get back a change I undid by accident |
@@ -364,11 +413,34 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
+**Use case: Find a contact by full name**
+
+**MSS**
+
+1.  User requests to find a contact by entering `find /name` followed by the contact's full name.
+2.  RAcontact lists the contacts whose full name exactly matches the entered name (case-sensitive) and shows the number of contacts listed.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. The `/name` prefix is missing, the name is empty, or there is text before `/name`.
+
+    * 1a1. RAcontact shows an invalid command format error with the usage of `find`.
+
+      Use case resumes at step 1.
+
+* 2a. No contact has a full name that exactly matches the entered name.
+
+    * 2a1. RAcontact shows the message `No contacts found` and an empty list.
+
+      Use case ends.
+
 **Use case: Find contacts during an emergency**
 
 **MSS**
 
-1.  User requests to find a resident.
+1.  User requests to find a resident by full name.
 2.  RAcontact shows the resident's details.
 3.  User requests to view the resident's emergency contact.
 4.  RAcontact shows the emergency contact's details.
@@ -381,7 +453,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 2a. The resident cannot be found.
 
-    * 2a1. RAcontact shows a message that no contact was found.
+    * 2a1. RAcontact shows the message `No contacts found`.
 
       Use case resumes at step 1.
 
@@ -460,13 +532,14 @@ testers are expected to do more *exploratory* testing.
 
 1. Restoring a filtered list
 
-   1. Prerequisites: Start with sample contacts and run `find Alex`.
+   1. Prerequisites: Start with sample contacts and run `find /name Alex Yeoh`.
 
-   1. Test case: `  LiSt  `<br>
-      Expected: All contacts appear in numbered order with their details. The message is `Listed all contacts.`.
+   1. Test case: `  list  `<br>
+      Expected: All contacts appear in numbered order with their details. The message is `Listed all persons.`.
 
-   1. Test case: Run `find Alex`, then `list abc`.<br>
-      Expected: `Invalid command format. Usage: list`. The filtered list and stored contacts stay unchanged.
+   1. Test case: Run `find /name Alex Yeoh`, then `list abc`.<br>
+      Expected: `Invalid command format. Usage: <output command> /filter <tagName>`.
+      The filtered list and stored contacts stay unchanged.
 
 1. Listing an empty address book
 
@@ -474,20 +547,77 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `list`<br>
       Expected: An empty list and `No contacts found.`.
+### Tagging a contact
+
+1. Tagging a contact
+
+   1. Prerequisites: Start with the sample data and run `list`.
+
+   1. Test case: `Alex Yeoh /tag Resident Fellow`<br>
+      Expected: `Resident Fellow` appears after Alex Yeoh's existing tags. The status message shows `Tag added to Alex Yeoh.`
+
+   1. Test case: `  alex   YEOH  /tag RESIDENT fellow`<br>
+      Expected: No change. Error: `Contact already has this tag.`
+
+   1. Test case: `Nobody Here /tag RA`<br>
+      Expected: No change. Error: `Contact not found.`
+
+   1. Other incorrect commands to try: `Alex Yeoh /tag`, `/tag RA`, `Alex Yeoh /tag RA/Staff`, `Alex Yeoh /tag` followed by 51 letters<br>
+      Expected: No change. The status message shows the matching error.
+
+1. Tagging a contact at the tag limit
+
+   1. Prerequisites: Tag Alex Yeoh with new tags (e.g., `T1`, `T2`, ...) until the card shows 5 tags.
+
+   1. Test case: `Alex Yeoh /tag Staff`<br>
+      Expected: No change. Error: `Tag limit reached (max 5)`
+
+1. Tagging a contact hidden by a filter
+
+   1. Prerequisites: Run `find Bernice`, so that Charlotte Oliveiro is not shown.
+
+   1. Test case: `Charlotte Oliveiro /tag Hall-Staff`<br>
+      Expected: The status message shows `Tag added to Charlotte Oliveiro.` Run `list` to see the new tag.
+
+### Filtering by tag
+
+1. Prerequisites: Start with the sample data.
+
+1. Test case: `list /filter friends`<br>
+   Expected: Only contacts tagged `Friends` are shown. The status message shows how many are listed.
+
+1. Test case: `list   /filter   FRIENDS  `<br>
+   Expected: Same as above.
+
+1. Test case: `list /filter Nobody`<br>
+   Expected: An empty list. The status message shows `No contacts found with this tag.`
+
+1. Test case: `list /filter`<br>
+   Expected: The list is unchanged. Error: `Tag cannot be empty.`
+
+1. Other incorrect commands to try: `list 3`, `list friends`, `list /filterfriends`<br>
+   Expected: The list is unchanged. Error: `Invalid command format. Usage: <output command> /filter <tagName>`
 
 ### Listing emergency contacts
 
 1. Filtering all stored contacts
 
-   1. Prerequisites: In a disposable address book, add at least one contact with `t/emergency`,
-      another with `t/EMERGENCY`, and contacts with no tags or with `t/emergencyservice`.
+   1. Prerequisites: In a disposable address book, add at least one contact with `/tag emergency`,
+      another with `/tag EMERGENCY`, and contacts with no tags or with `/tag emergencyservice`.
 
    1. Test case: `list emerg`<br>
       Expected: Only the contacts with a whole emergency tag appear, in stored order with their details.
       The message is `Listed all emergency contacts.`. Stored contacts are unchanged.
 
-   1. Test case: Search for a non-emergency contact, then enter `  LIST   EMERG  `.<br>
+   1. Test case: Search for a non-emergency contact, then enter `  list   emerg  `.<br>
       Expected: The same emergency contacts appear, including contacts hidden by the search.
+
+   1. Test case: `LIST emerg`, `List emerg`, or `LIST`<br>
+      Expected: `Unknown command.`. The displayed list and stored contacts stay unchanged.
+
+   1. Test case: `list EMERG` or `list EmErG`<br>
+      Expected: `Invalid command format. Usage: <output command> /filter <tagName>`.
+      The displayed list and stored contacts stay unchanged.
 
    1. Test case: `list emerg friend`<br>
       Expected: `Invalid command format. Usage: list emerg`. The displayed list and stored contacts stay unchanged.

@@ -107,4 +107,20 @@ public class JsonAddressBookStorageTest {
     public void saveAddressBook_nullFilePath_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> saveAddressBook(new AddressBook(), null));
     }
+    @Test
+    public void readAndSave_sameNameContactsWithRoomAndTags_success() throws Exception {
+        seedu.address.logic.parser.AddCommandParser parser = new seedu.address.logic.parser.AddCommandParser();
+        seedu.address.model.Model model = new seedu.address.model.ModelManager();
+        parser.parse("Sarah Tan /phone 91234567 /room B-204 /tag Resident").execute(model);
+        parser.parse("Daniel Lim /phone 81234567").execute(model);
+        Path filePath = testFolder.resolve("contactsWithRooms.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+        storage.saveAddressBook(model.getAddressBook());
+        ReadOnlyAddressBook loaded = storage.readAddressBook().orElseThrow();
+        assertEquals(model.getAddressBook(), new AddressBook(loaded));
+        assertEquals("B-204", loaded.getPersonList().getFirst().getRoom().value);
+        assertEquals(2, loaded.getPersonList().size());
+        assertEquals("", loaded.getPersonList().get(1).getRoom().value);
+    }
+
 }
