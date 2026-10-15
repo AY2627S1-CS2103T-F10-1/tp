@@ -20,9 +20,11 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.ListEmergencyCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.NameEqualsPredicate;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.PersonHasTagPredicate;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 import seedu.address.testutil.PersonBuilder;
 import seedu.address.testutil.PersonUtil;
@@ -84,14 +86,51 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_list() throws Exception {
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD) instanceof ListCommand);
-        assertTrue(parser.parseCommand("  LiSt  ") instanceof ListCommand);
+        assertTrue(parser.parseCommand("  list  ") instanceof ListCommand);
         assertEquals(new ListCommand(), parser.parseCommand(ListCommand.COMMAND_WORD));
     }
 
     @Test
     public void parseCommand_listWithArguments_throwsParseException() {
         assertThrows(ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, () -> parser.parseCommand("list 3"));
-        assertThrows(ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, () -> parser.parseCommand("LIST abc"));
+        assertThrows(ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, () -> parser.parseCommand("list abc"));
+    }
+
+    @Test
+    public void parseCommand_listEmergency() throws Exception {
+        assertTrue(parser.parseCommand("list emerg") instanceof ListEmergencyCommand);
+        assertTrue(parser.parseCommand("  list   emerg  ") instanceof ListEmergencyCommand);
+        assertTrue(parser.parseCommand("list\temerg") instanceof ListEmergencyCommand);
+    }
+
+    @Test
+    public void parseCommand_listWithWrongCase_throwsParseException() {
+        String[] invalidCommands = {"LIST", "LiSt", "LIST emerg", "List emerg", "LIST EMERG"};
+        for (String input : invalidCommands) {
+            assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand(input));
+        }
+    }
+
+    @Test
+    public void parseCommand_emergencyKeywordWithWrongCase_throwsParseException() {
+        assertThrows(ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, () ->
+                parser.parseCommand("list EMERG"));
+        assertThrows(ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, () ->
+                parser.parseCommand("list EmErG"));
+    }
+
+    @Test
+    public void parseCommand_listEmergencyWithExtraArguments_throwsParseException() {
+        assertThrows(ParseException.class, ListEmergencyCommand.MESSAGE_INVALID_FORMAT, () ->
+                parser.parseCommand("list emerg friend"));
+        assertThrows(ParseException.class, ListEmergencyCommand.MESSAGE_INVALID_FORMAT, () ->
+                parser.parseCommand("list emerg 1"));
+    }
+
+    @Test
+    public void parseCommand_findTag() throws Exception {
+        assertEquals(new FindCommand(new PersonHasTagPredicate("Emergency")),
+                parser.parseCommand("find /tag Emergency"));
     }
 
     @Test

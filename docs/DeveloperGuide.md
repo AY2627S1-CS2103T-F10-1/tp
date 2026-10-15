@@ -200,6 +200,19 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
 
 `find /tag TAG` shows only contacts with the given tag. `FindCommandParser` creates a `PersonHasTagPredicate` from the value after `/tag`, and `FindCommand` applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any non-empty value is accepted and a value that is not a valid tag simply matches nobody.
 
+### Emergency contact listing
+
+`list emerg` is a shortcut to display contacts with the whole tag `Emergency`, ignoring the tag's case.
+The command words `list` and `emerg` must be lowercase. `AddressBookParser` routes `list` to
+`ListCommandParser`, which returns `ListCommand` for blank arguments and `ListEmergencyCommand` for `emerg`.
+Other arguments are rejected; additional arguments after `emerg` use the emergency command's usage message.
+
+`ListEmergencyCommand` applies `EmergencyContactPredicate` through `Model#updateFilteredPersonList()`.
+It searches all stored contacts, preserves their order, and leaves stored data unchanged. The GUI reuses
+the normal contact list. If there are no matches, the result message is `No emergency contacts found.`;
+otherwise it is `Listed all emergency contacts.`. `find /tag Emergency` produces the same contact list
+through the general tag search, while `list` restores all contacts.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -564,13 +577,14 @@ testers are expected to do more *exploratory* testing.
 
 1. Restoring a filtered list
 
-   1. Prerequisites: Start with sample contacts and run `find Alex`.
+   1. Prerequisites: Start with sample contacts and run `find /name Alex Yeoh`.
 
-   1. Test case: `  LiSt  `<br>
-      Expected: All contacts appear in numbered order with their details. The message is `Listed all contacts.`.
+   1. Test case: `  list  `<br>
+      Expected: All contacts appear in numbered order with their details. The message is `Listed all persons.`.
 
-   1. Test case: Run `find Alex`, then `list abc`.<br>
-      Expected: `Invalid command format. Usage: list`. The filtered list and stored contacts stay unchanged.
+   1. Test case: Run `find /name Alex Yeoh`, then `list abc`.<br>
+      Expected: `Invalid command format. Usage: list`.
+      The filtered list and stored contacts stay unchanged.
 
 1. Listing an empty address book
 
@@ -578,6 +592,7 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `list`<br>
       Expected: An empty list and `No contacts found.`.
+
 ### Adding a contact with tags
 
 1. Adding a contact with tags
@@ -633,6 +648,40 @@ testers are expected to do more *exploratory* testing.
 
 1. Test case: `list /filter friends`<br>
    Expected: The list is unchanged. Error: `Invalid command format. Usage: list`
+
+### Listing emergency contacts
+
+1. Filtering all stored contacts
+
+   1. Prerequisites: In a disposable address book, add at least one contact with `/tag emergency`,
+      another with `/tag EMERGENCY`, and contacts with no tags or with `/tag emergencyservice`.
+
+   1. Test case: `list emerg`<br>
+      Expected: Only the contacts with a whole emergency tag appear, in stored order with their details.
+      The message is `Listed all emergency contacts.`. Stored contacts are unchanged.
+
+   1. Test case: Search for a non-emergency contact, then enter `  list   emerg  `.<br>
+      Expected: The same emergency contacts appear, including contacts hidden by the search.
+
+   1. Test case: `LIST emerg`, `List emerg`, or `LIST`<br>
+      Expected: `Unknown command.`. The displayed list and stored contacts stay unchanged.
+
+   1. Test case: `list EMERG` or `list EmErG`<br>
+      Expected: `Invalid command format. Usage: list`.
+      The displayed list and stored contacts stay unchanged.
+
+   1. Test case: `list emerg friend`<br>
+      Expected: `Invalid command format. Usage: list emerg`. The displayed list and stored contacts stay unchanged.
+
+   1. Test case: `list`<br>
+      Expected: All contacts appear again in numbered order.
+
+1. Handling no matches
+
+   1. Prerequisites: Use a disposable address book with no emergency tags, then repeat with no contacts.
+
+   1. Test case: `list emerg`<br>
+      Expected: An empty list and `No emergency contacts found.` in both cases.
 
 ### Saving data
 
