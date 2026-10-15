@@ -21,6 +21,8 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.NameEqualsPredicate;
 import seedu.address.model.person.PersonHasTagPredicate;
+import seedu.address.model.person.PhoneEqualsPredicate;
+import seedu.address.testutil.PersonBuilder;
 
 /**
  * Contains integration tests (interaction with the Model) for {@code FindCommand}.
@@ -116,5 +118,26 @@ public class FindCommandTest {
         FindCommand findCommand = new FindCommand(predicate);
         String expected = FindCommand.class.getCanonicalName() + "{predicate=" + predicate + "}";
         assertEquals(expected, findCommand.toString());
+    }
+    @Test
+    public void execute_phoneSearch_findsAllMatchesDespitePreviousFilter() {
+        var sharedPhoneContact = new PersonBuilder().withName("Shared Phone")
+                .withPhone(ALICE.getPhone().value).build();
+        model.addPerson(sharedPhoneContact);
+        expectedModel.addPerson(sharedPhoneContact);
+        model.updateFilteredPersonList(person -> false);
+        PhoneEqualsPredicate predicate = new PhoneEqualsPredicate(ALICE.getPhone().value);
+        expectedModel.updateFilteredPersonList(predicate);
+        assertCommandSuccess(new FindCommand(predicate), model,
+                String.format(MESSAGE_PERSONS_LISTED_OVERVIEW, 2), expectedModel);
+        assertEquals(List.of(ALICE, sharedPhoneContact), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_phoneNotFound_showsEmptyList() {
+        PhoneEqualsPredicate predicate = new PhoneEqualsPredicate("00000000000000000000");
+        expectedModel.updateFilteredPersonList(predicate);
+        assertCommandSuccess(new FindCommand(predicate), model, MESSAGE_NO_PERSONS_FOUND, expectedModel);
+        assertTrue(model.getFilteredPersonList().isEmpty());
     }
 }

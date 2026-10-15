@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.model.person.NameEqualsPredicate;
 import seedu.address.model.person.PersonHasTagPredicate;
+import seedu.address.model.person.PhoneEqualsPredicate;
 
 public class FindCommandParserTest {
 
@@ -93,6 +94,26 @@ public class FindCommandParserTest {
 
         // case is preserved
         assertParseSuccess(parser, " /name alice bob", new FindCommand(new NameEqualsPredicate("alice bob")));
+    }
+
+    @Test
+    public void parse_phone_returnsFindCommand() {
+        assertParseSuccess(parser, " /phone 91234567", new FindCommand(new PhoneEqualsPredicate("91234567")));
+        assertParseSuccess(parser, " /phone  +65  9123 4567  ",
+                new FindCommand(new PhoneEqualsPredicate("+65 9123 4567")));
+        assertParseSuccess(parser, " /phone unknown", new FindCommand(new PhoneEqualsPredicate("unknown")));
+    }
+
+    @Test
+    public void parse_invalidPhonePrefixes_throwsParseException() {
+        String message = String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE);
+        for (String input : new String[]{" /phone", " /phone   ", " /phone91234567", " text /phone 91234567",
+            " /phone 91234567 /name Alice", " /tag friends /phone 91234567",
+            " /name Alice /phone 91234567 /tag friends"}) {
+            assertParseFailure(parser, input, message);
+        }
+        assertParseFailure(parser, " /phone 123 /phone 456",
+                getErrorMessageForDuplicatePrefixes(CliSyntax.PREFIX_PHONE_COMMAND));
     }
 
 }
