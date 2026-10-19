@@ -23,6 +23,10 @@ public class AddCommandParser implements Parser<AddCommand> {
     private static final Prefix[] PREFIXES = PREFIXED_FIELDS.stream()
             .map(PersonField::getPrefix)
             .toArray(Prefix[]::new);
+    private static final Prefix[] SINGLE_VALUED_PREFIXES = PREFIXED_FIELDS.stream()
+            .filter(field -> !field.isRepeatable())
+            .map(PersonField::getPrefix)
+            .toArray(Prefix[]::new);
 
     /**
      * Parses the given {@code String} of arguments in the context of the AddCommand
@@ -37,6 +41,7 @@ public class AddCommandParser implements Parser<AddCommand> {
         String normalized = WORD_SEPARATOR + StringUtil.collapseWhitespace(args);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalized, PREFIXES);
         verifyFormat(normalized, argMultimap);
+        argMultimap.verifyNoDuplicatePrefixesFor(SINGLE_VALUED_PREFIXES);
 
         PersonFieldValues details = new PersonFieldValues();
         details.set(PersonField.NAME, PersonField.NAME.parse(List.of(argMultimap.getPreamble())));
@@ -50,15 +55,13 @@ public class AddCommandParser implements Parser<AddCommand> {
     }
 
     /**
-     * Checks that each required field is given exactly once, no other field is repeated unless it may be,
-     * and no unknown prefix is used.
+     * Checks that each required field is given and no unknown prefix is used.
+     * Fields that are given more than once are checked afterwards.
      */
     private static void verifyFormat(String normalized, ArgumentMultimap argMultimap) throws ParseException {
-        boolean isFieldMisused = PREFIXED_FIELDS.stream().anyMatch(field -> {
-            int count = argMultimap.getAllValues(field.getPrefix()).size();
-            return (field.isRequired() && count != 1) || (!field.isRepeatable() && count > 1);
-        });
-        if (isFieldMisused || ParserUtil.hasUnknownPrefix(normalized, PREFIXES)) {
+        boolean isRequiredFieldMissing = PREFIXED_FIELDS.stream().anyMatch(field ->
+                field.isRequired() && argMultimap.getAllValues(field.getPrefix()).isEmpty());
+        if (isRequiredFieldMissing || ParserUtil.hasUnknownPrefix(normalized, PREFIXES)) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE));
         }
     }

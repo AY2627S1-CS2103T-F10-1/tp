@@ -1,11 +1,14 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ROOM_COMMAND;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.Messages;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
@@ -96,8 +99,14 @@ public class AddCommandParserTest {
 
     @Test
     public void parse_repeatedPhoneOrRoom_failure() {
-        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /phone 87654321", MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /room B1 /room B2", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /phone 87654321",
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_PHONE_COMMAND));
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /room B1 /room B2",
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ROOM_COMMAND));
+
+        // the values are not checked, so an invalid one does not change the message
+        assertParseFailure(parser, VALID_NAME + " /phone 911a /phone 87654321",
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_PHONE_COMMAND));
     }
 
     @Test
