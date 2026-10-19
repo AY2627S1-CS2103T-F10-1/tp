@@ -160,12 +160,12 @@ Entering `edit` displays `Edit not currently supported` and does not change any 
 
 ### Locating persons by name, tag or phone: `find`
 
-Finds persons whose full name is exactly the given name, or who have the given tag or phone number.
+Finds persons whose name is close to the given name, or who have the given tag or phone number.
 
 Format: `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`
 
 * Exactly one of `/name`, `/tag` and `/phone` must be given, and nothing may be typed before it.
-* Name search is case-sensitive; for example, `find /name alex yeoh` does not match `Alex Yeoh`.
+* Name search ignores capital letters and forgives small typos; for example, `find /name alx yeo` finds `Alex Yeoh`.
 * Tag search ignores case and extra spaces; for example, `find /tag Friends` matches the tag `friends`.
 * Spaces before and after `NAME`, `TAG` or `NUMBER` are ignored.
 * If no person matches, the message `No contacts found` is shown and the list is empty. Otherwise, the number of persons listed is shown.
@@ -174,9 +174,15 @@ Format: `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`
 * If `/name`, `/tag` or `/phone` is repeated, a message listing the repeated prefix is shown.
 
 Finding by name (`/name`):
-* Everything after `/name` is treated as one full name. It is not split into separate keywords.
-* The whole name must match; for example, `find /name Alex` does not match `Alex Yeoh`.
-* Spaces inside the name are matched as typed.
+* You do not need the full name. Each word you type must be close to one of the words in the contact's name,
+  in any order; for example, `find /name Yeoh` and `find /name Yeoh Alex` both find `Alex Yeoh`.
+* Every word you type must match. For example, `find /name Alex Tan` does not find `Alex Yeoh`, because no part of
+  the name is close to `Tan`.
+* Longer words can have more typos than shorter ones. Very short words (1 or 2 letters) must be typed exactly, so
+  `find /name Al` does not find `Alex Yeoh`.
+* Because small typos are allowed, a search may also list contacts with similar names; for example,
+  `find /name Tan` may also list a contact named `Tay`.
+* Extra spaces between words are ignored.
 
 Finding by phone (`/phone`):
 * Searches all contacts for an exact phone number, including contacts hidden by an earlier search.
@@ -192,7 +198,8 @@ Finding by tag (`/tag`):
 
 Examples:
 * `find /name Alex Yeoh` returns `Alex Yeoh`
-* `find /name Alex` returns no persons, because `Alex` is not the full name
+* `find /name alex` returns `Alex Yeoh`
+* `find /name Bernise` returns `Bernice Yu`, despite the typo
 * `find /tag friends` returns all persons who have the tag `friends`
 
 ### Deleting a person: `delete`
@@ -205,7 +212,7 @@ Format: `delete INDEX` or `delete /name NAME`
 * The index refers to the index number shown in the displayed person list.
 * The index **must be a positive integer** 1, 2, 3, …​
 * Name deletion searches **all contacts**, even when the displayed list is filtered.
-* `/name NAME` must be the contact's full name, matched case-sensitively, the same way as [`find /name`](#locating-persons-by-name-tag-or-phone-find).
+* `/name NAME` must be the contact's exact full name, with matching capital letters. Unlike [`find /name`](#locating-persons-by-name-tag-or-phone-find), typos and partial names are not accepted, so a typo cannot delete a different contact.
 * If `/name` is missing or repeated, `NAME` is empty or there is text before `/name`, an invalid command format message is shown.
 * Exactly one match is deleted immediately. With no matches, nothing is deleted.
 * If more than one contact matches, nothing is deleted. The matching contacts are displayed with their indexes; continue with `delete INDEX`.
@@ -271,7 +278,7 @@ Action | Format, Examples
 **Clear** | `clear`
 **Delete** | `delete INDEX` or `delete /name NAME`<br> e.g., `delete 3`, `delete /name Alice Tan`
 **Edit (suspended)** | Temporarily unavailable. Displays `Edit not currently supported`.
-**Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /tag friends`
+**Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /name jams`, `find /tag friends`
 **List** | `list`
 **List emergency contacts** | `list emerg`
 **Help** | `help`

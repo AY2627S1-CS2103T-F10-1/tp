@@ -10,7 +10,7 @@ import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSucces
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.FindCommand;
-import seedu.address.model.person.NameEqualsPredicate;
+import seedu.address.model.person.NameFuzzyMatchesPredicate;
 import seedu.address.model.person.PersonHasTagPredicate;
 import seedu.address.model.person.PhoneEqualsPredicate;
 
@@ -85,15 +85,14 @@ public class FindCommandParserTest {
 
     @Test
     public void parse_validArgs_returnsFindCommand() {
-        // full name is kept as a single string, not split into keywords
-        FindCommand expectedFindCommand = new FindCommand(new NameEqualsPredicate("Alice Bob"));
+        FindCommand expectedFindCommand = new FindCommand(new NameFuzzyMatchesPredicate("Alice Bob"));
         assertParseSuccess(parser, " /name Alice Bob", expectedFindCommand);
 
-        // leading and trailing whitespaces around the name are trimmed
-        assertParseSuccess(parser, " /name   Alice Bob  \t", expectedFindCommand);
+        // extra whitespace around and between words is ignored
+        assertParseSuccess(parser, " /name   Alice    Bob  \t", expectedFindCommand);
 
-        // case is preserved
-        assertParseSuccess(parser, " /name alice bob", new FindCommand(new NameEqualsPredicate("alice bob")));
+        // case is ignored
+        assertParseSuccess(parser, " /name alice bob", expectedFindCommand);
     }
 
     @Test
