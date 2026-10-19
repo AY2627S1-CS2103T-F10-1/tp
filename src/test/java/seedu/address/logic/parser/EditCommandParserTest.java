@@ -47,6 +47,17 @@ public class EditCommandParserTest {
     }
 
     @Test
+    public void parse_unknownOrWrongCasePrefix_failure() {
+        assertParseFailure(parser, " 1 /phone 91234567 /foo", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, " 1 /room B1 /PHONE 91234567", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, " 1 /name Amy Bee /Tag friend", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, " 1 /email amy@example.com", MESSAGE_INVALID_FORMAT);
+
+        // the old prefixes are no longer recognised
+        assertParseFailure(parser, " 1 p/91234567", MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
     public void parse_invalidValue_failure() {
         assertParseFailure(parser, " 1 /name James&", Name.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, " 1 /name", PersonField.MESSAGE_EMPTY_NAME);

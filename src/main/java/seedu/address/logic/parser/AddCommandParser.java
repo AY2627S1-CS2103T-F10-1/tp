@@ -4,9 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.AddCommand;
@@ -16,7 +14,6 @@ import seedu.address.model.person.Email;
 
 /** Parses the add command: the name, followed by every other {@link PersonField} in any order. */
 public class AddCommandParser implements Parser<AddCommand> {
-    private static final String PREFIX_MARKER = "/";
     private static final String WORD_SEPARATOR = " ";
 
     /** The name is the text before the first prefix, so every other field is given with a prefix. */
@@ -26,9 +23,6 @@ public class AddCommandParser implements Parser<AddCommand> {
     private static final Prefix[] PREFIXES = PREFIXED_FIELDS.stream()
             .map(PersonField::getPrefix)
             .toArray(Prefix[]::new);
-    private static final Set<String> KNOWN_PREFIXES = Stream.of(PREFIXES)
-            .map(Prefix::getPrefix)
-            .collect(Collectors.toUnmodifiableSet());
 
     /**
      * Parses the given {@code String} of arguments in the context of the AddCommand
@@ -64,13 +58,8 @@ public class AddCommandParser implements Parser<AddCommand> {
             int count = argMultimap.getAllValues(field.getPrefix()).size();
             return (field.isRequired() && count != 1) || (!field.isRepeatable() && count > 1);
         });
-        if (isFieldMisused || hasUnknownPrefix(normalized)) {
+        if (isFieldMisused || ParserUtil.hasUnknownPrefix(normalized, PREFIXES)) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE));
         }
-    }
-
-    private static boolean hasUnknownPrefix(String normalized) {
-        return Stream.of(normalized.trim().split(WORD_SEPARATOR))
-                .anyMatch(word -> word.startsWith(PREFIX_MARKER) && !KNOWN_PREFIXES.contains(word));
     }
 }
