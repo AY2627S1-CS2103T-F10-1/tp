@@ -3,19 +3,19 @@ package seedu.address.testutil;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ROOM_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
 
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
+import seedu.address.logic.parser.PersonField;
 import seedu.address.model.person.Person;
-import seedu.address.model.tag.Tag;
 
 /**
  * A utility class for Person.
@@ -55,18 +55,18 @@ public class PersonUtil {
      */
     public static String getEditPersonDescriptorDetails(EditPersonDescriptor descriptor) {
         StringBuilder sb = new StringBuilder();
-        descriptor.getName().ifPresent(name -> sb.append(PREFIX_NAME).append(name.fullName).append(" "));
-        descriptor.getPhone().ifPresent(phone -> sb.append(PREFIX_PHONE).append(phone.value).append(" "));
-        descriptor.getEmail().ifPresent(email -> sb.append(PREFIX_EMAIL).append(email.value).append(" "));
-        descriptor.getAddress().ifPresent(address -> sb.append(PREFIX_ADDRESS).append(address.value).append(" "));
-        if (descriptor.getTags().isPresent()) {
-            Set<Tag> tags = descriptor.getTags().get();
+        descriptor.get(PersonField.NAME).ifPresent(name ->
+                sb.append(PREFIX_NAME_COMMAND).append(" ").append(name.fullName).append(" "));
+        descriptor.get(PersonField.PHONE).ifPresent(phone ->
+                sb.append(PREFIX_PHONE_COMMAND).append(" ").append(phone.value).append(" "));
+        descriptor.get(PersonField.ROOM).ifPresent(room ->
+                sb.append(PREFIX_ROOM_COMMAND).append(" ").append(room.value).append(" "));
+        descriptor.get(PersonField.TAGS).ifPresent(tags -> {
             if (tags.isEmpty()) {
-                sb.append(PREFIX_TAG);
-            } else {
-                tags.forEach(s -> sb.append(PREFIX_TAG).append(s.tagName).append(" "));
+                sb.append(PREFIX_TAG_COMMAND).append(" ");
             }
-        }
+            tags.forEach(tag -> sb.append(PREFIX_TAG_COMMAND).append(" ").append(tag.tagName).append(" "));
+        });
         return sb.toString();
     }
 }
