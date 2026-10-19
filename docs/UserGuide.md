@@ -154,8 +154,19 @@ Example using the existing tag syntax:
 
 ### Editing a person: `edit`
 
-**Temporarily suspended:** The `edit` command is not available in the current version.
-Entering `edit` displays `Edit not currently supported` and does not change any contacts.
+Changes one or more details of an existing contact.
+
+Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​`
+
+* `INDEX` is the number shown beside the contact in the current list, and must be a positive integer.
+* At least one field must be given, in any order. Fields you leave out stay as they are.
+* Each field follows the same rules as in `add`, so `/name`, `/phone` and `/room` cannot be repeated.
+* `/tag` replaces all of the contact's existing tags with the tags given. Repeat `/tag` once per tag.
+  `/tag` on its own removes all tags.
+
+Examples:
+* `edit 2 /phone 9123 4567` changes the phone number of the 2nd contact.
+* `edit 1 /room B-204 /tag Resident /tag Floor 3` sets the room of the 1st contact and replaces their tags.
 
 
 ### Locating persons by name, tag or phone: `find`
@@ -270,7 +281,7 @@ Action | Format, Examples
 **Add** | `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​` <br> e.g., `add Daniel Lim /phone 8123 4567 /room B-204 /tag Resident Fellow /tag Floor 3`
 **Clear** | `clear`
 **Delete** | `delete INDEX` or `delete /name NAME`<br> e.g., `delete 3`, `delete /name Alice Tan`
-**Edit (suspended)** | Temporarily unavailable. Displays `Edit not currently supported`.
+**Edit** | `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​`<br> e.g., `edit 2 /phone 9123 4567`, `edit 1 /tag`
 **Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /tag friends`
 **List** | `list`
 **List emergency contacts** | `list emerg`

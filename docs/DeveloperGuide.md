@@ -196,6 +196,20 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
   * Pros: no data is lost.
   * Cons: the limit is no longer guaranteed, and contact cards can grow beyond 5 tags.
 
+### Edit feature
+
+`edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…` replaces only the fields that are given.
+
+#### Implementation
+
+`add` and `edit` share one definition of each field, so they cannot disagree about it. A `PersonField` holds a field's prefix, how its value is parsed and validated, how it is read from a `Person`, and the value `add` uses when the field is left out. `PersonField.values()` lists every field a user can set.
+
+* `AddCommandParser` and `EditCommandParser` build their prefixes, duplicate checks and parsing from `PersonField.values()`. `add` reads the name from the text before the first prefix, and every other field with its prefix.
+* `PersonFieldValues` stores a value per field. `EditPersonDescriptor` wraps one to hold the edited fields, and `EditCommand` copies the contact's current values, overwrites them with the edited ones and builds the new `Person`.
+* `/tag` replaces all tags, and `/tag` with no value removes them. This applies to any repeatable field.
+
+To add a new field, add it to `Person`, add a constant to `PersonField` and list it in `PersonField.values()`. `add` and `edit` then accept it without further changes. `PersonFieldTest` fails if a `Person` field is not registered or has no sample value.
+
 ### Filter by tag feature
 
 `find /tag TAG` shows only contacts with the given tag. `FindCommandParser` creates a `PersonHasTagPredicate` from the value after `/tag`, and `FindCommand` applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any non-empty value is accepted and a value that is not a valid tag simply matches nobody.
