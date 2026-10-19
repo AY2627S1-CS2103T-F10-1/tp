@@ -101,6 +101,14 @@ public class EditCommandParserTest {
     }
 
     @Test
+    public void parse_extraWhitespace_collapsed() {
+        EditCommand expected = new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder()
+                .withName("Amy Bee").withPhone("9123 4567").withTags("Resident Fellow").build());
+
+        assertParseSuccess(parser, "  1  /name  Amy   Bee \t/phone 9123   4567\n/tag Resident   Fellow ", expected);
+    }
+
+    @Test
     public void parse_multipleTags_replacesAllInOrder() {
         assertParseSuccess(parser, " 1 /tag friend /tag Resident Fellow", new EditCommand(INDEX_FIRST_PERSON,
                 new EditPersonDescriptorBuilder().withTags("friend", "Resident Fellow").build()));
