@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ROOM_COMMAND;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Note;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Room;
@@ -127,6 +129,42 @@ public class AddCommandParserTest {
     }
 
     @Test
+    public void parse_note_success() {
+        assertParseSuccess(parser, VALID_NAME_AND_PHONE + " /note Allergic to peanuts",
+                addCommandWithNote("Allergic to peanuts"));
+        assertParseSuccess(parser, VALID_NAME_AND_PHONE + " /note  Allergic   to peanuts ",
+                addCommandWithNote("Allergic to peanuts"));
+        assertParseSuccess(parser, VALID_NAME_AND_PHONE + " /note Call mum: +65 9123-4567 (after 6pm)!",
+                addCommandWithNote("Call mum: +65 9123-4567 (after 6pm)!"));
+        assertParseSuccess(parser, " " + VALID_NAME + " /note Allergic to peanuts /phone " + VALID_PHONE,
+                addCommandWithNote("Allergic to peanuts"));
+    }
+
+    @Test
+    public void parse_noteLength() {
+        String longestNote = "a".repeat(Note.MAX_LENGTH);
+        assertParseSuccess(parser, VALID_NAME_AND_PHONE + " /note " + longestNote, addCommandWithNote(longestNote));
+        assertParseSuccess(parser, VALID_NAME_AND_PHONE + " /note a", addCommandWithNote("a"));
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /note " + longestNote + "a", Note.MESSAGE_TOO_LONG);
+    }
+
+    @Test
+    public void parse_invalidNote_failure() {
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /note", Note.MESSAGE_EMPTY);
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /note call w/ parent", Note.MESSAGE_INVALID_CHARACTERS);
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /note ends with/", Note.MESSAGE_INVALID_CHARACTERS);
+
+        // a word starting with / is taken as an unknown prefix
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /note see /docs", MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
+    public void parse_repeatedNote_failure() {
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /note a /note b",
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NOTE_COMMAND));
+    }
+
+    @Test
     public void parse_tags_success() {
         assertParseSuccess(parser, VALID_NAME_AND_PHONE + " /tag RA", addCommandWithTags("RA"));
         assertParseSuccess(parser, VALID_NAME_AND_PHONE + " /tag RA /tag Resident Fellow",
@@ -195,6 +233,11 @@ public class AddCommandParserTest {
      * Returns the {@code AddCommand} expected for {@link #VALID_NAME_AND_PHONE} with no room and the given
      * {@code tags}.
      */
+    private static AddCommand addCommandWithNote(String note) {
+        return new AddCommand(new PersonBuilder().withName(VALID_NAME).withPhone(VALID_PHONE)
+                .withEmail("").withAddress("").withNote(note).build());
+    }
+
     private static AddCommand addCommandWithTags(String... tags) {
         return addCommandWithRoomAndTags("", tags);
     }

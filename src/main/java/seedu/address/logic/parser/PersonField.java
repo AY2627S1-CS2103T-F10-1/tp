@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ROOM_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
@@ -14,6 +15,7 @@ import java.util.function.Supplier;
 
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Note;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Room;
@@ -36,8 +38,10 @@ public final class PersonField<T> {
             single(ParserUtil::parseRoom), Person::getRoom, () -> new Room(""));
     public static final PersonField<Set<Tag>> TAGS = optional("tags", PREFIX_TAG_COMMAND, "TAG", true,
             ParserUtil::parseTags, Person::getTags, Collections::emptySet);
+    public static final PersonField<Note> NOTE = optional("note", PREFIX_NOTE_COMMAND, "NOTE", false,
+            single(ParserUtil::parseNote), Person::getNote, () -> new Note(""));
 
-    private static final List<PersonField<?>> VALUES = List.of(NAME, PHONE, ROOM, TAGS);
+    private static final List<PersonField<?>> VALUES = List.of(NAME, PHONE, ROOM, TAGS, NOTE);
 
     private final String name;
     private final Prefix prefix;

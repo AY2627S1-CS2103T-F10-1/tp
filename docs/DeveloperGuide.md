@@ -198,7 +198,7 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
 
 ### Edit feature
 
-`edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…` replaces only the fields that are given.
+`edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]… [/note NOTE]` replaces only the fields that are given.
 
 #### Implementation
 
@@ -208,7 +208,26 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
 * `PersonFieldValues` stores a value per field. `EditPersonDescriptor` wraps one to hold the edited fields, and `EditCommand` copies the contact's current values, overwrites them with the edited ones and builds the new `Person`.
 * `/tag` replaces all tags. Any optional field given with no value, such as `/tag` or `/room`, is reset to the value `add` uses when it is left out, which removes it. Required fields given with no value are rejected.
 
-To add a new field, add it to `Person`, add a constant to `PersonField` and list it in `PersonField.values()`. `add` and `edit` then accept it without further changes. `PersonFieldTest` fails if a `Person` field is not registered or has no sample value.
+To add a new field, add it to `Person`, add a constant to `PersonField` and list it in `PersonField.values()`, and add its `ParserUtil#parseXyz` method. `add` and `edit` then accept it without further changes. `PersonFieldTest` fails if a `Person` field is not registered or has no sample value.
+
+### Note field
+
+`/note NOTE` gives a contact a short free-text note, such as an allergy or how they prefer to be reached, so an RA on duty sees it on the contact card without looking elsewhere.
+
+#### Implementation
+
+`Note` is an immutable value class like `Room`, where an empty value means the contact has no note. It is added as the `PersonField.NOTE` field, so `add` and `edit` support `/note` through the mechanism above with no changes to either parser. `ParserUtil#parseNote` collapses whitespace and rejects an empty note, a note longer than 200 characters and a note containing `/`. `JsonAdaptedPerson` stores the note as an optional `note` property, so data files saved before this feature still load. `PersonCard` shows the note as a wrapped label that is hidden when the note is empty.
+
+#### Design considerations
+
+* **Alternative 1 (current choice):** a field set through `add` and `edit`.
+  * Pros: one way to set every field, and `edit 1 /note` clears it like any other optional field.
+  * Cons: a note is slightly longer to type than with a dedicated command.
+* **Alternative 2:** a dedicated `note INDEX TEXT` command.
+  * Pros: shorter to type.
+  * Cons: a second way to change the same field, with its own parser and validation to keep in step with `edit`.
+
+`/` is not allowed in a note because the parser treats a word starting with `/` as a field prefix. Allowing it only in the middle of a word would make the rule hard to explain to users.
 
 ### Filter by tag feature
 
@@ -696,6 +715,51 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `list emerg`<br>
       Expected: An empty list and `No emergency contacts found.` in both cases.
+
+### Adding, editing and removing notes
+
+1. Adding a contact with a note
+
+   1. Prerequisites: Start with the sample data.
+
+   1. Test case: `add Wei Ming /phone 9876 5432 /note Allergic to peanuts,   carries an EpiPen`<br>
+      Expected: Wei Ming is added. The contact card shows `Note: Allergic to peanuts, carries an EpiPen`
+      below the phone number, with the extra spaces removed.
+
+   1. Test case: `add Wei Ling /phone 9876 5433`<br>
+      Expected: Wei Ling is added. The contact card shows no note line.
+
+   1. Test case: `add Wei Ling /phone 9876 5433 /note`<br>
+      Expected: No contact is added. Error: `Note cannot be empty.`
+
+   1. Test case: `add Wei Ling /phone 9876 5433 /note call w/ parent`<br>
+      Expected: No contact is added. Error: `Note cannot contain "/".`
+
+   1. Test case: `add Wei Ling /phone 9876 5433 /note a /note b`<br>
+      Expected: No contact is added. The error names `/note` as a repeated field.
+
+   1. Test case: `add Wei Ling /phone 9876 5433 /note ` followed by 201 letters<br>
+      Expected: No contact is added. Error: `Note too long, please shorten it and try again.`
+      With exactly 200 letters, the contact is added and the note wraps onto several lines on the card.
+
+1. Editing and removing a note
+
+   1. Prerequisites: Start with the sample data. The 1st contact, Alex Yeoh, has a note.
+
+   1. Test case: `edit 1 /note Prefers WhatsApp over calls`<br>
+      Expected: The 1st contact's note is replaced. The status message ends with `Note: Prefers WhatsApp over calls`.
+
+   1. Test case: `edit 1 /note`<br>
+      Expected: The 1st contact's note is removed and the card no longer shows a note line.
+
+   1. Test case: `edit 2 /room B-204`, then `edit 2 /room`<br>
+      Expected: The 2nd contact's card shows `Room: B-204`, then the room line is removed.
+
+   1. Test case: `edit 1 /note see /docs`<br>
+      Expected: No contact is changed. The status message shows the `edit` usage, because `/docs` is not a known field.
+
+   1. Test case: Close the app and reopen it.<br>
+      Expected: Notes added or edited above are still shown.
 
 ### Saving data
 

@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ROOM_COMMAND;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
@@ -15,6 +16,7 @@ import seedu.address.logic.Messages;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Note;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Room;
@@ -128,6 +130,24 @@ public class EditCommandParserTest {
                 new EditPersonDescriptorBuilder().withRoom("").build()));
         assertParseSuccess(parser, " 3 /room /tag", new EditCommand(INDEX_THIRD_PERSON,
                 new EditPersonDescriptorBuilder().withRoom("").withTags().build()));
+        assertParseSuccess(parser, " 3 /note", new EditCommand(INDEX_THIRD_PERSON,
+                new EditPersonDescriptorBuilder().withNote("").build()));
+    }
+
+    @Test
+    public void parse_note_success() {
+        assertParseSuccess(parser, " 1 /note  Prefers   WhatsApp ", new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withNote("Prefers WhatsApp").build()));
+        assertParseSuccess(parser, " 1 /note Allergic to peanuts /phone 91234567", new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withPhone("91234567").withNote("Allergic to peanuts").build()));
+    }
+
+    @Test
+    public void parse_invalidNote_failure() {
+        assertParseFailure(parser, " 1 /note " + "a".repeat(Note.MAX_LENGTH + 1), Note.MESSAGE_TOO_LONG);
+        assertParseFailure(parser, " 1 /note call w/ parent", Note.MESSAGE_INVALID_CHARACTERS);
+        assertParseFailure(parser, " 1 /note a /note b",
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NOTE_COMMAND));
     }
 
     @Test

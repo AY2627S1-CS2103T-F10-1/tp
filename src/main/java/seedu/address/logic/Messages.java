@@ -45,6 +45,9 @@ public class Messages {
         }
         builder.append("; Tags: ");
         person.getTags().forEach(builder::append);
+        if (!person.getNote().value.isEmpty()) {
+            builder.append("; Note: ").append(person.getNote());
+        }
         return builder.toString();
     }
 

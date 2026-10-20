@@ -15,6 +15,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Note;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Room;
@@ -114,6 +115,27 @@ public class ParserUtil {
             throw new ParseException(Room.MESSAGE_INVALID_CHARACTERS);
         }
         return new Room(normalizedRoom);
+    }
+
+    /**
+     * Parses a {@code String note} into a {@code Note}.
+     * Leading and trailing whitespaces will be trimmed and inner runs of whitespace collapsed.
+     *
+     * @throws ParseException if the given {@code note} is empty, too long or contains {@code /}.
+     */
+    public static Note parseNote(String note) throws ParseException {
+        requireNonNull(note);
+        String normalizedNote = StringUtil.collapseWhitespace(note);
+        if (normalizedNote.isEmpty()) {
+            throw new ParseException(Note.MESSAGE_EMPTY);
+        }
+        if (normalizedNote.length() > Note.MAX_LENGTH) {
+            throw new ParseException(Note.MESSAGE_TOO_LONG);
+        }
+        if (!Note.isValidNote(normalizedNote)) {
+            throw new ParseException(Note.MESSAGE_INVALID_CHARACTERS);
+        }
+        return new Note(normalizedNote);
     }
 
     /**

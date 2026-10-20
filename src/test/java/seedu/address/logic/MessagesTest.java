@@ -1,6 +1,7 @@
 package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static seedu.address.testutil.TypicalPersons.ALICE;
 
 import org.junit.jupiter.api.Test;
 
@@ -22,6 +23,25 @@ public class MessagesTest {
                 .withTags("Friend", "Resident Fellow").build();
 
         assertEquals("Amy Bee; Phone: 85355255; Room: B-204; Tags: [Friend][Resident Fellow]",
+                Messages.format(person));
+    }
+
+    @Test
+    public void format_personWithoutNote_omitsNote() {
+        assertEquals("Alice Pauline; Phone: 94351253; Tags: [Friends]", Messages.format(ALICE));
+    }
+
+    @Test
+    public void format_personWithNote_showsNote() {
+        assertEquals("Alice Pauline; Phone: 94351253; Tags: [Friends]; Note: Allergic to peanuts",
+                Messages.format(new PersonBuilder(ALICE).withNote("Allergic to peanuts").build()));
+    }
+
+    @Test
+    public void format_personWithRoomAndNote_showsNoteAfterTags() {
+        Person person = new PersonBuilder(ALICE).withRoom("B-204").withNote("Allergic to peanuts").build();
+
+        assertEquals("Alice Pauline; Phone: 94351253; Room: B-204; Tags: [Friends]; Note: Allergic to peanuts",
                 Messages.format(person));
     }
 }

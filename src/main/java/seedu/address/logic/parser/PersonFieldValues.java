@@ -87,7 +87,7 @@ public class PersonFieldValues {
      */
     public Person toPerson(Email email, Address address) {
         return new Person(require(PersonField.NAME), require(PersonField.PHONE), email, address,
-                require(PersonField.TAGS), require(PersonField.ROOM));
+                require(PersonField.TAGS), require(PersonField.ROOM), require(PersonField.NOTE));
     }
 
     private <T> T require(PersonField<T> field) {

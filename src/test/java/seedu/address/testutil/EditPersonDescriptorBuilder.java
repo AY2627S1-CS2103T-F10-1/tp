@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.logic.parser.PersonField;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Note;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Room;
@@ -71,6 +72,14 @@ public class EditPersonDescriptorBuilder {
         Set<Tag> tagSet = new LinkedHashSet<>();
         Stream.of(tags).map(Tag::new).forEach(tagSet::add);
         descriptor.set(PersonField.TAGS, tagSet);
+        return this;
+    }
+
+    /**
+     * Sets the {@code Note} of the {@code EditPersonDescriptor} that we are building.
+     */
+    public EditPersonDescriptorBuilder withNote(String note) {
+        descriptor.set(PersonField.NOTE, new Note(note));
         return this;
     }
 
