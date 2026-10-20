@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -29,6 +30,17 @@ public class ParserUtil {
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
 
     private static final String PREFIX_MARKER = "/";
+
+    private static final TextRules NAME_RULES = new TextRules(Name.MAX_LENGTH, Name::isValidName,
+            Name.MESSAGE_EMPTY, Name.MESSAGE_TOO_LONG, Name.MESSAGE_CONSTRAINTS);
+    private static final TextRules PHONE_RULES = new TextRules(Phone.MAX_LENGTH, Phone::isValidPhone,
+            Phone.MESSAGE_EMPTY, Phone.MESSAGE_TOO_LONG, Phone.MESSAGE_INVALID_CHARACTERS);
+    private static final TextRules ROOM_RULES = new TextRules(Room.MAX_LENGTH, Room::isValidRoom,
+            Room.MESSAGE_EMPTY, Room.MESSAGE_TOO_LONG, Room.MESSAGE_INVALID_CHARACTERS);
+    private static final TextRules NOTE_RULES = new TextRules(Note.MAX_LENGTH, Note::isValidNote,
+            Note.MESSAGE_EMPTY, Note.MESSAGE_TOO_LONG, Note.MESSAGE_INVALID_CHARACTERS);
+    private static final TextRules TAG_RULES = new TextRules(Tag.MAX_LENGTH, Tag::isValidTagName,
+            Tag.MESSAGE_EMPTY, Tag.MESSAGE_TOO_LONG, Tag.MESSAGE_INVALID_CHARACTERS);
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be
@@ -63,15 +75,7 @@ public class ParserUtil {
     public static Name parseName(String name) throws ParseException {
         requireNonNull(name);
         String trimmedName = name.trim();
-        if (trimmedName.isEmpty()) {
-            throw new ParseException(Name.MESSAGE_EMPTY);
-        }
-        if (trimmedName.length() > Name.MAX_LENGTH) {
-            throw new ParseException(Name.MESSAGE_TOO_LONG);
-        }
-        if (!Name.isValidName(trimmedName)) {
-            throw new ParseException(Name.MESSAGE_CONSTRAINTS);
-        }
+        checkText(trimmedName, NAME_RULES);
         return new Name(trimmedName);
     }
 
@@ -84,15 +88,7 @@ public class ParserUtil {
     public static Phone parsePhone(String phone) throws ParseException {
         requireNonNull(phone);
         String trimmedPhone = phone.trim();
-        if (trimmedPhone.isEmpty()) {
-            throw new ParseException(Phone.MESSAGE_EMPTY);
-        }
-        if (trimmedPhone.length() > Phone.MAX_LENGTH) {
-            throw new ParseException(Phone.MESSAGE_TOO_LONG);
-        }
-        if (!Phone.isValidPhone(trimmedPhone)) {
-            throw new ParseException(Phone.MESSAGE_INVALID_CHARACTERS);
-        }
+        checkText(trimmedPhone, PHONE_RULES);
         return new Phone(trimmedPhone);
     }
 
@@ -105,15 +101,7 @@ public class ParserUtil {
     public static Room parseRoom(String room) throws ParseException {
         requireNonNull(room);
         String normalizedRoom = StringUtil.collapseWhitespace(room);
-        if (normalizedRoom.isEmpty()) {
-            throw new ParseException(Room.MESSAGE_EMPTY);
-        }
-        if (normalizedRoom.length() > Room.MAX_LENGTH) {
-            throw new ParseException(Room.MESSAGE_TOO_LONG);
-        }
-        if (!Room.isValidRoom(normalizedRoom)) {
-            throw new ParseException(Room.MESSAGE_INVALID_CHARACTERS);
-        }
+        checkText(normalizedRoom, ROOM_RULES);
         return new Room(normalizedRoom);
     }
 
@@ -126,15 +114,7 @@ public class ParserUtil {
     public static Note parseNote(String note) throws ParseException {
         requireNonNull(note);
         String normalizedNote = StringUtil.collapseWhitespace(note);
-        if (normalizedNote.isEmpty()) {
-            throw new ParseException(Note.MESSAGE_EMPTY);
-        }
-        if (normalizedNote.length() > Note.MAX_LENGTH) {
-            throw new ParseException(Note.MESSAGE_TOO_LONG);
-        }
-        if (!Note.isValidNote(normalizedNote)) {
-            throw new ParseException(Note.MESSAGE_INVALID_CHARACTERS);
-        }
+        checkText(normalizedNote, NOTE_RULES);
         return new Note(normalizedNote);
     }
 
@@ -177,15 +157,7 @@ public class ParserUtil {
     public static Tag parseTag(String tag) throws ParseException {
         requireNonNull(tag);
         String normalizedTag = StringUtil.collapseWhitespace(tag);
-        if (normalizedTag.isEmpty()) {
-            throw new ParseException(Tag.MESSAGE_EMPTY);
-        }
-        if (normalizedTag.length() > Tag.MAX_LENGTH) {
-            throw new ParseException(Tag.MESSAGE_TOO_LONG);
-        }
-        if (!Tag.isValidTagName(normalizedTag)) {
-            throw new ParseException(Tag.MESSAGE_INVALID_CHARACTERS);
-        }
+        checkText(normalizedTag, TAG_RULES);
         return new Tag(normalizedTag);
     }
 
@@ -209,4 +181,26 @@ public class ParserUtil {
         }
         return Collections.unmodifiableSet(tagSet);
     }
+
+    /**
+     * Checks {@code value}, which has already been trimmed or collapsed, against {@code rules}.
+     * The checks run in a fixed order so the user sees the most basic problem first.
+     *
+     * @throws ParseException if {@code value} is empty, too long or otherwise invalid.
+     */
+    private static void checkText(String value, TextRules rules) throws ParseException {
+        if (value.isEmpty()) {
+            throw new ParseException(rules.emptyMessage());
+        }
+        if (value.length() > rules.maxLength()) {
+            throw new ParseException(rules.tooLongMessage());
+        }
+        if (!rules.isValid().test(value)) {
+            throw new ParseException(rules.invalidMessage());
+        }
+    }
+
+    /** The limits and error messages for a text field that must be non-empty. */
+    private record TextRules(int maxLength, Predicate<String> isValid, String emptyMessage, String tooLongMessage,
+            String invalidMessage) {}
 }
