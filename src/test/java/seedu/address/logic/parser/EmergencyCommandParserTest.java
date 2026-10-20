@@ -31,7 +31,8 @@ public class EmergencyCommandParserTest {
         String usage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, EmergencyCommand.MESSAGE_USAGE);
         for (String input : new String[]{"", "0 /name Bob /phone 91234567", "1 /name Bob", "1 /phone 91234567",
             "1 /name Bob /phone 91234567 /foo value", "1 /name Bob /phone 91234567 /clear",
-            "Bob /name Bob /phone 91234567", "1 /name Bob /PHONE 91234567"}) {
+            "Bob /name Bob /phone 91234567", "1 /name Bob /PHONE 91234567",
+            "-1 /name Bob /phone 91234567", "999999999999999999999 /name Bob /phone 91234567"}) {
             assertParseFailure(parser, input, usage);
         }
     }
