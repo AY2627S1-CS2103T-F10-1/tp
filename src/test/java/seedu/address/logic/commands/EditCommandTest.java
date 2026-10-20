@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.DESC_BOB;
@@ -22,11 +23,13 @@ import org.junit.jupiter.api.Test;
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
+import seedu.address.logic.parser.PersonField;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Room;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 import seedu.address.testutil.PersonBuilder;
 
@@ -72,6 +75,37 @@ public class EditCommandTest {
         expectedModel.setPerson(lastPerson, editedPerson);
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_everyField_storedInModel() throws Exception {
+        Person original = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        Person editedPerson = new PersonBuilder(original).withName(VALID_NAME_BOB).withPhone(VALID_PHONE_BOB)
+                .withRoom(VALID_ROOM_BOB).withTags(VALID_TAG_HUSBAND, VALID_TAG_FRIEND).build();
+
+        new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder(editedPerson).build()).execute(model);
+
+        // read the stored person back, rather than comparing with a model that went through the same code
+        Person stored = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        for (PersonField<?> field : PersonField.values()) {
+            assertEquals(field.getFrom(editedPerson), field.getFrom(stored), field.getName());
+        }
+        assertEquals(original.getEmail(), stored.getEmail());
+        assertEquals(original.getAddress(), stored.getAddress());
+    }
+
+    @Test
+    public void execute_roomOnly_storedInModel() throws Exception {
+        Person original = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        assertNotEquals(new Room(VALID_ROOM_BOB), original.getRoom());
+
+        new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder().withRoom(VALID_ROOM_BOB).build())
+                .execute(model);
+
+        Person stored = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        assertEquals(new Room(VALID_ROOM_BOB), stored.getRoom());
+        assertEquals(original.getName(), stored.getName());
+        assertEquals(original.getPhone(), stored.getPhone());
     }
 
     @Test
