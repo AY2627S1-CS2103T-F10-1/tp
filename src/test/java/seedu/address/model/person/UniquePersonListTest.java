@@ -2,19 +2,25 @@ package seedu.address.model.person;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_EMAIL_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
 
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.model.person.exceptions.DuplicatePersonException;
 import seedu.address.model.person.exceptions.PersonNotFoundException;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class UniquePersonListTest {
@@ -170,12 +176,42 @@ public class UniquePersonListTest {
     public void toStringMethod() {
         assertEquals(uniquePersonList.asUnmodifiableObservableList().toString(), uniquePersonList.toString());
     }
+
     @Test
-    public void setPerson_changedRoom_storesUpdatedRoom() {
+    public void setPerson_editedPerson_storedAsGiven() {
+        uniquePersonList.add(ALICE);
+        Person editedAlice = new PersonBuilder(ALICE).withPhone(VALID_PHONE_BOB).build();
+        uniquePersonList.setPerson(ALICE, editedAlice);
+
+        // the very same person, so that no field can be lost or replaced on the way in
+        assertSame(editedAlice, uniquePersonList.asUnmodifiableObservableList().getFirst());
+    }
+
+    @Test
+    public void setPerson_everyFieldChanged_replacesEveryField() {
+        Person resident = new PersonBuilder(ALICE).withRoom("B-204").build();
+        uniquePersonList.add(resident);
+        Person updated = new PersonBuilder().withName(VALID_NAME_BOB).withPhone(VALID_PHONE_BOB)
+                .withEmail(VALID_EMAIL_BOB).withAddress(VALID_ADDRESS_BOB).withRoom("C-101")
+                .withTags(VALID_TAG_HUSBAND).build();
+        uniquePersonList.setPerson(resident, updated);
+
+        Person stored = uniquePersonList.asUnmodifiableObservableList().getFirst();
+        assertEquals(VALID_NAME_BOB, stored.getName().fullName);
+        assertEquals(VALID_PHONE_BOB, stored.getPhone().value);
+        assertEquals(VALID_EMAIL_BOB, stored.getEmail().value);
+        assertEquals(VALID_ADDRESS_BOB, stored.getAddress().value);
+        assertEquals(new Room("C-101"), stored.getRoom());
+        assertEquals(Set.of(new Tag(VALID_TAG_HUSBAND)), stored.getTags());
+    }
+
+    @Test
+    public void setPerson_roomChanged_replacesRoom() {
         Person resident = new PersonBuilder(ALICE).withRoom("B-204").build();
         uniquePersonList.add(resident);
         Person updated = new PersonBuilder(resident).withPhone("12345678").withRoom("C-101").build();
         uniquePersonList.setPerson(resident, updated);
+        assertEquals(updated, uniquePersonList.asUnmodifiableObservableList().getFirst());
         assertEquals(new Room("C-101"), uniquePersonList.asUnmodifiableObservableList().getFirst().getRoom());
     }
 
