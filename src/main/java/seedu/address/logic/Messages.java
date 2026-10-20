@@ -39,8 +39,11 @@ public class Messages {
         final StringBuilder builder = new StringBuilder();
         builder.append(person.getName())
                 .append("; Phone: ")
-                .append(person.getPhone())
-                .append("; Tags: ");
+                .append(person.getPhone());
+        if (!person.getRoom().value.isEmpty()) {
+            builder.append("; Room: ").append(person.getRoom());
+        }
+        builder.append("; Tags: ");
         person.getTags().forEach(builder::append);
         return builder.toString();
     }
