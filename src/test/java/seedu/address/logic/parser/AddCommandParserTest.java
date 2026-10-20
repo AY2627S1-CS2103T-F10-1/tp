@@ -229,15 +229,15 @@ public class AddCommandParserTest {
                 Tag.MESSAGE_TOO_LONG);
     }
 
+    /** Returns the {@code AddCommand} expected for {@link #VALID_NAME_AND_PHONE} with only the given {@code note}. */
+    private static AddCommand addCommandWithNote(String note) {
+        return new AddCommand(validPersonBuilder().withNote(note).build());
+    }
+
     /**
      * Returns the {@code AddCommand} expected for {@link #VALID_NAME_AND_PHONE} with no room and the given
      * {@code tags}.
      */
-    private static AddCommand addCommandWithNote(String note) {
-        return new AddCommand(new PersonBuilder().withName(VALID_NAME).withPhone(VALID_PHONE)
-                .withEmail("").withAddress("").withNote(note).build());
-    }
-
     private static AddCommand addCommandWithTags(String... tags) {
         return addCommandWithRoomAndTags("", tags);
     }
@@ -247,7 +247,11 @@ public class AddCommandParserTest {
      * and {@code tags}.
      */
     private static AddCommand addCommandWithRoomAndTags(String room, String... tags) {
-        return new AddCommand(new PersonBuilder().withName(VALID_NAME).withPhone(VALID_PHONE)
-                .withEmail("").withAddress("").withRoom(room).withTags(tags).build());
+        return new AddCommand(validPersonBuilder().withRoom(room).withTags(tags).build());
+    }
+
+    /** Returns a builder for the person {@code add} creates from {@link #VALID_NAME_AND_PHONE} alone. */
+    private static PersonBuilder validPersonBuilder() {
+        return new PersonBuilder().withName(VALID_NAME).withPhone(VALID_PHONE).withEmail("").withAddress("");
     }
 }
