@@ -16,6 +16,7 @@ import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Phone;
 import seedu.address.model.person.Room;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
@@ -60,9 +61,9 @@ public class EditCommandParserTest {
     @Test
     public void parse_invalidValue_failure() {
         assertParseFailure(parser, " 1 /name James&", Name.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, " 1 /name", PersonField.MESSAGE_EMPTY_NAME);
-        assertParseFailure(parser, " 1 /phone 911a", PersonField.MESSAGE_INVALID_PHONE);
-        assertParseFailure(parser, " 1 /phone", PersonField.MESSAGE_EMPTY_PHONE);
+        assertParseFailure(parser, " 1 /name", Name.MESSAGE_EMPTY);
+        assertParseFailure(parser, " 1 /phone 911a", Phone.MESSAGE_INVALID_CHARACTERS);
+        assertParseFailure(parser, " 1 /phone", Phone.MESSAGE_EMPTY);
         assertParseFailure(parser, " 1 /room", Room.MESSAGE_EMPTY);
         assertParseFailure(parser, " 1 /room B#1", Room.MESSAGE_INVALID_CHARACTERS);
         assertParseFailure(parser, " 1 /tag hubby*", Tag.MESSAGE_INVALID_CHARACTERS);
@@ -72,7 +73,7 @@ public class EditCommandParserTest {
         assertParseFailure(parser, " 1 /tag /tag friend", Tag.MESSAGE_EMPTY);
 
         // same rules as add
-        assertParseFailure(parser, " 1 /tag RA /tag ra", PersonField.MESSAGE_DUPLICATE_TAG);
+        assertParseFailure(parser, " 1 /tag RA /tag ra", Tag.MESSAGE_DUPLICATE);
         assertParseFailure(parser, " 1 /tag a /tag b /tag c /tag d /tag e /tag f", Person.MESSAGE_TAG_LIMIT_REACHED);
 
         // only the first invalid value is reported

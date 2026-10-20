@@ -9,7 +9,10 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
  */
 public class Phone {
 
-
+    public static final int MAX_LENGTH = 20;
+    public static final String MESSAGE_EMPTY = "Phone number cannot be empty.";
+    public static final String MESSAGE_TOO_LONG = "Phone number too long, please shorten it and try again.";
+    public static final String MESSAGE_INVALID_CHARACTERS = "Phone number contains invalid characters.";
     public static final String MESSAGE_CONSTRAINTS =
             "Phone number must be 20 characters or fewer and contain only digits, spaces, '+', '-', or parentheses";
     public static final String VALIDATION_REGEX = "[0-9+()\\- ]{1,20}";

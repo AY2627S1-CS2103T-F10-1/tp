@@ -3,6 +3,7 @@ package seedu.address.logic.parser;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -16,6 +17,7 @@ import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
+import seedu.address.model.person.Room;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -55,11 +57,17 @@ public class ParserUtil {
      * Parses a {@code String name} into a {@code Name}.
      * Leading and trailing whitespaces will be trimmed.
      *
-     * @throws ParseException if the given {@code name} is invalid.
+     * @throws ParseException if the given {@code name} is empty, too long or invalid.
      */
     public static Name parseName(String name) throws ParseException {
         requireNonNull(name);
         String trimmedName = name.trim();
+        if (trimmedName.isEmpty()) {
+            throw new ParseException(Name.MESSAGE_EMPTY);
+        }
+        if (trimmedName.length() > Name.MAX_LENGTH) {
+            throw new ParseException(Name.MESSAGE_TOO_LONG);
+        }
         if (!Name.isValidName(trimmedName)) {
             throw new ParseException(Name.MESSAGE_CONSTRAINTS);
         }
@@ -70,15 +78,42 @@ public class ParserUtil {
      * Parses a {@code String phone} into a {@code Phone}.
      * Leading and trailing whitespaces will be trimmed.
      *
-     * @throws ParseException if the given {@code phone} is invalid.
+     * @throws ParseException if the given {@code phone} is empty, too long or contains invalid characters.
      */
     public static Phone parsePhone(String phone) throws ParseException {
         requireNonNull(phone);
         String trimmedPhone = phone.trim();
+        if (trimmedPhone.isEmpty()) {
+            throw new ParseException(Phone.MESSAGE_EMPTY);
+        }
+        if (trimmedPhone.length() > Phone.MAX_LENGTH) {
+            throw new ParseException(Phone.MESSAGE_TOO_LONG);
+        }
         if (!Phone.isValidPhone(trimmedPhone)) {
-            throw new ParseException(Phone.MESSAGE_CONSTRAINTS);
+            throw new ParseException(Phone.MESSAGE_INVALID_CHARACTERS);
         }
         return new Phone(trimmedPhone);
+    }
+
+    /**
+     * Parses a {@code String room} into a {@code Room}.
+     * Leading and trailing whitespaces will be trimmed and inner runs of whitespace collapsed.
+     *
+     * @throws ParseException if the given {@code room} is empty, too long or contains invalid characters.
+     */
+    public static Room parseRoom(String room) throws ParseException {
+        requireNonNull(room);
+        String normalizedRoom = StringUtil.collapseWhitespace(room);
+        if (normalizedRoom.isEmpty()) {
+            throw new ParseException(Room.MESSAGE_EMPTY);
+        }
+        if (normalizedRoom.length() > Room.MAX_LENGTH) {
+            throw new ParseException(Room.MESSAGE_TOO_LONG);
+        }
+        if (!Room.isValidRoom(normalizedRoom)) {
+            throw new ParseException(Room.MESSAGE_INVALID_CHARACTERS);
+        }
+        return new Room(normalizedRoom);
     }
 
     /**
@@ -134,19 +169,22 @@ public class ParserUtil {
 
     /**
      * Parses {@code Collection<String> tags} into a {@code Set<Tag>}, keeping the order in which they were given.
-     * Tags that differ only in case or spacing are treated as one tag.
      *
-     * @throws ParseException if any tag is invalid or there are more than {@link Person#MAX_TAGS} distinct tags.
+     * @throws ParseException if any tag is invalid, is repeated (ignoring case and spacing),
+     *         or there are more than {@link Person#MAX_TAGS} tags.
      */
     public static Set<Tag> parseTags(Collection<String> tags) throws ParseException {
         requireNonNull(tags);
         final Set<Tag> tagSet = new LinkedHashSet<>();
         for (String tagName : tags) {
-            tagSet.add(parseTag(tagName));
+            boolean isNewTag = tagSet.add(parseTag(tagName));
+            if (!isNewTag) {
+                throw new ParseException(Tag.MESSAGE_DUPLICATE);
+            }
         }
         if (tagSet.size() > Person.MAX_TAGS) {
             throw new ParseException(Person.MESSAGE_TAG_LIMIT_REACHED);
         }
-        return tagSet;
+        return Collections.unmodifiableSet(tagSet);
     }
 }

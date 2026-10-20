@@ -24,6 +24,7 @@ public class Tag {
     public static final String MESSAGE_EMPTY = "Tag cannot be empty.";
     public static final String MESSAGE_TOO_LONG = "Tag too long, please shorten it and try again.";
     public static final String MESSAGE_INVALID_CHARACTERS = "Tag contains invalid characters.";
+    public static final String MESSAGE_DUPLICATE = "Contact already has this tag.";
 
     /** One or more words of letters, digits and hyphens, separated by single spaces. */
     public static final String VALIDATION_REGEX = "[\\p{Alnum}-]+( [\\p{Alnum}-]+)*";
