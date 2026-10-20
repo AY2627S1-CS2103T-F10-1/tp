@@ -27,11 +27,12 @@ import seedu.address.logic.parser.PersonField;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
-import seedu.address.model.person.Room;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 import seedu.address.testutil.PersonBuilder;
+import seedu.address.testutil.PersonFieldSamples;
 
 /**
  * Contains integration tests (interaction with the Model) and unit tests for EditCommand.
@@ -78,34 +79,61 @@ public class EditCommandTest {
     }
 
     @Test
-    public void execute_everyField_storedInModel() throws Exception {
+    public void execute_editedContact_canBeReadBackFromModel() throws Exception {
         Person original = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
         Person editedPerson = new PersonBuilder(original).withName(VALID_NAME_BOB).withPhone(VALID_PHONE_BOB)
                 .withRoom(VALID_ROOM_BOB).withTags(VALID_TAG_HUSBAND, VALID_TAG_FRIEND).build();
 
         new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder(editedPerson).build()).execute(model);
 
-        // read the stored person back, rather than comparing with a model that went through the same code
-        Person stored = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
-        for (PersonField<?> field : PersonField.values()) {
-            assertEquals(field.getFrom(editedPerson), field.getFrom(stored), field.getName());
-        }
-        assertEquals(original.getEmail(), stored.getEmail());
-        assertEquals(original.getAddress(), stored.getAddress());
+        // read the contact back, rather than comparing with a model that went through the same code
+        assertEquals(editedPerson, model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased()));
     }
 
     @Test
-    public void execute_roomOnly_storedInModel() throws Exception {
-        Person original = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
-        assertNotEquals(new Room(VALID_ROOM_BOB), original.getRoom());
+    public void execute_oneFieldAtATime_changesOnlyThatField() throws Exception {
+        for (PersonField<?> field : PersonField.values()) {
+            assertOnlyFieldChanged(field);
+        }
+    }
 
-        new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder().withRoom(VALID_ROOM_BOB).build())
-                .execute(model);
+    /**
+     * Edits only {@code field} and checks, from the person that the command gives to the model,
+     * that this field has its new value and every other field is as before.
+     */
+    private <T> void assertOnlyFieldChanged(PersonField<T> field) throws Exception {
+        Person target = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        T newValue = PersonFieldSamples.getValue(field);
+        assertNotEquals(newValue, field.getFrom(target), "the sample for " + field + " must differ from the target");
+        EditPersonDescriptor descriptor = new EditPersonDescriptor();
+        descriptor.set(field, newValue);
 
-        Person stored = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
-        assertEquals(new Room(VALID_ROOM_BOB), stored.getRoom());
-        assertEquals(original.getName(), stored.getName());
-        assertEquals(original.getPhone(), stored.getPhone());
+        SetPersonSpy spy = new SetPersonSpy(getTypicalAddressBook());
+        new EditCommand(INDEX_FIRST_PERSON, descriptor).execute(spy);
+
+        assertEquals(target, spy.target);
+        for (PersonField<?> other : PersonField.values()) {
+            Object expected = other == field ? newValue : other.getFrom(target);
+            assertEquals(expected, other.getFrom(spy.editedPerson), "field " + other + " after editing " + field);
+        }
+        assertEquals(target.getEmail(), spy.editedPerson.getEmail());
+        assertEquals(target.getAddress(), spy.editedPerson.getAddress());
+    }
+
+    /** A model that records the replacement given to {@code setPerson} instead of storing it. */
+    private static class SetPersonSpy extends ModelManager {
+        private Person target;
+        private Person editedPerson;
+
+        SetPersonSpy(ReadOnlyAddressBook addressBook) {
+            super(addressBook, new UserPrefs());
+        }
+
+        @Override
+        public void setPerson(Person target, Person editedPerson) {
+            this.target = target;
+            this.editedPerson = editedPerson;
+        }
     }
 
     @Test
@@ -120,9 +148,6 @@ public class EditCommandTest {
         expectedModel.setPerson(original, editedPerson);
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
-        assertEquals(original.getEmail(), editedPerson.getEmail());
-        assertEquals(original.getAddress(), editedPerson.getAddress());
-        assertEquals(original.getName(), editedPerson.getName());
     }
 
     @Test

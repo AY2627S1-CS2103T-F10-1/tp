@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -19,6 +18,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Person;
+import seedu.address.testutil.PersonFieldSamples;
 import seedu.address.testutil.TypicalPersons;
 
 /**
@@ -28,13 +28,6 @@ import seedu.address.testutil.TypicalPersons;
 public class PersonFieldTest {
     /** Person fields that are not set from the command line. */
     private static final Set<String> LEGACY_PERSON_FIELDS = Set.of("email", "address");
-
-    /** A valid value for each field. A new field must be given one here. */
-    private static final Map<PersonField<?>, String> SAMPLE_VALUES = Map.of(
-            PersonField.NAME, "Sample Name",
-            PersonField.PHONE, "98765432",
-            PersonField.ROOM, "Z-999",
-            PersonField.TAGS, "Sample Tag");
 
     @Test
     public void everyPersonFieldIsRegistered() {
@@ -52,17 +45,17 @@ public class PersonFieldTest {
 
     @Test
     public void everyFieldHasSampleValue() {
-        assertEquals(Set.copyOf(PersonField.values()), SAMPLE_VALUES.keySet());
+        PersonField.values().forEach(PersonFieldSamples::getText);
     }
 
     @Test
     public void addAcceptsEveryField() throws Exception {
-        StringBuilder args = new StringBuilder(" " + SAMPLE_VALUES.get(PersonField.NAME));
+        StringBuilder args = new StringBuilder(" " + PersonFieldSamples.getText(PersonField.NAME));
         PersonFieldValues expectedValues = new PersonFieldValues();
         for (PersonField<?> field : PersonField.values()) {
             setSample(expectedValues, field);
             if (field != PersonField.NAME) {
-                args.append(" ").append(field.getPrefix()).append(" ").append(SAMPLE_VALUES.get(field));
+                args.append(" ").append(field.getPrefix()).append(" ").append(PersonFieldSamples.getText(field));
             }
         }
 
@@ -74,7 +67,7 @@ public class PersonFieldTest {
     public void editAcceptsEveryField() throws Exception {
         for (PersonField<?> field : PersonField.values()) {
             EditCommand command = new EditCommandParser().parse(" 1 " + field.getPrefix() + " "
-                    + SAMPLE_VALUES.get(field));
+                    + PersonFieldSamples.getText(field));
             assertTrue(command.toString().contains(field.getName() + "="),
                     "edit should accept " + field.getPrefix());
         }
@@ -95,6 +88,6 @@ public class PersonFieldTest {
     }
 
     private static <T> void setSample(PersonFieldValues values, PersonField<T> field) throws ParseException {
-        values.set(field, field.parse(List.of(SAMPLE_VALUES.get(field))));
+        values.set(field, field.parse(List.of(PersonFieldSamples.getText(field))));
     }
 }
