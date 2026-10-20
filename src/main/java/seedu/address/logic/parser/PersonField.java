@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
@@ -12,7 +13,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Note;
@@ -42,6 +45,7 @@ public final class PersonField<T> {
             single(ParserUtil::parseNote), Person::getNote, () -> new Note(""));
 
     private static final List<PersonField<?>> VALUES = List.of(NAME, PHONE, ROOM, TAGS, NOTE);
+    private static final Logger logger = LogsCenter.getLogger(PersonField.class);
 
     private final String name;
     private final Prefix prefix;
@@ -134,12 +138,15 @@ public final class PersonField<T> {
      * @throws ParseException if the values are invalid.
      */
     public Optional<T> parseFrom(ArgumentMultimap argMultimap, boolean isClearAllowed) throws ParseException {
+        requireNonNull(argMultimap);
         List<String> values = argMultimap.getAllValues(prefix);
         if (values.isEmpty()) {
             return Optional.empty();
         }
         boolean isClearRequested = isClearAllowed && !isRequired() && values.equals(List.of(""));
         if (isClearRequested) {
+            assert getDefaultValue().isPresent() : "an optional field always has a default value";
+            logger.fine("Clearing field " + name + " given with no value");
             return getDefaultValue();
         }
         return Optional.of(parse(values));

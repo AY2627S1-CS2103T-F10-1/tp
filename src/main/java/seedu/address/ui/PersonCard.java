@@ -57,6 +57,7 @@ public class PersonCard extends UiPart<Region> {
 
     /** Shows {@code value} after {@code prefix} in {@code label}, or hides the label if there is no value. */
     private static void showIfPresent(Label label, String prefix, String value) {
+        assert label != null && prefix != null && value != null : "every card label and value is set";
         boolean isPresent = !value.isEmpty();
         label.setText(prefix + value);
         label.setVisible(isPresent);

@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -86,6 +87,7 @@ public class PersonFieldValues {
      * The legacy {@code email} and {@code address}, which are not fields, are given separately.
      */
     public Person toPerson(Email email, Address address) {
+        requireAllNonNull(email, address);
         return new Person(require(PersonField.NAME), require(PersonField.PHONE), email, address,
                 require(PersonField.TAGS), require(PersonField.ROOM), require(PersonField.NOTE));
     }

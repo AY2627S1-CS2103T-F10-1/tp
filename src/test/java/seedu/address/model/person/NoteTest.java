@@ -28,6 +28,11 @@ public class NoteTest {
     }
 
     @Test
+    public void isValidNote_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> Note.isValidNote(null));
+    }
+
+    @Test
     public void isValidNote_length() {
         assertTrue(Note.isValidNote(""));
         assertTrue(Note.isValidNote("a"));

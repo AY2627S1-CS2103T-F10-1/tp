@@ -30,6 +30,7 @@ public class Note {
 
     /** Returns true if {@code note} is a valid note; an empty note means the contact has no note. */
     public static boolean isValidNote(String note) {
+        requireNonNull(note);
         return note.length() <= MAX_LENGTH && !note.contains(FORBIDDEN_CHARACTER);
     }
 

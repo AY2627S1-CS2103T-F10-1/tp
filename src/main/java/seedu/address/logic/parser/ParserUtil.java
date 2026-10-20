@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -189,6 +190,8 @@ public class ParserUtil {
      * @throws ParseException if {@code value} is empty, too long or otherwise invalid.
      */
     private static void checkText(String value, TextRules rules) throws ParseException {
+        assert value != null && rules != null : "callers check their input for null before normalizing it";
+        assert value.equals(value.trim()) : "value should be trimmed before it is checked";
         if (value.isEmpty()) {
             throw new ParseException(rules.emptyMessage());
         }
@@ -202,5 +205,10 @@ public class ParserUtil {
 
     /** The limits and error messages for a text field that must be non-empty. */
     private record TextRules(int maxLength, Predicate<String> isValid, String emptyMessage, String tooLongMessage,
-            String invalidMessage) {}
+            String invalidMessage) {
+        private TextRules {
+            requireAllNonNull(isValid, emptyMessage, tooLongMessage, invalidMessage);
+            assert maxLength > 0 : "a field must allow at least one character";
+        }
+    }
 }
