@@ -206,7 +206,7 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
 
 * `AddCommandParser` and `EditCommandParser` build their prefixes, duplicate checks and parsing from `PersonField.values()`. `add` reads the name from the text before the first prefix, and every other field with its prefix.
 * `PersonFieldValues` stores a value per field. `EditPersonDescriptor` wraps one to hold the edited fields, and `EditCommand` copies the contact's current values, overwrites them with the edited ones and builds the new `Person`.
-* `/tag` replaces all tags, and `/tag` with no value removes them. This applies to any repeatable field.
+* `/tag` replaces all tags. Any optional field given with no value, such as `/tag` or `/room`, is reset to the value `add` uses when it is left out, which removes it. Required fields given with no value are rejected.
 
 To add a new field, add it to `Person`, add a constant to `PersonField` and list it in `PersonField.values()`. `add` and `edit` then accept it without further changes. `PersonFieldTest` fails if a `Person` field is not registered or has no sample value.
 

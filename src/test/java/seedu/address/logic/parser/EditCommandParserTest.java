@@ -61,10 +61,7 @@ public class EditCommandParserTest {
     @Test
     public void parse_invalidValue_failure() {
         assertParseFailure(parser, " 1 /name James&", Name.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, " 1 /name", Name.MESSAGE_EMPTY);
         assertParseFailure(parser, " 1 /phone 911a", Phone.MESSAGE_INVALID_CHARACTERS);
-        assertParseFailure(parser, " 1 /phone", Phone.MESSAGE_EMPTY);
-        assertParseFailure(parser, " 1 /room", Room.MESSAGE_EMPTY);
         assertParseFailure(parser, " 1 /room B#1", Room.MESSAGE_INVALID_CHARACTERS);
         assertParseFailure(parser, " 1 /tag hubby*", Tag.MESSAGE_INVALID_CHARACTERS);
 
@@ -124,8 +121,18 @@ public class EditCommandParserTest {
     }
 
     @Test
-    public void parse_resetTags_success() {
+    public void parse_emptyOptionalField_clearsField() {
         assertParseSuccess(parser, " 3 /tag", new EditCommand(INDEX_THIRD_PERSON,
                 new EditPersonDescriptorBuilder().withTags().build()));
+        assertParseSuccess(parser, " 3 /room", new EditCommand(INDEX_THIRD_PERSON,
+                new EditPersonDescriptorBuilder().withRoom("").build()));
+        assertParseSuccess(parser, " 3 /room /tag", new EditCommand(INDEX_THIRD_PERSON,
+                new EditPersonDescriptorBuilder().withRoom("").withTags().build()));
+    }
+
+    @Test
+    public void parse_emptyRequiredField_failure() {
+        assertParseFailure(parser, " 1 /name", Name.MESSAGE_EMPTY);
+        assertParseFailure(parser, " 1 /phone", Phone.MESSAGE_EMPTY);
     }
 }

@@ -162,11 +162,13 @@ Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​`
 * At least one field must be given, in any order. Fields you leave out stay as they are.
 * Each field follows the same rules as in `add`, so `/name`, `/phone` and `/room` cannot be repeated.
 * `/tag` replaces all of the contact's existing tags with the tags given. Repeat `/tag` once per tag.
-  `/tag` on its own removes all tags.
+* An optional field given with nothing after it is removed: `/room` on its own removes the room,
+  and `/tag` on its own removes all tags. `/name` and `/phone` are required, so they cannot be removed.
 
 Examples:
 * `edit 2 /phone 9123 4567` changes the phone number of the 2nd contact.
 * `edit 1 /room B-204 /tag Resident /tag Floor 3` sets the room of the 1st contact and replaces their tags.
+* `edit 3 /room` removes the room of the 3rd contact.
 
 
 ### Locating persons by name, tag or phone: `find`

@@ -124,8 +124,8 @@ public final class PersonField<T> {
 
     /**
      * Parses the values given for this field in {@code argMultimap}, or returns empty if there are none.
-     * If {@code isClearAllowed} is true, a repeatable field given a single empty value is reset to its default
-     * value, so that for example {@code /tag} on its own removes all tags.
+     * If {@code isClearAllowed} is true, an optional field given a single empty value is reset to its default
+     * value, so that for example {@code /tag} on its own removes all tags and {@code /room} removes the room.
      *
      * @throws ParseException if the values are invalid.
      */
@@ -134,7 +134,8 @@ public final class PersonField<T> {
         if (values.isEmpty()) {
             return Optional.empty();
         }
-        if (isClearAllowed && isRepeatable && values.equals(List.of(""))) {
+        boolean isClearRequested = isClearAllowed && !isRequired() && values.equals(List.of(""));
+        if (isClearRequested) {
             return getDefaultValue();
         }
         return Optional.of(parse(values));
