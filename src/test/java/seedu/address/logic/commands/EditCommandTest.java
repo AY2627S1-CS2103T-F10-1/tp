@@ -91,6 +91,14 @@ public class EditCommandTest {
     }
 
     @Test
+    public void execute_roomEdited_messageShowsNewRoom() throws Exception {
+        CommandResult result = new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withRoom(VALID_ROOM_BOB).build()).execute(model);
+
+        assertTrue(result.getFeedbackToUser().contains("Room: " + VALID_ROOM_BOB), result.getFeedbackToUser());
+    }
+
+    @Test
     public void execute_oneFieldAtATime_changesOnlyThatField() throws Exception {
         for (PersonField<?> field : PersonField.values()) {
             assertOnlyFieldChanged(field);
