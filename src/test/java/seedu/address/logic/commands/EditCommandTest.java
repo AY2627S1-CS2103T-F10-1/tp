@@ -2,11 +2,14 @@ package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_ROOM_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_FRIEND;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
@@ -20,13 +23,16 @@ import org.junit.jupiter.api.Test;
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
+import seedu.address.logic.parser.PersonField;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 import seedu.address.testutil.PersonBuilder;
+import seedu.address.testutil.PersonFieldSamples;
 
 /**
  * Contains integration tests (interaction with the Model) and unit tests for EditCommand.
@@ -37,7 +43,9 @@ public class EditCommandTest {
 
     @Test
     public void execute_allFieldsSpecifiedUnfilteredList_success() {
-        Person editedPerson = new PersonBuilder().build();
+        Person originalPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        Person editedPerson = new PersonBuilder(originalPerson).withName(VALID_NAME_BOB).withPhone(VALID_PHONE_BOB)
+                .withRoom(VALID_ROOM_BOB).withTags(VALID_TAG_HUSBAND, VALID_TAG_FRIEND).build();
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder(editedPerson).build();
         EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON, descriptor);
 
@@ -66,6 +74,86 @@ public class EditCommandTest {
 
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
         expectedModel.setPerson(lastPerson, editedPerson);
+
+        assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_editedContact_canBeReadBackFromModel() throws Exception {
+        Person original = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        Person editedPerson = new PersonBuilder(original).withName(VALID_NAME_BOB).withPhone(VALID_PHONE_BOB)
+                .withRoom(VALID_ROOM_BOB).withTags(VALID_TAG_HUSBAND, VALID_TAG_FRIEND).build();
+
+        new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder(editedPerson).build()).execute(model);
+
+        // read the contact back, rather than comparing with a model that went through the same code
+        assertEquals(editedPerson, model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased()));
+    }
+
+    @Test
+    public void execute_roomEdited_messageShowsNewRoom() throws Exception {
+        CommandResult result = new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withRoom(VALID_ROOM_BOB).build()).execute(model);
+
+        assertTrue(result.getFeedbackToUser().contains("Room: " + VALID_ROOM_BOB), result.getFeedbackToUser());
+    }
+
+    @Test
+    public void execute_oneFieldAtATime_changesOnlyThatField() throws Exception {
+        for (PersonField<?> field : PersonField.values()) {
+            assertOnlyFieldChanged(field);
+        }
+    }
+
+    /**
+     * Edits only {@code field} and checks, from the person that the command gives to the model,
+     * that this field has its new value and every other field is as before.
+     */
+    private <T> void assertOnlyFieldChanged(PersonField<T> field) throws Exception {
+        Person target = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        T newValue = PersonFieldSamples.getValue(field);
+        assertNotEquals(newValue, field.getFrom(target), "the sample for " + field + " must differ from the target");
+        EditPersonDescriptor descriptor = new EditPersonDescriptor();
+        descriptor.set(field, newValue);
+
+        SetPersonSpy spy = new SetPersonSpy(getTypicalAddressBook());
+        new EditCommand(INDEX_FIRST_PERSON, descriptor).execute(spy);
+
+        assertEquals(target, spy.target);
+        for (PersonField<?> other : PersonField.values()) {
+            Object expected = other == field ? newValue : other.getFrom(target);
+            assertEquals(expected, other.getFrom(spy.editedPerson), "field " + other + " after editing " + field);
+        }
+        assertEquals(target.getEmail(), spy.editedPerson.getEmail());
+        assertEquals(target.getAddress(), spy.editedPerson.getAddress());
+    }
+
+    /** A model that records the replacement given to {@code setPerson} instead of storing it. */
+    private static class SetPersonSpy extends ModelManager {
+        private Person target;
+        private Person editedPerson;
+
+        SetPersonSpy(ReadOnlyAddressBook addressBook) {
+            super(addressBook, new UserPrefs());
+        }
+
+        @Override
+        public void setPerson(Person target, Person editedPerson) {
+            this.target = target;
+            this.editedPerson = editedPerson;
+        }
+    }
+
+    @Test
+    public void execute_roomAndTagsOnly_keepsOtherFields() {
+        Person original = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        Person editedPerson = new PersonBuilder(original).withRoom(VALID_ROOM_BOB).withTags().build();
+        EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withRoom(VALID_ROOM_BOB).withTags().build());
+
+        String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS, Messages.format(editedPerson));
+        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expectedModel.setPerson(original, editedPerson);
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
     }
