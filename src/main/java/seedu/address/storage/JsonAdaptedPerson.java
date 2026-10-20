@@ -3,6 +3,7 @@ package seedu.address.storage;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -13,6 +14,7 @@ import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.EmergencyContact;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
@@ -31,6 +33,7 @@ class JsonAdaptedPerson {
     private final String email;
     private final String address;
     private final String room;
+    private final JsonAdaptedEmergencyContact emergencyContact;
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
 
     /**
@@ -40,15 +43,22 @@ class JsonAdaptedPerson {
         this(name, phone, email, address, tags, null);
     }
 
+    public JsonAdaptedPerson(String name, String phone, String email, String address,
+            List<JsonAdaptedTag> tags, String room) {
+        this(name, phone, email, address, tags, room, null);
+    }
+
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
             @JsonProperty("email") String email, @JsonProperty("address") String address,
-            @JsonProperty("tags") List<JsonAdaptedTag> tags, @JsonProperty("room") String room) {
+            @JsonProperty("tags") List<JsonAdaptedTag> tags, @JsonProperty("room") String room,
+            @JsonProperty("emergencyContact") JsonAdaptedEmergencyContact emergencyContact) {
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
         this.room = room;
+        this.emergencyContact = emergencyContact;
         if (tags != null) {
             this.tags.addAll(tags);
         }
@@ -63,6 +73,7 @@ class JsonAdaptedPerson {
         email = source.getEmail().value;
         address = source.getAddress().value;
         room = source.getRoom().value;
+        emergencyContact = source.getEmergencyContact().map(JsonAdaptedEmergencyContact::new).orElse(null);
         tags.addAll(source.getTags().stream()
                 .map(JsonAdaptedTag::new)
                 .collect(Collectors.toList()));
@@ -119,7 +130,10 @@ class JsonAdaptedPerson {
         if (!Room.isValidRoom(roomValue)) {
             throw new IllegalValueException(Room.MESSAGE_INVALID_CHARACTERS);
         }
-        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelTags, new Room(roomValue));
+        Optional<EmergencyContact> modelEmergencyContact = emergencyContact == null
+                ? Optional.empty() : Optional.of(emergencyContact.toModelType());
+        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelTags, new Room(roomValue),
+                modelEmergencyContact);
     }
 
 }

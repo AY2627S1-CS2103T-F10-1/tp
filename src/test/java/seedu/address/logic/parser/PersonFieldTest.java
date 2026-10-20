@@ -26,8 +26,8 @@ import seedu.address.testutil.TypicalPersons;
  * {@link Person} cannot be left out of one of them.
  */
 public class PersonFieldTest {
-    /** Person fields that are not set from the command line. */
-    private static final Set<String> LEGACY_PERSON_FIELDS = Set.of("email", "address");
+    /** Person fields that are not handled by add and edit. Emergency details have a separate command. */
+    private static final Set<String> LEGACY_PERSON_FIELDS = Set.of("email", "address", "emergencyContact");
 
     /** A valid value for each field. A new field must be given one here. */
     private static final Map<PersonField<?>, String> SAMPLE_VALUES = Map.of(

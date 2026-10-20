@@ -87,6 +87,7 @@ public class EditCommandTest {
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
         assertEquals(original.getEmail(), editedPerson.getEmail());
+        assertEquals(VALID_ROOM_BOB, model.getAddressBook().getPersonList().getFirst().getRoom().value);
         assertEquals(original.getAddress(), editedPerson.getAddress());
         assertEquals(original.getName(), editedPerson.getName());
     }

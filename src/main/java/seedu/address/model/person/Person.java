@@ -6,6 +6,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import seedu.address.commons.util.ToStringBuilder;
@@ -29,6 +30,7 @@ public class Person {
     // Data fields
     private final Address address;
     private final Room room;
+    private final Optional<EmergencyContact> emergencyContact;
     private final Set<Tag> tags = new LinkedHashSet<>();
 
     /**
@@ -41,13 +43,20 @@ public class Person {
 
     /** Creates a contact with an optional room number. */
     public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room) {
-        requireAllNonNull(name, phone, email, address, tags, room);
+        this(name, phone, email, address, tags, room, Optional.empty());
+    }
+
+    /** Creates a contact with optional room and emergency details. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room,
+            Optional<EmergencyContact> emergencyContact) {
+        requireAllNonNull(name, phone, email, address, tags, room, emergencyContact);
         checkArgument(tags.size() <= MAX_TAGS, MESSAGE_TAG_LIMIT_REACHED);
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
         this.room = room;
+        this.emergencyContact = emergencyContact;
         this.tags.addAll(tags);
     }
 
@@ -65,6 +74,15 @@ public class Person {
 
     public Room getRoom() {
         return room;
+    }
+
+    public Optional<EmergencyContact> getEmergencyContact() {
+        return emergencyContact;
+    }
+
+    /** Returns a copy with the given emergency details. */
+    public Person withEmergencyContact(EmergencyContact contact) {
+        return new Person(name, phone, email, address, tags, room, Optional.of(contact));
     }
 
     public Address getAddress() {
@@ -112,13 +130,14 @@ public class Person {
                 && email.equals(otherPerson.email)
                 && address.equals(otherPerson.address)
                 && room.equals(otherPerson.room)
-                && tags.equals(otherPerson.tags);
+                && tags.equals(otherPerson.tags)
+                && emergencyContact.equals(otherPerson.emergencyContact);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, tags, room);
+        return Objects.hash(name, phone, email, address, tags, room, emergencyContact);
     }
 
     @Override
@@ -132,6 +151,7 @@ public class Person {
         if (!room.value.isEmpty()) {
             builder.add("room", room);
         }
+        emergencyContact.ifPresent(contact -> builder.add("emergencyContact", contact));
         return builder.toString();
     }
 

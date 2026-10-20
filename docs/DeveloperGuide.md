@@ -210,6 +210,19 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
 
 To add a new field, add it to `Person`, add a constant to `PersonField` and list it in `PersonField.values()`. `add` and `edit` then accept it without further changes. `PersonFieldTest` fails if a `Person` field is not registered or has no sample value.
 
+### Emergency contact assignment
+
+`emergency INDEX /name NAME /phone PHONE [/relation RELATION]` assigns one independent, immutable
+`EmergencyContact` to a person in the displayed list. Name and phone are required; relation is optional.
+Each assignment atomically replaces any existing emergency details; omitted relation defaults to empty.
+Emergency details are independent of tags and of the general `list emerg` feature. Clearing is not supported yet.
+
+`EmergencyCommandParser` and `EditCommandParser` share `ParserUtil#parseIndexedArguments()` for whitespace,
+prefix and index handling. Emergency name and phone use the corresponding `PersonField` validators.
+Emergency details are kept outside the add/edit field registry, and ordinary edits preserve them explicitly.
+`Person#equals()` and `hashCode()` include the emergency details; `isSamePerson()` still compares names only.
+`JsonAdaptedEmergencyContact` stores the nested details, and older files without this field remain valid.
+
 ### Filter by tag feature
 
 `find /tag TAG` shows only contacts with the given tag. `FindCommandParser` creates a `PersonHasTagPredicate` from the value after `/tag`, and `FindCommand` applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any non-empty value is accepted and a value that is not a valid tag simply matches nobody.
