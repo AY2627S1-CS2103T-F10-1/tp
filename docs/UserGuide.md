@@ -38,6 +38,9 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
    * `exit` : Exits the app.
 
+1. Use the Up (`↑`) and Down (`↓`) arrow keys in the command box to
+   [recall previous commands](#recalling-previous-commands).
+
 1. Refer to the [Features](#features) section below for details of each command.
 
 --------------------------------------------------------------------------------------------------------------------
@@ -74,6 +77,40 @@ Shows a message explaining how to access the help page.
 
 Format: `help`
 
+
+### Recalling previous commands
+
+Reuse or correct previously submitted commands without typing them again.
+
+Click the command box, then use these keys without holding Shift, Ctrl, Alt or Command:
+
+Key | Action
+----|-------
+**↑ (Up)** | Recall the most recent command, then progressively older commands.
+**↓ (Down)** | Browse newer commands. Moving past the newest entry restores the unfinished input typed before browsing.
+**Enter** | Submit the text displayed in the command box.
+
+* Recalling a command only fills the command box and moves the caret to the end.
+  The contact list and result message do not change until you press Enter.
+* The latest 100 non-blank submissions are remembered, including failed commands and repeated submissions.
+  Empty or whitespace-only input is ignored. When the history is full, the oldest entry is discarded.
+* Pressing ↑ at the oldest entry keeps showing that command. Pressing ↓ after restoring the unfinished
+  input leaves that input unchanged. With no history, either arrow leaves the text unchanged.
+* You can edit recalled commands. Navigating history discards unsubmitted changes to recalled text;
+  it does not overwrite the original command or the unfinished input saved before browsing.
+* Submitting a non-blank command adds a new history entry and discards the saved unfinished input.
+  The next ↑ recalls that submission, even if it failed.
+* History clears when you close the app; it is not saved with your contacts.
+* This feature recalls text and does not undo or redo previous actions. Resubmitted commands use the
+  current contact data and displayed indices: `delete 2` deletes whoever is currently shown as contact #2.
+
+Example:
+
+1. Submit `list`, then `find /tag Resident`.
+1. Type `find /name Al` without pressing Enter.
+1. Press ↑ to recall `find /tag Resident`, then ↑ again to recall `list`.
+1. Press ↓ to return to `find /tag Resident`, then ↓ again to restore `find /name Al`.
+1. Edit the text if needed and press Enter to execute it.
 
 ### Adding a contact: `add`
 
@@ -286,3 +323,4 @@ Action | Format, Examples
 **List** | `list`
 **List emergency contacts** | `list emerg`
 **Help** | `help`
+**Recall commands** | ↑ for older commands; ↓ for newer commands or the saved unfinished input. Press Enter to execute. The command box must be focused.

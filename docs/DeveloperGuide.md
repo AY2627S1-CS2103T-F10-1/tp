@@ -227,6 +227,53 @@ the normal contact list. If there are no matches, the result message is `No emer
 otherwise it is `Listed all emergency contacts.`. `find /tag Emergency` produces the same contact list
 through the general tag search, while `list` restores all contacts.
 
+### Command recall
+
+Users browse submitted command text with Up/Down in the command box and press Enter to submit it again.
+Recall does not restore contact data or implement the proposed undo/redo feature below.
+
+#### Implementation
+
+Each `CommandBox` owns a `CommandHistory` instance. `CommandHistory` stores the latest 100 non-blank
+submissions in an `ArrayList`, from oldest to newest, preserving the submitted text and duplicates.
+It holds no contact data and is not serialized, so a new app session starts with empty history.
+
+* `add(commandText)` ignores blank input. Otherwise, it appends the text, evicts the oldest entry if needed,
+  resets `historyPosition` to `commands.size()`, and clears the saved draft.
+* `historyPosition == commands.size()` means the user is not browsing history. The first
+  `navigatePrevious(currentInput)` saves `currentInput` as the draft, then moves towards older entries.
+  At the oldest entry it returns that entry again; with empty history it returns the input unchanged.
+* `navigateNext(currentInput)` moves towards newer entries. Passing the newest entry restores the saved
+  draft. When not browsing, it returns the input unchanged.
+* Editing recalled text does not update a stored entry or the draft. Only a new submission records it.
+  `getCommands()` returns an unmodifiable snapshot for inspecting the history without changing it.
+
+`CommandBox` installs a `KEY_PRESSED` filter on its text field, before JavaFX's normal key handling.
+Unmodified Up/Down events call the corresponding navigation method, display the returned text, move the
+caret to the end, and consume the event. Other keys and modified arrows retain their normal behavior.
+Because the filter belongs to the command field, arrow events in other controls do not navigate history.
+
+On Enter, `CommandBox` records non-blank input before calling `CommandExecutor#execute()`, so both parse
+failures and execution failures remain recallable. Successful execution clears the field; failures retain
+the submitted text and existing error styling. Navigation itself never calls the executor.
+
+#### Design considerations
+
+* **Session-only text history:** keeps recall independent of contact storage and avoids saving command
+  parameters to a history file. Earlier sessions cannot be recalled.
+* **A separate history helper:** lets storage, bounds, and draft handling be tested without JavaFX.
+  The command box remains responsible for key events, display, submission, and error styling.
+* **One saved draft:** preserves the unfinished input present before browsing. Edits to recalled entries
+  are discarded when navigating rather than maintained as additional drafts.
+
+#### Testing
+
+`CommandHistoryTest` covers storage, the 100-entry limit, navigation boundaries, drafts, and resets.
+`CommandBoxTest` uses real JavaFX controls and dispatched key events to cover their integration with
+submission and error handling, including index-based commands using the current contact list.
+See the [testing guide](Testing.md) for JavaFX display requirements and the
+[manual checks](#recalling-previous-commands) for keyboard behavior in the running app.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -696,6 +743,97 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `list emerg`<br>
       Expected: An empty list and `No emergency contacts found.` in both cases.
+
+### Recalling previous commands
+
+Use the command box for all key presses below unless another control is specified.
+
+1. Empty history, navigation, and boundaries
+
+   1. Prerequisites: Restart the app so command history is empty.
+
+   1. Test case: Type `unfinished` without submitting, then press Up and Down.<br>
+      Expected: The text remains `unfinished` and no command executes. Clear the input afterwards.
+
+   1. Test case: Submit `list`, then `find /tag Resident`. Press Up three times.<br>
+      Expected: The input shows `find /tag Resident`, then `list`, then stays at `list`.
+      The contact list and result message remain as they were after the search.
+
+   1. Test case: Press Down three times.<br>
+      Expected: The input shows `find /tag Resident`, becomes empty, then stays empty.
+      Recalled text has its caret at the end.
+
+1. Restoring a draft and editing recalled text
+
+   1. Prerequisites: Submit `list`, then `find /tag Resident`.
+
+   1. Test case: Type `find /name Al` without submitting. Press Up, edit the recalled text to
+      `find /tag Staff` without submitting, then press Down.<br>
+      Expected: `find /name Al` is restored. The edit to the recalled command is discarded.
+
+   1. Test case: Press Up again.<br>
+      Expected: The original `find /tag Resident` is recalled. No command executes.
+
+   1. Test case: Replace the recalled text with `list` and press Enter. Press Up, then Down.<br>
+      Expected: `list` executes once and clears the field. Up recalls `list`; Down restores empty input.
+      The previous `find /name Al` draft is discarded after submission.
+
+1. Failed, blank, and repeated submissions
+
+   1. Test case: Submit `notacommand`. Clear the retained text manually, then press Up.<br>
+      Expected: The unknown-command error is shown on submission, and `notacommand` can be recalled.
+      Correct it to `list` and press Enter to execute the corrected text.
+
+   1. Test case: Submit `delete 2147483647` in an address book with fewer contacts than that index.
+      Clear the retained text manually, then press Up.<br>
+      Expected: The invalid displayed-index error is shown without deleting a contact, and the command
+      is recallable despite its execution failure.
+
+   1. Test case: Submit `list`, then submit an input containing only spaces. Clear the input and press Up.<br>
+      Expected: Spaces do not execute a command or add a history entry; Up recalls `list`.
+
+   1. Test case: Submit `list` twice, then type `draft` without submitting.
+      Press Up twice, then Down twice.<br>
+      Expected: Both Up presses show `list`; Down shows `list` and then `draft`, demonstrating that
+      repeated submissions occupy separate history entries.
+
+1. Normal editing keys and focus
+
+   1. Prerequisites: Submit at least one command, then type a draft without submitting.
+
+   1. Test case: Use Left/Right and modified arrows such as Shift+Up or Ctrl+Down.<br>
+      Expected: Normal text editing remains available and modified arrows do not recall commands.
+
+   1. Test case: Click the contact list and press Up/Down.<br>
+      Expected: The command box text remains unchanged. Click the command box again to resume recall.
+
+1. Resubmitting an index command against the current list
+
+   1. Prerequisites: Use a disposable copy of the address book with no contacts named `Recall Alice`,
+      `Recall Bob`, or `Recall Carol`, and no contacts tagged `RecallTest`.
+
+   1. Test case: Submit these commands in order:
+      `add Recall Alice /phone 91234567 /tag RecallTest`,
+      `add Recall Bob /phone 87654321 /tag RecallTest`, `find /tag RecallTest`, `delete 2`,
+      `add Recall Carol /phone 98765432 /tag RecallTest`, then `find /tag RecallTest`.<br>
+      Expected: Recall Bob is deleted, and the displayed list contains Recall Alice followed by Recall Carol.
+
+   1. Test case: Press Up three times to recall `delete 2`, without pressing Enter.<br>
+      Expected: Both displayed contacts remain; browsing does not delete anything.
+
+   1. Test case: Press Enter.<br>
+      Expected: Recall Carol, the current second contact, is deleted. Recall Alice remains.
+      The command does not restore or target the previously deleted Recall Bob.
+
+1. History limit and session lifetime
+
+   1. Test case (optional): In a fresh session, submit 101 distinct commands such as
+      `find /name History1` through `find /name History101`. Press Up 100 times, then once more.<br>
+      Expected: The oldest retained command is `find /name History2`; another Up keeps showing it.
+      Automated tests also cover this limit without requiring manual entry of 101 commands.
+
+   1. Test case: Close and reopen the app, then press Up in the empty command box.<br>
+      Expected: No command from the earlier session is recalled.
 
 ### Saving data
 
