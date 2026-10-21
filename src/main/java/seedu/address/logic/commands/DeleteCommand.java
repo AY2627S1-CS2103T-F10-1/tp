@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
+import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PERSONS;
 
 import java.util.List;
 import java.util.Objects;
@@ -55,7 +56,7 @@ public class DeleteCommand extends Command {
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
         if (nameSearch != null) {
-            model.updateFilteredPersonList(nameSearch);
+            model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS.and(nameSearch));
             int matchCount = model.getFilteredPersonList().size();
             if (matchCount == 1) {
                 return new DeleteCommand(Index.fromOneBased(1)).execute(model);

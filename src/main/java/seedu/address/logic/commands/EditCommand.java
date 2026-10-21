@@ -34,6 +34,7 @@ public class EditCommand extends Command {
             + "\nExample: " + COMMAND_WORD + " 1 /phone 91234567 /room B-204";
 
     public static final String MESSAGE_EDIT_PERSON_SUCCESS = "Edited person: %1$s";
+    public static final String MESSAGE_ARCHIVED_PERSON = "Cannot edit an archived contact. Unarchive it first.";
     public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
     public static final String MESSAGE_DUPLICATE_PERSON = "This person already exists in the address book.";
 
@@ -62,6 +63,9 @@ public class EditCommand extends Command {
         }
 
         Person personToEdit = lastShownList.get(index.getZeroBased());
+        if (personToEdit.isArchived()) {
+            throw new CommandException(MESSAGE_ARCHIVED_PERSON);
+        }
         Person editedPerson = createEditedPerson(personToEdit, editPersonDescriptor);
 
         if (!personToEdit.isSamePerson(editedPerson) && model.hasPerson(editedPerson)) {
