@@ -1,6 +1,8 @@
 package seedu.address.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.storage.JsonAdaptedPerson.MISSING_FIELD_MESSAGE_FORMAT;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.BENSON;
@@ -13,6 +15,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.exceptions.IllegalValueException;
+import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
@@ -34,6 +37,24 @@ public class JsonAdaptedPersonTest {
     private static final List<JsonAdaptedTag> VALID_TAGS = BENSON.getTags().stream()
             .map(JsonAdaptedTag::new)
             .collect(Collectors.toList());
+
+    @Test
+    public void jsonRoundTrip_preservesArchiveState() throws Exception {
+        for (boolean archive : new boolean[] {false, true}) {
+            Person original = BENSON.withArchive(archive);
+            String json = JsonUtil.toJsonString(new JsonAdaptedPerson(original));
+            assertTrue(json.contains("\"archive\" : " + archive));
+            assertEquals(original, JsonUtil.fromJsonString(json, JsonAdaptedPerson.class).toModelType());
+        }
+    }
+
+    @Test
+    public void fromJson_missingArchive_defaultsToFalse() throws Exception {
+        String legacyJson = "{\"name\":\"Benson\",\"phone\":\"91234567\","
+                + "\"email\":\"benson@example.com\",\"address\":\"Block 1\",\"tags\":[]}";
+        Person person = JsonUtil.fromJsonString(legacyJson, JsonAdaptedPerson.class).toModelType();
+        assertFalse(person.isArchived());
+    }
 
     @Test
     public void toModelType_validPersonDetails_returnsPerson() throws Exception {

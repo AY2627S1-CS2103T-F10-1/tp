@@ -25,6 +25,28 @@ import seedu.address.testutil.PersonBuilder;
 public class PersonTest {
 
     @Test
+    public void archiveState_defaultsToFalse() {
+        assertFalse(ALICE.isArchived());
+        assertFalse(new PersonBuilder().withRoom("B-204").build().isArchived());
+    }
+
+    @Test
+    public void withArchive_preservesDetailsAndIdentity() {
+        Person original = new PersonBuilder(ALICE).withRoom("B-204").build();
+        Person archived = original.withArchive(true);
+        assertTrue(archived.isArchived());
+        assertFalse(original.isArchived());
+        assertTrue(original.isSamePerson(archived));
+        assertTrue(archived.isSamePerson(original));
+        assertFalse(original.equals(archived));
+        assertEquals(original, archived.withArchive(false));
+        assertEquals(original.hashCode(), archived.withArchive(false).hashCode());
+        assertEquals(archived, original.withArchive(true));
+        assertEquals(archived.hashCode(), original.withArchive(true).hashCode());
+        assertEquals(List.copyOf(original.getTags()), List.copyOf(archived.getTags()));
+    }
+
+    @Test
     public void asObservableList_modifyList_throwsUnsupportedOperationException() {
         Person person = new PersonBuilder().build();
         assertThrows(UnsupportedOperationException.class, () -> person.getTags().remove(0));

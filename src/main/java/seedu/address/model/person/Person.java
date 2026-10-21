@@ -29,6 +29,7 @@ public class Person {
     // Data fields
     private final Address address;
     private final Room room;
+    private final boolean archive;
     private final Set<Tag> tags = new LinkedHashSet<>();
 
     /**
@@ -41,6 +42,11 @@ public class Person {
 
     /** Creates a contact with an optional room number. */
     public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room) {
+        this(name, phone, email, address, tags, room, false);
+    }
+
+    /** Creates a contact with the specified archive state. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, boolean archive) {
         requireAllNonNull(name, phone, email, address, tags, room);
         checkArgument(tags.size() <= MAX_TAGS, MESSAGE_TAG_LIMIT_REACHED);
         this.name = name;
@@ -48,7 +54,17 @@ public class Person {
         this.email = email;
         this.address = address;
         this.room = room;
+        this.archive = archive;
         this.tags.addAll(tags);
+    }
+
+    public boolean isArchived() {
+        return archive;
+    }
+
+    /** Returns a copy with the specified archive state, preserving all contact details. */
+    public Person withArchive(boolean archive) {
+        return new Person(name, phone, email, address, tags, room, archive);
     }
 
     public Name getName() {
@@ -112,13 +128,14 @@ public class Person {
                 && email.equals(otherPerson.email)
                 && address.equals(otherPerson.address)
                 && room.equals(otherPerson.room)
+                && archive == otherPerson.archive
                 && tags.equals(otherPerson.tags);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, tags, room);
+        return Objects.hash(name, phone, email, address, tags, room, archive);
     }
 
     @Override

@@ -31,6 +31,7 @@ class JsonAdaptedPerson {
     private final String email;
     private final String address;
     private final String room;
+    private final boolean archive;
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
 
     /**
@@ -40,15 +41,23 @@ class JsonAdaptedPerson {
         this(name, phone, email, address, tags, null);
     }
 
+    /** Creates an adapter for legacy callers without archive state. */
+    public JsonAdaptedPerson(String name, String phone, String email, String address,
+            List<JsonAdaptedTag> tags, String room) {
+        this(name, phone, email, address, tags, room, false);
+    }
+
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
             @JsonProperty("email") String email, @JsonProperty("address") String address,
-            @JsonProperty("tags") List<JsonAdaptedTag> tags, @JsonProperty("room") String room) {
+            @JsonProperty("tags") List<JsonAdaptedTag> tags, @JsonProperty("room") String room,
+            @JsonProperty("archive") boolean archive) {
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
         this.room = room;
+        this.archive = archive;
         if (tags != null) {
             this.tags.addAll(tags);
         }
@@ -63,6 +72,7 @@ class JsonAdaptedPerson {
         email = source.getEmail().value;
         address = source.getAddress().value;
         room = source.getRoom().value;
+        archive = source.isArchived();
         tags.addAll(source.getTags().stream()
                 .map(JsonAdaptedTag::new)
                 .collect(Collectors.toList()));
@@ -119,7 +129,7 @@ class JsonAdaptedPerson {
         if (!Room.isValidRoom(roomValue)) {
             throw new IllegalValueException(Room.MESSAGE_INVALID_CHARACTERS);
         }
-        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelTags, new Room(roomValue));
+        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelTags, new Room(roomValue), archive);
     }
 
 }

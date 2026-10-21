@@ -26,8 +26,8 @@ import seedu.address.testutil.TypicalPersons;
  * {@link Person} cannot be left out of one of them.
  */
 public class PersonFieldTest {
-    /** Person fields that are not set from the command line. */
-    private static final Set<String> LEGACY_PERSON_FIELDS = Set.of("email", "address");
+    /** Person fields that are not set through add/edit arguments. */
+    private static final Set<String> NON_EDITABLE_PERSON_FIELDS = Set.of("email", "address", "archive");
 
     @Test
     public void everyPersonFieldIsRegistered() {
@@ -36,7 +36,7 @@ public class PersonFieldTest {
         Set<String> personFields = Stream.of(Person.class.getDeclaredFields())
                 .filter(field -> !Modifier.isStatic(field.getModifiers()))
                 .map(Field::getName)
-                .filter(name -> !LEGACY_PERSON_FIELDS.contains(name))
+                .filter(name -> !NON_EDITABLE_PERSON_FIELDS.contains(name))
                 .collect(Collectors.toSet());
 
         assertEquals(personFields, registered,

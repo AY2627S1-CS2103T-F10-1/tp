@@ -26,6 +26,16 @@ public class JsonAddressBookStorageTest {
     public Path testFolder;
 
     @Test
+    public void saveAndReload_mixedArchiveStates_preservesAllContacts() throws Exception {
+        AddressBook original = new AddressBook();
+        original.addPerson(ALICE.withArchive(true));
+        original.addPerson(HOON);
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("archive.json"));
+        storage.saveAddressBook(original);
+        assertEquals(original, new AddressBook(storage.readAddressBook().orElseThrow()));
+    }
+
+    @Test
     public void readAddressBook_nullFilePath_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> readAddressBook(null));
     }
