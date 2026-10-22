@@ -22,6 +22,8 @@ public class FavCommand extends Command {
             + "Example: " + COMMAND_WORD + " 1";
     public static final String MESSAGE_SUCCESS = "Marked as favourite: %1$s";
     public static final String MESSAGE_ALREADY_FAVOURITE = "Contact is already a favourite: %1$s";
+    public static final String MESSAGE_ARCHIVED_PERSON =
+            "Cannot change favourite status for an archived contact. Unarchive it first.";
 
     private final Index targetIndex;
 
@@ -41,6 +43,9 @@ public class FavCommand extends Command {
         }
 
         Person target = displayed.get(targetIndex.getZeroBased());
+        if (target.isArchived()) {
+            throw new CommandException(MESSAGE_ARCHIVED_PERSON);
+        }
         if (target.isFavourite()) {
             return new CommandResult(String.format(MESSAGE_ALREADY_FAVOURITE, Messages.format(target)));
         }

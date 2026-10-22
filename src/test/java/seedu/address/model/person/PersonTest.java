@@ -64,6 +64,66 @@ public class PersonTest {
     }
 
     @Test
+    public void withEmergencyContact_archivedPerson_preservesArchiveAndNote() {
+        Person original = new PersonBuilder(ALICE).withNote("Call after six").withFavourite(true).build()
+                .withArchive(true);
+        EmergencyContact contact = new EmergencyContact(new Name("Jane Tan"), new Phone("91234567"), "Sister");
+        Person updated = original.withEmergencyContact(contact);
+        assertTrue(updated.isArchived());
+        assertTrue(updated.isFavourite());
+        assertEquals(original.getNote(), updated.getNote());
+        assertEquals(contact, updated.getEmergencyContact().orElseThrow());
+    }
+
+    @Test
+    public void builderCopy_archivedPerson_preservesAllFields() {
+        Person original = new PersonBuilder(ALICE).withNote("Call after six").withFavourite(true).build()
+                .withEmergencyContact(new EmergencyContact(new Name("Jane Tan"), new Phone("91234567"), "Sister"))
+                .withArchive(true);
+        assertEquals(original, new PersonBuilder(original).build());
+    }
+
+    @Test
+    public void constructor_archiveOverloads_preserveRequestedState() {
+        Person withRoom = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(),
+                ALICE.getAddress(), ALICE.getTags(), new Room("B-204"), true);
+        Person withNote = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(),
+                ALICE.getAddress(), ALICE.getTags(), new Room("B-204"), new Note("Call after six"), true);
+        assertTrue(withRoom.isArchived());
+        assertTrue(withNote.isArchived());
+        assertTrue(withRoom.getEmergencyContact().isEmpty());
+        assertTrue(withNote.getEmergencyContact().isEmpty());
+        assertEquals(new Note("Call after six"), withNote.getNote());
+    }
+
+    @Test
+    public void archiveState_defaultsToFalse() {
+        assertFalse(ALICE.isArchived());
+        assertFalse(new PersonBuilder().withRoom("B-204").build().isArchived());
+    }
+
+    @Test
+    public void withArchive_preservesDetailsAndIdentity() {
+        Person original = new PersonBuilder(ALICE).withRoom("B-204").withNote("Call after six")
+                .withFavourite(true).build()
+                .withEmergencyContact(new EmergencyContact(new Name("Jane Tan"), new Phone("91234567"), "Sister"));
+        Person archived = original.withArchive(true);
+        assertTrue(archived.isArchived());
+        assertTrue(archived.isFavourite());
+        assertEquals(original.getNote(), archived.getNote());
+        assertEquals(original.getEmergencyContact(), archived.getEmergencyContact());
+        assertFalse(original.isArchived());
+        assertTrue(original.isSamePerson(archived));
+        assertTrue(archived.isSamePerson(original));
+        assertFalse(original.equals(archived));
+        assertEquals(original, archived.withArchive(false));
+        assertEquals(original.hashCode(), archived.withArchive(false).hashCode());
+        assertEquals(archived, original.withArchive(true));
+        assertEquals(archived.hashCode(), original.withArchive(true).hashCode());
+        assertEquals(List.copyOf(original.getTags()), List.copyOf(archived.getTags()));
+    }
+
+    @Test
     public void asObservableList_modifyList_throwsUnsupportedOperationException() {
         Person person = new PersonBuilder().build();
         assertThrows(UnsupportedOperationException.class, () -> person.getTags().remove(0));
@@ -183,6 +243,38 @@ public class PersonTest {
         Person aliceWithNote = new PersonBuilder(ALICE).withNote(VALID_NOTE_BOB).build();
         assertNotEquals(ALICE.hashCode(), aliceWithNote.hashCode());
         assertEquals(aliceWithNote.hashCode(), new PersonBuilder(aliceWithNote).build().hashCode());
+    }
+
+    @Test
+    public void withEmergencyContact_preservesOtherFieldsAndOriginalPerson() {
+        Person original = new PersonBuilder(ALICE).withRoom("B-204").withNote("Allergic to peanuts").build();
+        EmergencyContact contact = new EmergencyContact(new Name("Bob Choo"), new Phone("91234567"), "Brother");
+        Person updated = original.withEmergencyContact(contact);
+        assertTrue(original.getEmergencyContact().isEmpty());
+        assertTrue(original.isSamePerson(updated));
+        assertEquals(original.getNote(), updated.getNote());
+        assertEquals(original.getRoom(), updated.getRoom());
+        assertEquals(original.getPhone(), updated.getPhone());
+        assertEquals(original.getEmail(), updated.getEmail());
+        assertEquals(original.getAddress(), updated.getAddress());
+        assertEquals(original.getTags(), updated.getTags());
+        assertEquals(contact, updated.getEmergencyContact().orElseThrow());
+    }
+
+    @Test
+    public void equals_emergencyDetailsIncludedInEqualityAndHashCode() {
+        EmergencyContact contact = new EmergencyContact(new Name("Bob Choo"), new Phone("91234567"), "Brother");
+        Person updated = ALICE.withEmergencyContact(contact);
+        Person copy = new PersonBuilder(updated).build();
+        assertFalse(ALICE.equals(updated));
+        assertEquals(updated, copy);
+        assertEquals(updated.hashCode(), copy.hashCode());
+    }
+
+    @Test
+    public void toString_withEmergencyContact_includesEmergencyDetails() {
+        EmergencyContact contact = new EmergencyContact(new Name("Bob Choo"), new Phone("91234567"), "Brother");
+        assertTrue(ALICE.withEmergencyContact(contact).toString().contains("emergencyContact="));
     }
 
     @Test

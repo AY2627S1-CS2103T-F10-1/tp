@@ -24,7 +24,10 @@ import seedu.address.logic.commands.FavCommand;
 import seedu.address.logic.commands.UnfavCommand;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.person.EmergencyContact;
+import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Phone;
 import seedu.address.testutil.JavaFxExtension;
 import seedu.address.testutil.PersonBuilder;
 
@@ -34,7 +37,8 @@ import seedu.address.testutil.PersonBuilder;
 @ExtendWith(JavaFxExtension.class)
 public class PersonCardTest {
     private static final Person CONTACT = new PersonBuilder().withRoom("B-204").withNote("Call after 6 pm")
-            .withTags("Resident", "Floor 3").build();
+            .withTags("Resident", "Floor 3").build()
+            .withEmergencyContact(new EmergencyContact(new Name("Jane Tan"), new Phone("91234567"), "Sister"));
 
     @Test
     public void constructor_favouriteContact_showsIndicatorAndOtherDetails() throws Exception {
@@ -52,6 +56,7 @@ public class PersonCardTest {
             assertEquals(CONTACT.getPhone().value, label(card.getRoot(), "phone").getText());
             assertEquals("Room: B-204", label(card.getRoot(), "room").getText());
             assertEquals("Note: Call after 6 pm", label(card.getRoot(), "note").getText());
+            assertEquals("emergency: Jane Tan(Sister) 91234567", label(card.getRoot(), "emergencyContact").getText());
             FlowPane tags = (FlowPane) card.getRoot().lookup("#tags");
             assertEquals(List.of("Resident", "Floor 3"), tags.getChildren().stream()
                     .map(node -> ((Label) node).getText()).toList());
@@ -88,6 +93,8 @@ public class PersonCardTest {
             assertTrue(favourite.isManaged());
             assertEquals(Color.web("#f2c14e"), favourite.getTextFill());
             assertEquals("Note: Call after 6 pm", label(firstCard(root), "note").getText());
+            assertEquals("emergency: Jane Tan(Sister) 91234567",
+                    label(firstCard(root), "emergencyContact").getText());
 
             assertDoesNotThrow(() -> new UnfavCommand(INDEX_FIRST_PERSON).execute(model));
             root.layout();

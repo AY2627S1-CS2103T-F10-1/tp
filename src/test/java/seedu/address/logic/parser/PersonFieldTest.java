@@ -27,8 +27,9 @@ import seedu.address.testutil.TypicalPersons;
  * {@link Person} cannot be left out of one of them.
  */
 public class PersonFieldTest {
-    /** Person fields that are not set through {@code add} or {@code edit}. */
-    private static final Set<String> NON_EDITABLE_PERSON_FIELDS = Set.of("email", "address", "isFavourite");
+    /** Person fields managed outside add/edit arguments. */
+    private static final Set<String> NON_EDITABLE_PERSON_FIELDS =
+            Set.of("email", "address", "archive", "emergencyContact", "isFavourite");
 
     @Test
     public void everyPersonFieldIsRegistered() {

@@ -229,6 +229,20 @@ To add a new field supported by `add` and `edit`, add it to `Person`, add a cons
 
 `/` is not allowed in a note because the parser treats a word starting with `/` as a field prefix. Allowing it only in the middle of a word would make the rule hard to explain to users.
 
+### Emergency contact assignment
+
+`emergency INDEX /name NAME /phone PHONE [/relation RELATION]` assigns one independent, immutable
+`EmergencyContact` to a person in the displayed list. Name and phone are required; relation is optional.
+Each assignment atomically replaces any existing emergency details; omitted relation defaults to empty.
+Emergency details are independent of tags and of the general `list emerg` feature. Clearing is not supported yet.
+
+`EmergencyCommandParser` and `EditCommandParser` share `ParserUtil#parseIndexedArguments()` for whitespace,
+prefix and index handling. Emergency name and phone reuse `ParserUtil#parseName()` and `parsePhone()`.
+Emergency details are kept outside the add/edit field registry. `PersonFieldValues#toPerson()` accepts them
+separately so ordinary edits preserve them while constructing the replacement person once.
+`Person#equals()` and `hashCode()` include the emergency details; `isSamePerson()` still compares names only.
+`JsonAdaptedEmergencyContact` stores the nested details, and older files without this field remain valid.
+
 ### Filter by tag feature
 
 `find /tag TAG` shows only contacts with the given tag. `FindCommandParser` creates a `PersonHasTagPredicate` from the value after `/tag`, and `FindCommand` applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any non-empty value is accepted and a value that is not a valid tag simply matches nobody.
@@ -319,24 +333,27 @@ through the general tag search, while `list` restores all contacts.
 
 ### Favourite contacts
 
-`fav INDEX` and `unfav INDEX` set a contact's favourite status. `list fav` displays favourite contacts
+`fav INDEX` and `unfav INDEX` set an active contact's favourite status. `list fav` displays active favourite contacts
 using the existing observable contact list.
 
 #### Implementation
 
 * **Model:** `Person` stores an immutable `isFavourite` boolean, defaulting to `false` in the existing constructors.
-  `withFavourite(boolean)` returns a copy that preserves every other field, including notes and tag order.
+  `withFavourite(boolean)` returns a copy that preserves every other field, including notes, emergency details,
+  archive status and tag order. All constructors delegate to one constructor accepting the complete contact state.
   Favourite status participates in `equals()` and `hashCode()`, but not `isSamePerson()`, so marking a contact
   does not change its identity or allow duplicates. `EditCommand` preserves the flag when rebuilding a contact.
 * **Parsing:** `AddressBookParser` routes `fav` and `unfav` to `FavCommandParser` and `UnfavCommandParser`.
   Both reuse `ParserUtil#parseIndex()` and wrap parsing failures in the respective command's usage message.
   `ListCommandParser` returns `ListFavouriteCommand` for the exact `fav` argument and rejects extra arguments.
 * **Commands:** `FavCommand` and `UnfavCommand` resolve the target from `Model#getFilteredPersonList()` before
-  replacing it through `Model#setPerson()`. An out-of-range displayed index raises a `CommandException`.
+  replacing it through `Model#setPerson()`. An out-of-range displayed index or an archived target raises a
+  `CommandException`. Archived targets must be restored before changing favourite status, as with ordinary edits.
   Requests for an already-set status return explanatory feedback without replacing the contact.
   Neither command resets the current filter.
-* **Listing:** `ListFavouriteCommand` applies `Person::isFavourite` through `Model#updateFilteredPersonList()`.
-  This replaces the previous filter and searches all stored contacts. Their relative stored order is retained,
+* **Listing:** `ListFavouriteCommand` combines `PREDICATE_SHOW_ACTIVE_PERSONS` with `Person::isFavourite` through
+  `Model#updateFilteredPersonList()`. This replaces the previous filter and searches active contacts.
+  Their relative stored order is retained,
   while displayed indices start at 1. Unfavouriting a displayed contact removes it from this view immediately.
 * **Storage:** `JsonAdaptedPerson` reads and writes the JSON boolean `isFavourite`. Missing properties default to
   `false`, so older files remain readable. `LogicManager` saves changes through the existing storage path.
@@ -354,11 +371,12 @@ using the existing observable contact list.
 
 #### Integration considerations
 
-When adding other contact fields, such as per-resident emergency details or archive status, preserve them in
-`withFavourite()` and preserve favourite status in their copy helpers, ordinary edits, and JSON storage.
-The intended archive interaction is to retain favourite status, hide archived contacts from `list fav`, and
-show them again after restoration. Archive filtering requires integration with the separate archive feature
-and is not implemented by this branch.
+`withFavourite()`, `withArchive()` and `withEmergencyContact()` preserve each other's fields and notes.
+`EditCommand` preserves favourite status and emergency details while rebuilding an active contact.
+Archiving retains favourite status and hides the contact from `list fav`; restoration makes it visible again.
+`fav` and `unfav` reject archived contacts even if they already have the requested status.
+JSON storage preserves both status flags and emergency details. Missing status fields default independently
+to `false`, allowing files from before either feature to load with their other details intact.
 
 #### Testing
 
@@ -366,7 +384,9 @@ and is not implemented by this branch.
 `FavouriteCommandsTest`, `FavouriteCommandParsersTest`, `ListFavouriteCommandTest` and the shared parser tests
 cover indices, invalid arguments, repeated commands, filtering and result order. Storage tests and
 `LogicManagerTest` check saving, reloading and compatibility with missing flags. `PersonCardTest` checks badge
-visibility and refreshes using real JavaFX controls. See the [testing guide](Testing.md#favourite-contact-tests)
+visibility, emergency details and refreshes using real JavaFX controls. `FavouriteArchiveIntegrationTest`
+checks archive/restore across restarts, preserved details, archived-command rejection and older data files.
+See the [testing guide](Testing.md#favourite-contact-tests)
 and the [manual checks](#managing-favourite-contacts).
 
 ### Command recall
@@ -1003,6 +1023,34 @@ Repeat `list fav` in an empty disposable address book; it should show the same n
 For backward compatibility, close the app and use a copy of a valid data file saved before this feature,
 with no `isFavourite` properties. Reopen the app: every contact should be unfavourited, with its existing
 details intact. Mark one contact, restart, and verify that the new status and existing details are retained.
+
+For archive integration, run `find /phone 91234567`, then `fav 1` to mark Test One as a favourite.
+Assign emergency details with `emergency 1 /name Jane Tan /phone 91234567 /relation Sister`.
+Run `archive 1`, restart, and enter `list fav`: Test One is hidden. Run `list archived`, then try `fav 1`
+and `unfav 1`: both must report that the contact needs to be unarchived, with no data changes.
+Run `unarchive 1`, restart, and enter `list fav`: Test One is shown with its favourite badge, note and
+emergency details preserved.
+
+### Assigning and replacing a person's emergency contact
+
+Use a disposable address book with just `Amy Bee`, created using
+`add Amy Bee /phone 85355255 /note Call after 6pm`. Run `list` so Amy is displayed as contact 1.
+
+| Test command or action | Expected result |
+|---|---|
+| `emergency 1 /name Bob Choo /phone 91234567 /relation Brother` | The card shows `emergency: Bob Choo(Brother) 91234567`; Amy's phone and note are unchanged. |
+| `emergency 1 /name Alex Yeoh /phone 87654321` | The previous details are replaced by `emergency: Alex Yeoh 87654321`, with no relation. |
+| `emergency 1 /name Bob Choo /phone abc` | Invalid-phone error; Alex's details remain unchanged. |
+| `emergency 1 /name Bob Choo` | Usage error; existing details remain unchanged. |
+| `emergency 2 /name Bob Choo /phone 91234567` | Invalid-index error; no contact is changed. |
+| `emergency 1 /name Bob Choo /phone 91234567 /phone 87654321` | Duplicate-prefix error; existing details remain unchanged. |
+| `edit 1 /note Changed note /room B-204 /tag` | Note and room change, tags are cleared, and Alex's emergency details remain. |
+| `edit 1 /note` | The note is cleared; emergency details remain. |
+| `list emerg`, then `list` | The general emergency list is empty; `list` restores Amy with her emergency details intact. |
+| Close and reopen the app | Amy's replacement emergency details and room are still present. |
+
+For filtered-list indexing, add a second person, use `find /name` to display only that person, and run
+`emergency 1 /name Bob Choo /phone 91234567`. Only the displayed person receives the details.
 
 ### Saving data
 

@@ -62,6 +62,8 @@ The favourite feature is covered at these levels:
   whitespace, case sensitivity, missing or invalid indices, and extra arguments.
 * `JsonAdaptedPersonTest`, `JsonAddressBookStorageTest` and `LogicManagerTest`: actual JSON round trips,
   files without favourite status, notes and tag order, and command execution across a reload.
+* `FavouriteArchiveIntegrationTest`: archived favourites hidden until restored, favourite changes rejected
+  for archived contacts, preserved notes and emergency details, and files missing either status flag.
 * `PersonCardTest`: real JavaFX cards and list cells, badge visibility, command-driven updates,
   preservation of other displayed details, and cell reuse after a contact is removed.
 

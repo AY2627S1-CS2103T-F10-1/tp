@@ -1,12 +1,13 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PERSONS;
 
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
 
 /**
- * Lists all favourite contacts in their stored order.
+ * Lists active favourite contacts in their stored order.
  */
 public class ListFavouriteCommand extends Command {
     public static final String FAVOURITE_KEYWORD = "fav";
@@ -18,7 +19,7 @@ public class ListFavouriteCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        model.updateFilteredPersonList(Person::isFavourite);
+        model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS.and(Person::isFavourite));
         return new CommandResult(model.getFilteredPersonList().isEmpty() ? MESSAGE_EMPTY : MESSAGE_SUCCESS);
     }
 

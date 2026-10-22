@@ -26,7 +26,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try:
 
-   * `list` : Lists all contacts.
+   * `list` : Lists all active contacts.
 
    * `list emerg` : Lists contacts tagged as emergency.
 
@@ -67,7 +67,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 * Parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
 
-* Extraneous parameters for `help`, `exit`, and `clear` are ignored. The `list`, `list emerg`, `list fav`,
+* Extraneous parameters for `help`, `exit`, and `clear` are ignored. The `list`, `list emerg`, `list archived`, `list fav`,
   `fav INDEX` and `unfav INDEX` commands reject extra parameters.<br>
   For example, `help 123` is interpreted as `help`.
 
@@ -151,12 +151,14 @@ Examples:
 * `add Sarah Tan /phone 91234567 /room B-204 /tag Resident /tag Floor 3`
 * `add Wei Ming /phone 9876 5432 /room C-310 /note Allergic to peanuts, carries an EpiPen`
 
-### Listing all contacts: `list`
+### Listing active contacts: `list`
 
-Shows all stored contacts in numbered order, including their available details.
-This restores the full list after a search and does not change any stored contact.
+Shows all active (not archived) contacts in numbered order, including their available details.
+This restores the active list after a search or archived view and does not change stored contacts.
 
 Format: `list`
+
+* Only the `archived`, `emerg` and `fav` subcommands are supported after `list`. To show only contacts with a given tag, use [`find /tag`](#locating-persons-by-name-tag-or-phone-find).
 
 * The command keyword is case-sensitive: use lowercase `list`. `LIST` and `LiSt` are rejected as unknown commands.
 * Leading and trailing spaces are ignored.
@@ -164,12 +166,12 @@ Format: `list`
   To search by any tag, use [`find /tag`](#locating-persons-by-name-tag-or-phone-find).
 * Unsupported arguments, such as `list abc` or the retired `list /filter Emergency`, are rejected with
   `Invalid command format. Usage: list`. The displayed list stays unchanged when the command is rejected.
-* When there are no stored contacts, the list is empty and the result message is `No contacts found.`.
+* When there are no active contacts, the list is empty and the result message is `No contacts found.`.
 * Otherwise, the result message is `Listed all persons.`.
 
 ### Listing emergency contacts: `list emerg`
 
-Shows only contacts carrying the complete tag `emergency`, in numbered order with their available details.
+Shows only active contacts carrying the complete tag `emergency`, in numbered order with their available details.
 It searches all stored contacts, including those hidden by a previous search.
 The command does not add, edit, delete, or deduplicate contacts.
 
@@ -186,13 +188,13 @@ Format: `list emerg`
 * When no emergency contacts exist, the list is empty and the message is `No emergency contacts found.`.
 * Otherwise, the result message is `Listed all emergency contacts.`.
 * `find /tag Emergency` displays the same contacts through the general tag search.
-* Run `list` to return to all contacts. `list` alone is a valid command to list everyone.
+* Run `list` to return to all active contacts.
 
 Example using the existing tag syntax:
 
 1. `add Hall Security /phone 98765432 /tag Emergency`
 1. `list emerg` shows Hall Security and any other emergency contacts.
-1. `list` restores all contacts.
+1. `list` restores all active contacts.
 
 ### Marking a contact as a favourite: `fav`
 
@@ -208,6 +210,8 @@ Format: `fav INDEX`
 * Repeating the command leaves the contact unchanged and shows `Contact is already a favourite:`
   followed by its details. The command does not toggle the status.
 * Ordinary edits, including replacing or clearing tags, preserve favourite status.
+* Archived contacts must be unarchived before using `fav` or `unfav`. Otherwise, the command reports
+  `Cannot change favourite status for an archived contact. Unarchive it first.` and leaves data unchanged.
 * The command word is case-sensitive. Leading and trailing spaces are ignored; extra arguments are rejected.
 * Missing, zero, negative, non-integer or overflowing indices show an invalid command format message with
   the `fav` usage. A positive index outside the displayed list shows `The person index provided is invalid.`.
@@ -231,7 +235,7 @@ Example: `unfav 1` removes favourite status from the 1st currently displayed con
 
 ### Listing favourite contacts: `list fav`
 
-Shows favourite contacts from across the address book, including those hidden by an earlier search.
+Shows active favourite contacts from across the address book, including those hidden by an earlier search.
 
 Format: `list fav`
 
@@ -240,16 +244,18 @@ Format: `list fav`
 * For example, if the main list contains Alice at #1, Bob at #2 and Charlie at #3, marking Alice and Charlie
   shows Alice at #1 and Charlie at #2 in `list fav`. In that view, `unfav 2` removes Charlie's favourite status.
 * Listing favourites does not change stored contact data.
+* Archived contacts are hidden from this view but retain their favourite status. Restoring an archived
+  favourite makes it appear here again. Run `list archived` and `unarchive INDEX` to restore it.
 * Both words must be lowercase. Extra spaces or tabs between them are accepted.
 * Extra arguments such as `list fav 1` are rejected with `Invalid command format. Usage: list fav`.
   The displayed list stays unchanged.
 * With no favourites, the list is empty and the message is `No favourite contacts found.`.
   Otherwise, the message is `Listed all favourite contacts.`.
-* Run `list` to show all contacts again.
+* Run `list` to show all active contacts again.
 
 ### Editing a person: `edit`
 
-Changes one or more details of an existing contact.
+Changes one or more details of an active contact. Archived contacts must be unarchived before editing.
 
 Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​ [/note NOTE]`
 
@@ -269,9 +275,29 @@ Examples:
 * `edit 1 /note` removes the note of the 1st contact.
 
 
+### Assigning an emergency contact: `emergency`
+
+Stores emergency details for a person without adding another entry to the contact list.
+
+Format: `emergency INDEX /name NAME /phone PHONE [/relation RELATION]`
+
+* `INDEX` identifies the person in the currently displayed list, as with `edit`.
+* Name and phone are required and follow the same rules as `add`. Fields may appear in any order.
+* Relation is optional free text, up to 50 characters. Extra whitespace is collapsed.
+* Each prefix may appear only once. Invalid input leaves the contact unchanged.
+* A person can have one emergency contact. Running the command again replaces all previous emergency details.
+  Name and phone are required each time; omitting relation replaces the previous relation with an empty value.
+* Emergency details are a separate person field. Replacing or clearing tags does not remove them.
+  Clearing emergency details without providing a replacement is not supported yet.
+* Details appear on the person's card and are saved automatically. Ordinary edits preserve them.
+* The same emergency details may be assigned to several people independently.
+* This does not change `list emerg`, which lists the app's tagged emergency resources.
+
+Example: `emergency 1 /name Bob Choo /phone 9123 4567 /relation Brother`
+
 ### Locating persons by name, tag or phone: `find`
 
-Finds persons whose name is close to the given name, or who have the given tag or phone number.
+Finds active persons whose name is close to the given name, even when run from the archived view. Also finds who have the given tag or phone number.
 
 Format: `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`
 
@@ -296,7 +322,7 @@ Finding by name (`/name`):
 * Extra spaces between words are ignored.
 
 Finding by phone (`/phone`):
-* Searches all contacts for an exact phone number, including contacts hidden by an earlier search.
+* Searches all active contacts for an exact phone number, including contacts hidden by an earlier search.
 * Extra spaces are ignored, as when storing phone numbers. Other formatting must match:
   `+65 9123 4567` does not match `+6591234567`, and `9123` does not match `91234567`.
 * All contacts sharing the number are listed. Any non-empty value is accepted; an unknown value matches nobody.
@@ -313,21 +339,64 @@ Examples:
 * `find /name Bernise` returns `Bernice Yu`, despite the typo
 * `find /tag friends` returns all persons who have the tag `friends`
 
+### Archiving contacts: `archive`
+
+Format: `archive INDEX` or `archive /tag TAG`
+
+* `INDEX` is a positive integer from the currently displayed list, including search results.
+* `/tag TAG` archives **all active contacts** with that tag across the address book,
+  including contacts outside the displayed results. Matching ignores case and extra whitespace.
+* Selection is internal: the command runs immediately without a preview or confirmation.
+* The current view/filter stays in place. Archived contacts disappear from active results;
+  in the archived view, newly archived contacts appear.
+* The result reports how many contacts were archived. Already archived contacts are skipped
+  for tag selection; selecting one by index reports that it is already archived.
+* A missing tag, repeated `/tag`, mixed index/tag arguments, unknown prefix, or invalid index is rejected.
+  An unmatched tag reports that no contacts were archived.
+* Archiving preserves contact details. A same-name contact cannot be added while the original is archived;
+  restore the existing contact instead.
+
+Examples: `archive 1`, `archive /tag Study Group`.
+
+### Listing archived contacts: `list archived`
+
+Shows only archived contacts with their displayed index numbers. If none exist, the result is
+`No archived contacts found.`. Extra arguments are rejected.
+
+Use `list`, `find`, or `list emerg` to return to active contacts. Archived contacts remain
+stored and are hidden at startup and in these normal lists/searches.
+
+### Restoring archived contacts: `unarchive`
+
+Format: `unarchive INDEX` or `unarchive /tag TAG`
+
+* Run `list archived` before restoring by index. Use the index currently displayed.
+* Tag selection restores all archived contacts matching the tag across the address book,
+  ignoring case and extra whitespace. Active contacts are unchanged.
+* The current view/filter stays in place: restored contacts disappear from the archived view.
+  Use `list` to see them among active contacts.
+* The result reports the number restored. An active contact selected by index or a tag with
+  no archived matches produces an explanatory message without changing contacts.
+* Argument validation follows the same rules as `archive`.
+
+Example: `list archived`, then `unarchive 1`; or `unarchive /tag Study Group`.
+
 ### Deleting a person: `delete`
 
-Deletes the specified person from the address book.
+Permanently deletes the specified person from the address book. From `list archived`,
+`delete INDEX` can delete an archived contact; it cannot then be unarchived.
 
 Format: `delete INDEX` or `delete /name NAME`
 
 * Deletes the person at the specified `INDEX`.
 * The index refers to the index number shown in the displayed person list.
 * The index **must be a positive integer** 1, 2, 3, …​
-* Name deletion searches **all contacts**, even when the displayed list is filtered.
+* Name deletion searches **all active contacts**, even when the displayed list is filtered.
 * `/name NAME` must be the contact's exact full name, with matching capital letters. Unlike [`find /name`](#locating-persons-by-name-tag-or-phone-find), typos and partial names are not accepted, so a typo cannot delete a different contact.
 * If `/name` is missing or repeated, `NAME` is empty or there is text before `/name`, an invalid command format message is shown.
 * Exactly one match is deleted immediately. With no matches, nothing is deleted.
 * If more than one contact matches, nothing is deleted. The matching contacts are displayed with their indexes; continue with `delete INDEX`.
-* The search results remain displayed; deleting the only match leaves an empty list. Use `list` to show all contacts.
+* The search results remain displayed; deleting the only match leaves an empty list. Use `list` to show all active contacts.
 * Purely numeric input is treated as an index, so `delete 1` can never be a name search.
 
 
@@ -337,7 +406,7 @@ Examples:
 
 ### Clearing all entries: `clear`
 
-Clears all entries from the address book.
+Permanently clears all active and archived entries, regardless of the current view.
 
 Format: `clear`
 
@@ -349,7 +418,11 @@ Format: `exit`
 
 ### Saving the data
 
-AddressBook automatically saves data after every command. You do not need to save manually.
+AddressBook automatically saves data after every command. You do not need to save manually. Archive state is stored as the boolean `archive`: `true`
+means archived, and `false` means active. Older files without this field load contacts as active.
+
+If saving fails, an error is shown and the in-memory change remains visible. It has not been
+confirmed saved to disk; resolve the storage problem before relying on it surviving a restart.
 
 Favourite status is saved with each contact and remains after restarting, including when the status is removed.
 Older data files without favourite status still load; their contacts start unfavourited.
@@ -391,6 +464,9 @@ _Details coming soon ..._
 Action | Format, Examples
 --------|------------------
 **Add** | `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]` <br> e.g., `add Daniel Lim /phone 8123 4567 /room B-204 /tag Resident Fellow /tag Floor 3 /note Prefers WhatsApp`
+**Archive** | `archive INDEX` or `archive /tag TAG`
+**List archived** | `list archived`
+**Unarchive** | `unarchive INDEX` or `unarchive /tag TAG`
 **Clear** | `clear`
 **Delete** | `delete INDEX` or `delete /name NAME`<br> e.g., `delete 3`, `delete /name Alice Tan`
 **Edit (suspended)** | Temporarily unavailable. Displays `Edit not currently supported`.
@@ -402,5 +478,6 @@ Action | Format, Examples
 **Mark favourite** | `fav INDEX`<br> e.g., `fav 2`
 **Remove favourite status** | `unfav INDEX`<br> e.g., `unfav 1`
 **List favourite contacts** | `list fav`
+**Assign emergency contact** | `emergency INDEX /name NAME /phone PHONE [/relation RELATION]`
 **Help** | `help`
 **Recall commands** | ↑ for older commands; ↓ for newer commands or the saved unfinished input. Press Enter to execute. The command box must be focused.

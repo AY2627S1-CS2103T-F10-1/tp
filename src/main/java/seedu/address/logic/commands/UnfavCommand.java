@@ -22,6 +22,7 @@ public class UnfavCommand extends Command {
             + "Example: " + COMMAND_WORD + " 1";
     public static final String MESSAGE_SUCCESS = "Removed favourite status: %1$s";
     public static final String MESSAGE_NOT_FAVOURITE = "Contact is not a favourite: %1$s";
+    public static final String MESSAGE_ARCHIVED_PERSON = FavCommand.MESSAGE_ARCHIVED_PERSON;
 
     private final Index targetIndex;
 
@@ -41,6 +42,9 @@ public class UnfavCommand extends Command {
         }
 
         Person target = displayed.get(targetIndex.getZeroBased());
+        if (target.isArchived()) {
+            throw new CommandException(MESSAGE_ARCHIVED_PERSON);
+        }
         if (!target.isFavourite()) {
             return new CommandResult(String.format(MESSAGE_NOT_FAVOURITE, Messages.format(target)));
         }
