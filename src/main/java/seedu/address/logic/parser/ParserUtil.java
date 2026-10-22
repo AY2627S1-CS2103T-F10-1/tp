@@ -5,6 +5,8 @@ import static java.util.Objects.requireNonNull;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
@@ -23,6 +25,8 @@ public class ParserUtil {
 
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
 
+    private static final String PREFIX_MARKER = "/";
+
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be
      * trimmed.
@@ -34,6 +38,17 @@ public class ParserUtil {
             throw new ParseException(MESSAGE_INVALID_INDEX);
         }
         return Index.fromOneBased(Integer.parseInt(trimmedIndex));
+    }
+
+    /**
+     * Returns true if {@code args} has a word that starts with {@code /} but is not one of {@code knownPrefixes},
+     * such as a misspelt or wrongly capitalised {@code /phone}. No field value contains {@code /}, so such a word
+     * is always a mistake rather than part of a value.
+     */
+    public static boolean hasUnknownPrefix(String args, Prefix... knownPrefixes) {
+        Set<String> known = Stream.of(knownPrefixes).map(Prefix::getPrefix).collect(Collectors.toSet());
+        return Stream.of(args.trim().split("\\s+"))
+                .anyMatch(word -> word.startsWith(PREFIX_MARKER) && !known.contains(word));
     }
 
     /**

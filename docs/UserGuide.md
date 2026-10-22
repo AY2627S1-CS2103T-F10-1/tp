@@ -38,6 +38,9 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
    * `exit` : Exits the app.
 
+1. Use the Up (`↑`) and Down (`↓`) arrow keys in the command box to
+   [recall previous commands](#recalling-previous-commands).
+
 1. Refer to the [Features](#features) section below for details of each command.
 
 --------------------------------------------------------------------------------------------------------------------
@@ -74,6 +77,40 @@ Shows a message explaining how to access the help page.
 
 Format: `help`
 
+
+### Recalling previous commands
+
+Reuse or correct previously submitted commands without typing them again.
+
+Click the command box, then use these keys without holding Shift, Ctrl, Alt or Command:
+
+Key | Action
+----|-------
+**↑ (Up)** | Recall the most recent command, then progressively older commands.
+**↓ (Down)** | Browse newer commands. Moving past the newest entry restores the unfinished input typed before browsing.
+**Enter** | Submit the text displayed in the command box.
+
+* Recalling a command only fills the command box and moves the caret to the end.
+  The contact list and result message do not change until you press Enter.
+* The latest 100 non-blank submissions are remembered, including failed commands and repeated submissions.
+  Empty or whitespace-only input is ignored. When the history is full, the oldest entry is discarded.
+* Pressing ↑ at the oldest entry keeps showing that command. Pressing ↓ after restoring the unfinished
+  input leaves that input unchanged. With no history, either arrow leaves the text unchanged.
+* You can edit recalled commands. Navigating history discards unsubmitted changes to recalled text;
+  it does not overwrite the original command or the unfinished input saved before browsing.
+* Submitting a non-blank command adds a new history entry and discards the saved unfinished input.
+  The next ↑ recalls that submission, even if it failed.
+* History clears when you close the app; it is not saved with your contacts.
+* This feature recalls text and does not undo or redo previous actions. Resubmitted commands use the
+  current contact data and displayed indices: `delete 2` deletes whoever is currently shown as contact #2.
+
+Example:
+
+1. Submit `list`, then `find /tag Resident`.
+1. Type `find /name Al` without pressing Enter.
+1. Press ↑ to recall `find /tag Resident`, then ↑ again to recall `list`.
+1. Press ↓ to return to `find /tag Resident`, then ↓ again to restore `find /name Al`.
+1. Edit the text if needed and press Enter to execute it.
 
 ### Adding a contact: `add`
 
@@ -154,8 +191,19 @@ Example using the existing tag syntax:
 
 ### Editing a person: `edit`
 
-**Temporarily suspended:** The `edit` command is not available in the current version.
-Entering `edit` displays `Edit not currently supported` and does not change any contacts.
+Changes one or more details of an existing contact.
+
+Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​`
+
+* `INDEX` is the number shown beside the contact in the current list, and must be a positive integer.
+* At least one field must be given, in any order. Fields you leave out stay as they are.
+* Each field follows the same rules as in `add`, so `/name`, `/phone` and `/room` cannot be repeated.
+* `/tag` replaces all of the contact's existing tags with the tags given. Repeat `/tag` once per tag.
+  `/tag` on its own removes all tags.
+
+Examples:
+* `edit 2 /phone 9123 4567` changes the phone number of the 2nd contact.
+* `edit 1 /room B-204 /tag Resident /tag Floor 3` sets the room of the 1st contact and replaces their tags.
 
 
 ### Locating persons by name, tag or phone: `find`
@@ -279,6 +327,9 @@ Action | Format, Examples
 **Delete** | `delete INDEX` or `delete /name NAME`<br> e.g., `delete 3`, `delete /name Alice Tan`
 **Edit (suspended)** | Temporarily unavailable. Displays `Edit not currently supported`.
 **Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /name jams`, `find /tag friends`
+**Edit** | `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​`<br> e.g., `edit 2 /phone 9123 4567`, `edit 1 /tag`
+**Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /tag friends`
 **List** | `list`
 **List emergency contacts** | `list emerg`
 **Help** | `help`
+**Recall commands** | ↑ for older commands; ↓ for newer commands or the saved unfinished input. Press Enter to execute. The command box must be focused.
