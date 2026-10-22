@@ -27,7 +27,7 @@ public class PersonFieldValues {
         values.putAll(toCopy.values);
     }
 
-    /** Returns values holding every field of {@code person}. */
+    /** Returns values holding every editable field of {@code person}. */
     public static PersonFieldValues of(Person person) {
         requireNonNull(person);
         PersonFieldValues personValues = new PersonFieldValues();

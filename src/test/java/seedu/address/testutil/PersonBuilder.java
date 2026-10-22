@@ -32,6 +32,7 @@ public class PersonBuilder {
     private Set<Tag> tags;
     private Room room;
     private Note note;
+    private boolean isFavourite;
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -44,6 +45,7 @@ public class PersonBuilder {
         tags = new LinkedHashSet<>();
         room = new Room(DEFAULT_ROOM);
         note = new Note(DEFAULT_NOTE);
+        isFavourite = false;
     }
 
     /**
@@ -57,6 +59,7 @@ public class PersonBuilder {
         tags = new LinkedHashSet<>(personToCopy.getTags());
         room = personToCopy.getRoom();
         note = personToCopy.getNote();
+        isFavourite = personToCopy.isFavourite();
     }
 
     /**
@@ -115,8 +118,16 @@ public class PersonBuilder {
         return this;
     }
 
+    /**
+     * Sets the favourite status of the {@code Person} that we are building.
+     */
+    public PersonBuilder withFavourite(boolean isFavourite) {
+        this.isFavourite = isFavourite;
+        return this;
+    }
+
     public Person build() {
-        return new Person(name, phone, email, address, tags, room, note);
+        return new Person(name, phone, email, address, tags, room, note, isFavourite);
     }
 
 }

@@ -31,6 +31,7 @@ public class Person {
     private final Room room;
     private final Set<Tag> tags = new LinkedHashSet<>();
     private final Note note;
+    private final boolean isFavourite;
 
     /**
      * Every field must be present and not null, and there must be at most {@link #MAX_TAGS} tags.
@@ -47,6 +48,14 @@ public class Person {
 
     /** Creates a contact with an optional room number and note. */
     public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note) {
+        this(name, phone, email, address, tags, room, note, false);
+    }
+
+    /**
+     * Creates a contact with the specified details and favourite status.
+     */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note,
+            boolean isFavourite) {
         requireAllNonNull(name, phone, email, address, tags, room, note);
         checkArgument(tags.size() <= MAX_TAGS, MESSAGE_TAG_LIMIT_REACHED);
         this.name = name;
@@ -56,6 +65,7 @@ public class Person {
         this.room = room;
         this.tags.addAll(tags);
         this.note = note;
+        this.isFavourite = isFavourite;
     }
 
     public Name getName() {
@@ -80,6 +90,17 @@ public class Person {
 
     public Note getNote() {
         return note;
+    }
+
+    public boolean isFavourite() {
+        return isFavourite;
+    }
+
+    /**
+     * Returns a copy with the given favourite status, preserving all other contact details.
+     */
+    public Person withFavourite(boolean isFavourite) {
+        return new Person(name, phone, email, address, tags, room, note, isFavourite);
     }
 
     /**
@@ -124,13 +145,14 @@ public class Person {
                 && address.equals(otherPerson.address)
                 && room.equals(otherPerson.room)
                 && tags.equals(otherPerson.tags)
-                && note.equals(otherPerson.note);
+                && note.equals(otherPerson.note)
+                && isFavourite == otherPerson.isFavourite;
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, tags, room, note);
+        return Objects.hash(name, phone, email, address, tags, room, note, isFavourite);
     }
 
     @Override
@@ -146,6 +168,9 @@ public class Person {
         }
         if (!note.value.isEmpty()) {
             builder.add("note", note);
+        }
+        if (isFavourite) {
+            builder.add("isFavourite", isFavourite);
         }
         return builder.toString();
     }

@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
+import seedu.address.logic.parser.EditCommandParser;
 import seedu.address.logic.parser.PersonField;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
@@ -148,7 +149,8 @@ public class EditCommandTest {
     }
 
     @Test
-    public void execute_oneFieldAtATime_changesOnlyThatField() throws Exception {
+    public void execute_oneFieldAtATime_changesOnlyThatFieldAndPreservesFavourite() throws Exception {
+        replaceFirstPerson(person -> person.withFavourite(true));
         for (PersonField<?> field : PersonField.values()) {
             assertOnlyFieldChanged(field);
         }
@@ -165,7 +167,7 @@ public class EditCommandTest {
         EditPersonDescriptor descriptor = new EditPersonDescriptor();
         descriptor.set(field, newValue);
 
-        SetPersonSpy spy = new SetPersonSpy(getTypicalAddressBook());
+        SetPersonSpy spy = new SetPersonSpy(model.getAddressBook());
         new EditCommand(INDEX_FIRST_PERSON, descriptor).execute(spy);
 
         assertEquals(target, spy.target);
@@ -175,6 +177,31 @@ public class EditCommandTest {
         }
         assertEquals(target.getEmail(), spy.editedPerson.getEmail());
         assertEquals(target.getAddress(), spy.editedPerson.getAddress());
+        assertTrue(spy.editedPerson.isFavourite(), "favourite status after editing " + field);
+    }
+
+    @Test
+    public void execute_replaceTags_preservesFavouriteAndOtherDetails() throws Exception {
+        Person original = replaceFirstPerson(person -> person.withFavourite(true).withRoom(VALID_ROOM_BOB)
+                .withNote(VALID_NOTE_AMY));
+
+        new EditCommandParser().parse(" 1 /tag " + VALID_TAG_HUSBAND).execute(model);
+
+        Person edited = model.getFilteredPersonList().getFirst();
+        assertTrue(edited.isFavourite());
+        assertEquals(new PersonBuilder(original).withTags(VALID_TAG_HUSBAND).build(), edited);
+    }
+
+    @Test
+    public void execute_clearTags_preservesFavouriteAndOtherDetails() throws Exception {
+        Person original = replaceFirstPerson(person -> person.withFavourite(true).withRoom(VALID_ROOM_BOB)
+                .withNote(VALID_NOTE_AMY));
+
+        new EditCommandParser().parse(" 1 /tag").execute(model);
+
+        Person edited = model.getFilteredPersonList().getFirst();
+        assertTrue(edited.isFavourite());
+        assertEquals(new PersonBuilder(original).withTags().build(), edited);
     }
 
     /** A model that records the replacement given to {@code setPerson} instead of storing it. */
