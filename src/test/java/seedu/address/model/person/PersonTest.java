@@ -154,6 +154,38 @@ public class PersonTest {
     }
 
     @Test
+    public void withEmergencyContact_preservesOtherFieldsAndOriginalPerson() {
+        Person original = new PersonBuilder(ALICE).withRoom("B-204").withNote("Allergic to peanuts").build();
+        EmergencyContact contact = new EmergencyContact(new Name("Bob Choo"), new Phone("91234567"), "Brother");
+        Person updated = original.withEmergencyContact(contact);
+        assertTrue(original.getEmergencyContact().isEmpty());
+        assertTrue(original.isSamePerson(updated));
+        assertEquals(original.getNote(), updated.getNote());
+        assertEquals(original.getRoom(), updated.getRoom());
+        assertEquals(original.getPhone(), updated.getPhone());
+        assertEquals(original.getEmail(), updated.getEmail());
+        assertEquals(original.getAddress(), updated.getAddress());
+        assertEquals(original.getTags(), updated.getTags());
+        assertEquals(contact, updated.getEmergencyContact().orElseThrow());
+    }
+
+    @Test
+    public void equals_emergencyDetailsIncludedInEqualityAndHashCode() {
+        EmergencyContact contact = new EmergencyContact(new Name("Bob Choo"), new Phone("91234567"), "Brother");
+        Person updated = ALICE.withEmergencyContact(contact);
+        Person copy = new PersonBuilder(updated).build();
+        assertFalse(ALICE.equals(updated));
+        assertEquals(updated, copy);
+        assertEquals(updated.hashCode(), copy.hashCode());
+    }
+
+    @Test
+    public void toString_withEmergencyContact_includesEmergencyDetails() {
+        EmergencyContact contact = new EmergencyContact(new Name("Bob Choo"), new Phone("91234567"), "Brother");
+        assertTrue(ALICE.withEmergencyContact(contact).toString().contains("emergencyContact="));
+    }
+
+    @Test
     public void toStringMethod() {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
                 + ", email=" + ALICE.getEmail() + ", address=" + ALICE.getAddress() + ", tags=" + ALICE.getTags() + "}";

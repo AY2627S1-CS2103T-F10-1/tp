@@ -33,7 +33,10 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.EmergencyContact;
+import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Phone;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 import seedu.address.testutil.PersonBuilder;
 import seedu.address.testutil.PersonFieldSamples;
@@ -44,6 +47,21 @@ import seedu.address.testutil.PersonFieldSamples;
 public class EditCommandTest {
 
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+
+    @Test
+    public void execute_editNoteAndClearTags_preservesEmergencyDetails() throws Exception {
+        Person original = model.getFilteredPersonList().getFirst();
+        EmergencyContact contact = new EmergencyContact(new Name("Bob Choo"), new Phone("91234567"), "Brother");
+        model.setPerson(original, original.withEmergencyContact(contact));
+        new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder().withNote("Call after 6pm")
+                .withRoom("B-204").withTags().build()).execute(model);
+        Person stored = model.getAddressBook().getPersonList().getFirst();
+        assertEquals(contact, stored.getEmergencyContact().orElseThrow());
+        assertEquals("Call after 6pm", stored.getNote().value);
+        assertEquals("B-204", stored.getRoom().value);
+        assertTrue(stored.getTags().isEmpty());
+        assertEquals(original.getPhone(), stored.getPhone());
+    }
 
     @Test
     public void execute_allFieldsSpecifiedUnfilteredList_success() {

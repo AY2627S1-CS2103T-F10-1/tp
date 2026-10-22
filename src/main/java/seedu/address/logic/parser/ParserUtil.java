@@ -2,6 +2,7 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
+import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -42,6 +43,23 @@ public class ParserUtil {
             Note.MESSAGE_EMPTY, Note.MESSAGE_TOO_LONG, Note.MESSAGE_INVALID_CHARACTERS);
     private static final TextRules TAG_RULES = new TextRules(Tag.MAX_LENGTH, Tag::isValidTagName,
             Tag.MESSAGE_EMPTY, Tag.MESSAGE_TOO_LONG, Tag.MESSAGE_INVALID_CHARACTERS);
+
+    /** Normalizes and tokenizes fields following an index, rejecting unknown prefixes and invalid indices. */
+    public static ArgumentMultimap parseIndexedArguments(String args, String usage, Prefix... prefixes)
+            throws ParseException {
+        requireNonNull(args);
+        String normalized = " " + StringUtil.collapseWhitespace(args);
+        if (hasUnknownPrefix(normalized, prefixes)) {
+            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, usage));
+        }
+        ArgumentMultimap arguments = ArgumentTokenizer.tokenize(normalized, prefixes);
+        try {
+            parseIndex(arguments.getPreamble());
+        } catch (ParseException exception) {
+            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, usage), exception);
+        }
+        return arguments;
+    }
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be

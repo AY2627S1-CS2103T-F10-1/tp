@@ -229,6 +229,20 @@ To add a new field, add it to `Person`, add a constant to `PersonField` and list
 
 `/` is not allowed in a note because the parser treats a word starting with `/` as a field prefix. Allowing it only in the middle of a word would make the rule hard to explain to users.
 
+### Emergency contact assignment
+
+`emergency INDEX /name NAME /phone PHONE [/relation RELATION]` assigns one independent, immutable
+`EmergencyContact` to a person in the displayed list. Name and phone are required; relation is optional.
+Each assignment atomically replaces any existing emergency details; omitted relation defaults to empty.
+Emergency details are independent of tags and of the general `list emerg` feature. Clearing is not supported yet.
+
+`EmergencyCommandParser` and `EditCommandParser` share `ParserUtil#parseIndexedArguments()` for whitespace,
+prefix and index handling. Emergency name and phone reuse `ParserUtil#parseName()` and `parsePhone()`.
+Emergency details are kept outside the add/edit field registry. `PersonFieldValues#toPerson()` accepts them
+separately so ordinary edits preserve them while constructing the replacement person once.
+`Person#equals()` and `hashCode()` include the emergency details; `isSamePerson()` still compares names only.
+`JsonAdaptedEmergencyContact` stores the nested details, and older files without this field remain valid.
+
 ### Filter by tag feature
 
 `find /tag TAG` shows only contacts with the given tag. `FindCommandParser` creates a `PersonHasTagPredicate` from the value after `/tag`, and `FindCommand` applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any non-empty value is accepted and a value that is not a valid tag simply matches nobody.
@@ -916,6 +930,27 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: Close the app and reopen it.<br>
       Expected: Notes added or edited above are still shown.
+
+### Assigning and replacing a person's emergency contact
+
+Use a disposable address book with just `Amy Bee`, created using
+`add Amy Bee /phone 85355255 /note Call after 6pm`. Run `list` so Amy is displayed as contact 1.
+
+| Test command or action | Expected result |
+|---|---|
+| `emergency 1 /name Bob Choo /phone 91234567 /relation Brother` | The card shows `emergency: Bob Choo(Brother) 91234567`; Amy's phone and note are unchanged. |
+| `emergency 1 /name Alex Yeoh /phone 87654321` | The previous details are replaced by `emergency: Alex Yeoh 87654321`, with no relation. |
+| `emergency 1 /name Bob Choo /phone abc` | Invalid-phone error; Alex's details remain unchanged. |
+| `emergency 1 /name Bob Choo` | Usage error; existing details remain unchanged. |
+| `emergency 2 /name Bob Choo /phone 91234567` | Invalid-index error; no contact is changed. |
+| `emergency 1 /name Bob Choo /phone 91234567 /phone 87654321` | Duplicate-prefix error; existing details remain unchanged. |
+| `edit 1 /note Changed note /room B-204 /tag` | Note and room change, tags are cleared, and Alex's emergency details remain. |
+| `edit 1 /note` | The note is cleared; emergency details remain. |
+| `list emerg`, then `list` | The general emergency list is empty; `list` restores Amy with her emergency details intact. |
+| Close and reopen the app | Amy's replacement emergency details and room are still present. |
+
+For filtered-list indexing, add a second person, use `find /name` to display only that person, and run
+`emergency 1 /name Bob Choo /phone 91234567`. Only the displayed person receives the details.
 
 ### Saving data
 
