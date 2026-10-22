@@ -9,6 +9,9 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
  */
 public class Name {
 
+    public static final int MAX_LENGTH = 100;
+    public static final String MESSAGE_EMPTY = "Contact name cannot be empty.";
+    public static final String MESSAGE_TOO_LONG = "Contact name too long, please shorten it and try again.";
     public static final String MESSAGE_CONSTRAINTS =
             "Names should only contain alphanumeric characters and spaces, and should not be blank";
 

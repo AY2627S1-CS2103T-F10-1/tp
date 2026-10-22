@@ -21,6 +21,7 @@ import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
+import seedu.address.model.person.Room;
 import seedu.address.model.tag.Tag;
 
 public class ParserUtilTest {
@@ -34,6 +35,7 @@ public class ParserUtilTest {
     private static final String VALID_PHONE = "123456";
     private static final String VALID_ADDRESS = "123 Main Street #0505";
     private static final String VALID_EMAIL = "rachel@example.com";
+    private static final String VALID_ROOM = "B-204 Annex";
     private static final String VALID_TAG_1 = "friend";
     private static final String VALID_TAG_2 = "neighbour";
     private static final List<String> TAGS_AT_LIMIT = JANE.getTags().stream().map(tag -> tag.tagName).toList();
@@ -81,6 +83,56 @@ public class ParserUtilTest {
         String nameWithWhitespace = WHITESPACE + VALID_NAME + WHITESPACE;
         Name expectedName = new Name(VALID_NAME);
         assertEquals(expectedName, ParserUtil.parseName(nameWithWhitespace));
+    }
+
+    @Test
+    public void parseName_emptyValue_throwsParseException() {
+        assertThrows(ParseException.class, Name.MESSAGE_EMPTY, () -> ParserUtil.parseName(""));
+        assertThrows(ParseException.class, Name.MESSAGE_EMPTY, () -> ParserUtil.parseName(WHITESPACE));
+    }
+
+    @Test
+    public void parseName_lengthBoundary() throws Exception {
+        String longestName = "A".repeat(Name.MAX_LENGTH);
+        assertEquals(new Name(longestName), ParserUtil.parseName(longestName));
+        assertThrows(ParseException.class, Name.MESSAGE_TOO_LONG, () -> ParserUtil.parseName(longestName + "A"));
+    }
+
+    @Test
+    public void parsePhone_emptyValue_throwsParseException() {
+        assertThrows(ParseException.class, Phone.MESSAGE_EMPTY, () -> ParserUtil.parsePhone(""));
+        assertThrows(ParseException.class, Phone.MESSAGE_EMPTY, () -> ParserUtil.parsePhone(WHITESPACE));
+    }
+
+    @Test
+    public void parsePhone_lengthBoundary() throws Exception {
+        String longestPhone = "1".repeat(Phone.MAX_LENGTH);
+        assertEquals(new Phone(longestPhone), ParserUtil.parsePhone(longestPhone));
+        assertThrows(ParseException.class, Phone.MESSAGE_TOO_LONG, () -> ParserUtil.parsePhone(longestPhone + "1"));
+    }
+
+    @Test
+    public void parsePhone_invalidCharacters_throwsParseException() {
+        assertThrows(ParseException.class, Phone.MESSAGE_INVALID_CHARACTERS, () ->
+                ParserUtil.parsePhone(INVALID_PHONE));
+    }
+
+    @Test
+    public void parseRoom_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseRoom(null));
+    }
+
+    @Test
+    public void parseRoom_validValueWithExtraWhitespace_returnsCollapsedRoom() throws Exception {
+        assertEquals(new Room(VALID_ROOM), ParserUtil.parseRoom(WHITESPACE + "B-204   Annex" + WHITESPACE));
+    }
+
+    @Test
+    public void parseRoom_invalidValue_throwsParseException() {
+        assertThrows(ParseException.class, Room.MESSAGE_EMPTY, () -> ParserUtil.parseRoom(WHITESPACE));
+        assertThrows(ParseException.class, Room.MESSAGE_TOO_LONG, () ->
+                ParserUtil.parseRoom("A".repeat(Room.MAX_LENGTH + 1)));
+        assertThrows(ParseException.class, Room.MESSAGE_INVALID_CHARACTERS, () -> ParserUtil.parseRoom("B/204"));
     }
 
     @Test
@@ -243,10 +295,9 @@ public class ParserUtilTest {
     }
 
     @Test
-    public void parseTags_duplicatesDifferingInCase_countedOnce() throws Exception {
-        List<String> tagsWithDuplicate = new ArrayList<>(TAGS_AT_LIMIT);
-        tagsWithDuplicate.add(TAGS_AT_LIMIT.get(0).toLowerCase());
+    public void parseTags_duplicatesDifferingInCase_throwsParseException() {
+        List<String> tagsWithDuplicate = List.of(VALID_TAG_1, VALID_TAG_1.toUpperCase());
 
-        assertEquals(Person.MAX_TAGS, ParserUtil.parseTags(tagsWithDuplicate).size());
+        assertThrows(ParseException.class, Tag.MESSAGE_DUPLICATE, () -> ParserUtil.parseTags(tagsWithDuplicate));
     }
 }

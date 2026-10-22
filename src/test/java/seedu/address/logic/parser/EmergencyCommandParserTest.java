@@ -1,6 +1,8 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
@@ -39,19 +41,19 @@ public class EmergencyCommandParserTest {
 
     @Test
     public void parse_invalidDetails_usesSharedValidation() {
-        assertParseFailure(parser, "1 /name /phone 91234567", PersonField.MESSAGE_EMPTY_NAME);
-        assertParseFailure(parser, "1 /name Bob /phone", PersonField.MESSAGE_EMPTY_PHONE);
+        assertParseFailure(parser, "1 /name /phone 91234567", Name.MESSAGE_EMPTY);
+        assertParseFailure(parser, "1 /name Bob /phone", Phone.MESSAGE_EMPTY);
         assertParseFailure(parser, "1 /name B@b /phone 91234567", Name.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, "1 /name Bob /phone abc", PersonField.MESSAGE_INVALID_PHONE);
-        assertParseFailure(parser, "1 /name " + "a".repeat(101) + " /phone 91234567", PersonField.MESSAGE_LONG_NAME);
-        assertParseFailure(parser, "1 /name Bob /phone " + "1".repeat(21), PersonField.MESSAGE_LONG_PHONE);
+        assertParseFailure(parser, "1 /name Bob /phone abc", Phone.MESSAGE_INVALID_CHARACTERS);
+        assertParseFailure(parser, "1 /name " + "a".repeat(101) + " /phone 91234567", Name.MESSAGE_TOO_LONG);
+        assertParseFailure(parser, "1 /name Bob /phone " + "1".repeat(21), Phone.MESSAGE_TOO_LONG);
         assertParseFailure(parser, "1 /name Bob /phone 91234567 /relation " + "a".repeat(51),
                 EmergencyContact.MESSAGE_RELATION_TOO_LONG);
     }
 
     @Test
     public void parse_repeatedFields_failure() {
-        for (Prefix prefix : new Prefix[]{PersonField.NAME.getPrefix(), PersonField.PHONE.getPrefix(),
+        for (Prefix prefix : new Prefix[]{PREFIX_NAME_COMMAND, PREFIX_PHONE_COMMAND,
             new Prefix("/relation", true)}) {
             assertParseFailure(parser, "1 /name Bob /phone 91234567 /relation Brother " + prefix + " value",
                     Messages.getErrorMessageForDuplicatePrefixes(prefix));

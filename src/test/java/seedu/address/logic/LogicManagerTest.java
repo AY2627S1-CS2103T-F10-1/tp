@@ -21,13 +21,13 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.ListEmergencyCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
-import seedu.address.logic.parser.PersonField;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Phone;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
@@ -72,9 +72,9 @@ public class LogicManagerTest {
 
     @Test
     public void execute_emergencyReplacement_savesNewDetailsAndKeepsGeneralEmergencyListSeparate() throws Exception {
-        model.addPerson(AMY);
+        model.addPerson(new PersonBuilder(AMY).withNote("Allergic to peanuts").build());
         logic.execute("emergency 1 /name Bob Choo /phone 91234567 /relation Brother");
-        logic.execute("edit 1 /name Amy Tan /room B-204 /tag");
+        logic.execute("edit 1 /name Amy Tan /room B-204 /tag /note Call after 6pm");
         logic.execute("emergency 1 /name Alex Yeoh /phone 87654321");
 
         Person stored = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
@@ -82,6 +82,7 @@ public class LogicManagerTest {
         assertEquals(model.getAddressBook().getPersonList().getFirst(), stored);
         assertEquals("Amy Tan", stored.getName().fullName);
         assertEquals("B-204", stored.getRoom().value);
+        assertEquals("Call after 6pm", stored.getNote().value);
         assertEquals("Alex Yeoh", stored.getEmergencyContact().orElseThrow().getName().fullName);
         assertEquals("87654321", stored.getEmergencyContact().orElseThrow().getPhone().value);
         assertEquals("", stored.getEmergencyContact().orElseThrow().getRelation());
@@ -98,7 +99,7 @@ public class LogicManagerTest {
         JsonAddressBookStorage storage = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
         ReadOnlyAddressBook savedBefore = storage.readAddressBook().orElseThrow();
 
-        assertParseException("emergency 1 /name Alex Yeoh /phone abc", PersonField.MESSAGE_INVALID_PHONE);
+        assertParseException("emergency 1 /name Alex Yeoh /phone abc", Phone.MESSAGE_INVALID_CHARACTERS);
         assertEquals(savedBefore, model.getAddressBook());
         assertEquals(savedBefore, storage.readAddressBook().orElseThrow());
     }

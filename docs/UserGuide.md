@@ -38,6 +38,9 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
    * `exit` : Exits the app.
 
+1. Use the Up (`↑`) and Down (`↓`) arrow keys in the command box to
+   [recall previous commands](#recalling-previous-commands).
+
 1. Refer to the [Features](#features) section below for details of each command.
 
 --------------------------------------------------------------------------------------------------------------------
@@ -75,29 +78,65 @@ Shows a message explaining how to access the help page.
 Format: `help`
 
 
+### Recalling previous commands
+
+Reuse or correct previously submitted commands without typing them again.
+
+Click the command box, then use these keys without holding Shift, Ctrl, Alt or Command:
+
+Key | Action
+----|-------
+**↑ (Up)** | Recall the most recent command, then progressively older commands.
+**↓ (Down)** | Browse newer commands. Moving past the newest entry restores the unfinished input typed before browsing.
+**Enter** | Submit the text displayed in the command box.
+
+* Recalling a command only fills the command box and moves the caret to the end.
+  The contact list and result message do not change until you press Enter.
+* The latest 100 non-blank submissions are remembered, including failed commands and repeated submissions.
+  Empty or whitespace-only input is ignored. When the history is full, the oldest entry is discarded.
+* Pressing ↑ at the oldest entry keeps showing that command. Pressing ↓ after restoring the unfinished
+  input leaves that input unchanged. With no history, either arrow leaves the text unchanged.
+* You can edit recalled commands. Navigating history discards unsubmitted changes to recalled text;
+  it does not overwrite the original command or the unfinished input saved before browsing.
+* Submitting a non-blank command adds a new history entry and discards the saved unfinished input.
+  The next ↑ recalls that submission, even if it failed.
+* History clears when you close the app; it is not saved with your contacts.
+* This feature recalls text and does not undo or redo previous actions. Resubmitted commands use the
+  current contact data and displayed indices: `delete 2` deletes whoever is currently shown as contact #2.
+
+Example:
+
+1. Submit `list`, then `find /tag Resident`.
+1. Type `find /name Al` without pressing Enter.
+1. Press ↑ to recall `find /tag Resident`, then ↑ again to recall `list`.
+1. Press ↓ to return to `find /tag Resident`, then ↓ again to restore `find /name Al`.
+1. Edit the text if needed and press Enter to execute it.
+
 ### Adding a contact: `add`
 
-Adds a contact with a required name and phone number, and optional room and tags. Tags show a contact's category at a glance (e.g., `Resident`, `Resident Fellow`, `Staff`).
+Adds a contact with a required name and phone number, and optional room, tags and note. Tags show a contact's category at a glance (e.g., `Resident`, `Resident Fellow`, `Staff`).
 
-Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​`
+Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
 
 * Name is required and can contain up to 100 characters. Existing name character rules apply.
 * Phone is required and can contain up to 20 characters: digits, spaces, `+`, hyphens and parentheses.
 * Room is optional for any contact, regardless of tags. It can contain up to 20 characters:
   letters, digits, spaces and hyphens.
-* Enter the name first. `/phone`, `/room` and `/tag` can then be given in any order.
-  `/phone` and `/room` cannot be repeated.
+* Note is optional free text, such as an allergy or how the contact prefers to be reached. It can contain
+  up to 200 characters of any kind except `/`, which marks the start of a field.
+* Enter the name first. `/phone`, `/room`, `/tag` and `/note` can then be given in any order.
+  `/phone`, `/room` and `/note` cannot be repeated.
 * Repeat `/tag` once per tag, up to five tags. Spaces inside a tag are allowed, so `/tag Resident Fellow` is one tag.
 * Tags may contain letters, digits, spaces and hyphens (`-`), up to 50 characters. They are not case-sensitive,
   and are displayed with the first letter of each word capitalized.
 * Duplicate tags, including tags differing only in case or extra spaces (e.g., `/tag RA /tag ra`), are rejected.
 * Leading and trailing spaces are trimmed, and extra whitespace is collapsed into one space.
-* Supplying `/room` or `/tag` without a value is rejected.
+* Supplying `/room`, `/tag` or `/note` without a value is rejected.
 * A contact is a duplicate when its name matches an existing contact (case-sensitive).
   The add command trims and collapses whitespace before comparing names. Phone number, room and tags do not
   affect duplicate detection.
 * Contacts with the same name cannot be added, even when their phone numbers differ.
-* On success, the contact appears in the list with its supplied room and tags, and
+* On success, the contact appears in the list with its supplied room, tags and note, and
   `Contact NAME added successfully.` is shown. On failure, no contact is added.
 
 Examples:
@@ -105,6 +144,7 @@ Examples:
 * `add Sarah Tan /phone 9123 4567`
 * `add Daniel Lim /phone +65 8123 4567 /room B-204`
 * `add Sarah Tan /phone 91234567 /room B-204 /tag Resident /tag Floor 3`
+* `add Wei Ming /phone 9876 5432 /room C-310 /note Allergic to peanuts, carries an EpiPen`
 
 ### Listing all contacts: `list`
 
@@ -156,17 +196,21 @@ Example using the existing tag syntax:
 
 Changes one or more details of an existing contact.
 
-Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​`
+Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​ [/note NOTE]`
 
 * `INDEX` is the number shown beside the contact in the current list, and must be a positive integer.
 * At least one field must be given, in any order. Fields you leave out stay as they are.
-* Each field follows the same rules as in `add`, so `/name`, `/phone` and `/room` cannot be repeated.
+* Each field follows the same rules as in `add`, so `/name`, `/phone`, `/room` and `/note` cannot be repeated.
 * `/tag` replaces all of the contact's existing tags with the tags given. Repeat `/tag` once per tag.
-  `/tag` on its own removes all tags.
+* An optional field given with nothing after it is removed: `/room` on its own removes the room,
+  `/note` on its own removes the note, and `/tag` on its own removes all tags. `/name` and `/phone` are required, so they cannot be removed.
 
 Examples:
 * `edit 2 /phone 9123 4567` changes the phone number of the 2nd contact.
 * `edit 1 /room B-204 /tag Resident /tag Floor 3` sets the room of the 1st contact and replaces their tags.
+* `edit 3 /room` removes the room of the 3rd contact.
+* `edit 1 /note Prefers WhatsApp over calls` sets or replaces the note of the 1st contact.
+* `edit 1 /note` removes the note of the 1st contact.
 
 
 ### Assigning an emergency contact: `emergency`
@@ -191,12 +235,12 @@ Example: `emergency 1 /name Bob Choo /phone 9123 4567 /relation Brother`
 
 ### Locating persons by name, tag or phone: `find`
 
-Finds persons whose full name is exactly the given name, or who have the given tag or phone number.
+Finds persons whose name is close to the given name, or who have the given tag or phone number.
 
 Format: `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`
 
 * Exactly one of `/name`, `/tag` and `/phone` must be given, and nothing may be typed before it.
-* Name search is case-sensitive; for example, `find /name alex yeoh` does not match `Alex Yeoh`.
+* Name search ignores capital letters and forgives small typos; for example, `find /name alx yeo` finds `Alex Yeoh`.
 * Tag search ignores case and extra spaces; for example, `find /tag Friends` matches the tag `friends`.
 * Spaces before and after `NAME`, `TAG` or `NUMBER` are ignored.
 * If no person matches, the message `No contacts found` is shown and the list is empty. Otherwise, the number of persons listed is shown.
@@ -205,9 +249,15 @@ Format: `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`
 * If `/name`, `/tag` or `/phone` is repeated, a message listing the repeated prefix is shown.
 
 Finding by name (`/name`):
-* Everything after `/name` is treated as one full name. It is not split into separate keywords.
-* The whole name must match; for example, `find /name Alex` does not match `Alex Yeoh`.
-* Spaces inside the name are matched as typed.
+* You do not need the full name. Each word you type must be close to one of the words in the contact's name,
+  in any order; for example, `find /name Yeoh` and `find /name Yeoh Alex` both find `Alex Yeoh`.
+* Every word you type must match. For example, `find /name Alex Tan` does not find `Alex Yeoh`, because no part of
+  the name is close to `Tan`.
+* Longer words can have more typos than shorter ones. Very short words (1 or 2 letters) must be typed exactly, so
+  `find /name Al` does not find `Alex Yeoh`.
+* Because small typos are allowed, a search may also list contacts with similar names; for example,
+  `find /name Tan` may also list a contact named `Tay`.
+* Extra spaces between words are ignored.
 
 Finding by phone (`/phone`):
 * Searches all contacts for an exact phone number, including contacts hidden by an earlier search.
@@ -223,7 +273,8 @@ Finding by tag (`/tag`):
 
 Examples:
 * `find /name Alex Yeoh` returns `Alex Yeoh`
-* `find /name Alex` returns no persons, because `Alex` is not the full name
+* `find /name alex` returns `Alex Yeoh`
+* `find /name Bernise` returns `Bernice Yu`, despite the typo
 * `find /tag friends` returns all persons who have the tag `friends`
 
 ### Deleting a person: `delete`
@@ -236,7 +287,7 @@ Format: `delete INDEX` or `delete /name NAME`
 * The index refers to the index number shown in the displayed person list.
 * The index **must be a positive integer** 1, 2, 3, …​
 * Name deletion searches **all contacts**, even when the displayed list is filtered.
-* `/name NAME` must be the contact's full name, matched case-sensitively, the same way as [`find /name`](#locating-persons-by-name-tag-or-phone-find).
+* `/name NAME` must be the contact's exact full name, with matching capital letters. Unlike [`find /name`](#locating-persons-by-name-tag-or-phone-find), typos and partial names are not accepted, so a typo cannot delete a different contact.
 * If `/name` is missing or repeated, `NAME` is empty or there is text before `/name`, an invalid command format message is shown.
 * Exactly one match is deleted immediately. With no matches, nothing is deleted.
 * If more than one contact matches, nothing is deleted. The matching contacts are displayed with their indexes; continue with `delete INDEX`.
@@ -298,12 +349,15 @@ _Details coming soon ..._
 
 Action | Format, Examples
 --------|------------------
-**Add** | `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​` <br> e.g., `add Daniel Lim /phone 8123 4567 /room B-204 /tag Resident Fellow /tag Floor 3`
+**Add** | `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]` <br> e.g., `add Daniel Lim /phone 8123 4567 /room B-204 /tag Resident Fellow /tag Floor 3 /note Prefers WhatsApp`
 **Clear** | `clear`
 **Delete** | `delete INDEX` or `delete /name NAME`<br> e.g., `delete 3`, `delete /name Alice Tan`
+**Edit (suspended)** | Temporarily unavailable. Displays `Edit not currently supported`.
+**Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /name jams`, `find /tag friends`
 **Edit** | `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​`<br> e.g., `edit 2 /phone 9123 4567`, `edit 1 /tag`
 **Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /tag friends`
 **List** | `list`
 **List emergency contacts** | `list emerg`
 **Assign emergency contact** | `emergency INDEX /name NAME /phone PHONE [/relation RELATION]`
 **Help** | `help`
+**Recall commands** | ↑ for older commands; ↓ for newer commands or the saved unfinished input. Press Enter to execute. The command box must be focused.

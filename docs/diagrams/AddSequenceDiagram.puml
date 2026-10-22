@@ -1,0 +1,97 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+title Adding a contact successfully
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as LogicManager LOGIC_COLOR
+participant ":AddressBookParser" as AddressBookParser LOGIC_COLOR
+participant ":AddCommandParser" as AddCommandParser LOGIC_COLOR
+participant "a:AddCommand" as AddCommand LOGIC_COLOR
+participant "r:CommandResult" as CommandResult LOGIC_COLOR
+end box
+
+box Model MODEL_COLOR_T1
+participant "m:Model" as Model MODEL_COLOR
+end box
+
+box Storage STORAGE_COLOR_T1
+participant ":Storage" as Storage STORAGE_COLOR
+end box
+
+[-> LogicManager : execute("add Sarah Tan /phone 9123 4567 /room B-204 /tag Resident")
+activate LogicManager
+
+LogicManager -> AddressBookParser : parseCommand(commandText)
+activate AddressBookParser
+
+create AddCommandParser
+AddressBookParser -> AddCommandParser : new AddCommandParser()
+AddressBookParser -> AddCommandParser : parse(arguments)
+activate AddCommandParser
+
+note right of AddCommandParser
+  Normalize whitespace and tokenize arguments.
+  Validate the name, phone, optional room and tags.
+  Create Person p with empty legacy email/address fields.
+end note
+
+create AddCommand
+AddCommandParser -> AddCommand : new AddCommand(p)
+activate AddCommand
+AddCommand --> AddCommandParser
+deactivate AddCommand
+
+AddCommandParser --> AddressBookParser : a
+deactivate AddCommandParser
+AddressBookParser --> LogicManager : a
+deactivate AddressBookParser
+
+LogicManager -> AddCommand : execute(m)
+activate AddCommand
+
+AddCommand -> Model : hasPerson(p)
+activate Model
+Model --> AddCommand : false
+deactivate Model
+
+note right of Model
+  Successful path assumes no existing contact
+  has the same name (case-sensitive).
+end note
+
+AddCommand -> Model : addPerson(p)
+activate Model
+note right of Model
+  Add p to the address book and
+  reset the filter to show all contacts.
+end note
+Model --> AddCommand
+deactivate Model
+
+create CommandResult
+AddCommand -> CommandResult : new CommandResult("Contact Sarah Tan added successfully.")
+activate CommandResult
+CommandResult --> AddCommand
+deactivate CommandResult
+
+AddCommand --> LogicManager : r
+deactivate AddCommand
+
+LogicManager -> Model : getAddressBook()
+activate Model
+Model --> LogicManager : addressBook
+deactivate Model
+
+LogicManager -> Storage : saveAddressBook(addressBook)
+activate Storage
+note right of Storage
+  Persist the contacts as JSON.
+end note
+Storage --> LogicManager
+deactivate Storage
+
+[<-- LogicManager : r
+deactivate LogicManager
+@enduml

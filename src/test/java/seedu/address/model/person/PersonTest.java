@@ -2,10 +2,12 @@ package seedu.address.model.person;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_EMAIL_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_NOTE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -116,6 +118,49 @@ public class PersonTest {
         // different room -> returns false
         editedAlice = new PersonBuilder(ALICE).withRoom("B-204").build();
         assertFalse(ALICE.equals(editedAlice));
+
+        // different note -> returns false
+        editedAlice = new PersonBuilder(ALICE).withNote(VALID_NOTE_BOB).build();
+        assertFalse(ALICE.equals(editedAlice));
+    }
+
+    @Test
+    public void hashCode_differentNote_differs() {
+        Person aliceWithNote = new PersonBuilder(ALICE).withNote(VALID_NOTE_BOB).build();
+        assertNotEquals(ALICE.hashCode(), aliceWithNote.hashCode());
+        assertEquals(aliceWithNote.hashCode(), new PersonBuilder(aliceWithNote).build().hashCode());
+    }
+
+    @Test
+    public void withEmergencyContact_preservesOtherFieldsAndOriginalPerson() {
+        Person original = new PersonBuilder(ALICE).withRoom("B-204").withNote("Allergic to peanuts").build();
+        EmergencyContact contact = new EmergencyContact(new Name("Bob Choo"), new Phone("91234567"), "Brother");
+        Person updated = original.withEmergencyContact(contact);
+        assertTrue(original.getEmergencyContact().isEmpty());
+        assertTrue(original.isSamePerson(updated));
+        assertEquals(original.getNote(), updated.getNote());
+        assertEquals(original.getRoom(), updated.getRoom());
+        assertEquals(original.getPhone(), updated.getPhone());
+        assertEquals(original.getEmail(), updated.getEmail());
+        assertEquals(original.getAddress(), updated.getAddress());
+        assertEquals(original.getTags(), updated.getTags());
+        assertEquals(contact, updated.getEmergencyContact().orElseThrow());
+    }
+
+    @Test
+    public void equals_emergencyDetailsIncludedInEqualityAndHashCode() {
+        EmergencyContact contact = new EmergencyContact(new Name("Bob Choo"), new Phone("91234567"), "Brother");
+        Person updated = ALICE.withEmergencyContact(contact);
+        Person copy = new PersonBuilder(updated).build();
+        assertFalse(ALICE.equals(updated));
+        assertEquals(updated, copy);
+        assertEquals(updated.hashCode(), copy.hashCode());
+    }
+
+    @Test
+    public void toString_withEmergencyContact_includesEmergencyDetails() {
+        EmergencyContact contact = new EmergencyContact(new Name("Bob Choo"), new Phone("91234567"), "Brother");
+        assertTrue(ALICE.withEmergencyContact(contact).toString().contains("emergencyContact="));
     }
 
     @Test
@@ -126,5 +171,8 @@ public class PersonTest {
 
         Person aliceWithRoom = new PersonBuilder(ALICE).withRoom("B-204").build();
         assertTrue(aliceWithRoom.toString().contains("room=B-204"));
+
+        Person aliceWithNote = new PersonBuilder(ALICE).withNote(VALID_NOTE_BOB).build();
+        assertTrue(aliceWithNote.toString().contains("note=" + VALID_NOTE_BOB));
     }
 }

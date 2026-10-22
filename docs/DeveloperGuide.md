@@ -198,7 +198,7 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
 
 ### Edit feature
 
-`edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…` replaces only the fields that are given.
+`edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]… [/note NOTE]` replaces only the fields that are given.
 
 #### Implementation
 
@@ -206,9 +206,28 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
 
 * `AddCommandParser` and `EditCommandParser` build their prefixes, duplicate checks and parsing from `PersonField.values()`. `add` reads the name from the text before the first prefix, and every other field with its prefix.
 * `PersonFieldValues` stores a value per field. `EditPersonDescriptor` wraps one to hold the edited fields, and `EditCommand` copies the contact's current values, overwrites them with the edited ones and builds the new `Person`.
-* `/tag` replaces all tags, and `/tag` with no value removes them. This applies to any repeatable field.
+* `/tag` replaces all tags. Any optional field given with no value, such as `/tag` or `/room`, is reset to the value `add` uses when it is left out, which removes it. Required fields given with no value are rejected.
 
-To add a new field, add it to `Person`, add a constant to `PersonField` and list it in `PersonField.values()`. `add` and `edit` then accept it without further changes. `PersonFieldTest` fails if a `Person` field is not registered or has no sample value.
+To add a new field, add it to `Person`, add a constant to `PersonField` and list it in `PersonField.values()`, and add its `ParserUtil#parseXyz` method. `add` and `edit` then accept it without further changes. `PersonFieldTest` fails if a `Person` field is not registered or has no sample value.
+
+### Note field
+
+`/note NOTE` gives a contact a short free-text note, such as an allergy or how they prefer to be reached, so an RA on duty sees it on the contact card without looking elsewhere.
+
+#### Implementation
+
+`Note` is an immutable value class like `Room`, where an empty value means the contact has no note. It is added as the `PersonField.NOTE` field, so `add` and `edit` support `/note` through the mechanism above with no changes to either parser. `ParserUtil#parseNote` collapses whitespace and rejects an empty note, a note longer than 200 characters and a note containing `/`. `JsonAdaptedPerson` stores the note as an optional `note` property, so data files saved before this feature still load. `PersonCard` shows the note as a wrapped label that is hidden when the note is empty.
+
+#### Design considerations
+
+* **Alternative 1 (current choice):** a field set through `add` and `edit`.
+  * Pros: one way to set every field, and `edit 1 /note` clears it like any other optional field.
+  * Cons: a note is slightly longer to type than with a dedicated command.
+* **Alternative 2:** a dedicated `note INDEX TEXT` command.
+  * Pros: shorter to type.
+  * Cons: a second way to change the same field, with its own parser and validation to keep in step with `edit`.
+
+`/` is not allowed in a note because the parser treats a word starting with `/` as a field prefix. Allowing it only in the middle of a word would make the rule hard to explain to users.
 
 ### Emergency contact assignment
 
@@ -218,14 +237,85 @@ Each assignment atomically replaces any existing emergency details; omitted rela
 Emergency details are independent of tags and of the general `list emerg` feature. Clearing is not supported yet.
 
 `EmergencyCommandParser` and `EditCommandParser` share `ParserUtil#parseIndexedArguments()` for whitespace,
-prefix and index handling. Emergency name and phone use the corresponding `PersonField` validators.
-Emergency details are kept outside the add/edit field registry, and ordinary edits preserve them explicitly.
+prefix and index handling. Emergency name and phone reuse `ParserUtil#parseName()` and `parsePhone()`.
+Emergency details are kept outside the add/edit field registry. `PersonFieldValues#toPerson()` accepts them
+separately so ordinary edits preserve them while constructing the replacement person once.
 `Person#equals()` and `hashCode()` include the emergency details; `isSamePerson()` still compares names only.
 `JsonAdaptedEmergencyContact` stores the nested details, and older files without this field remain valid.
 
 ### Filter by tag feature
 
 `find /tag TAG` shows only contacts with the given tag. `FindCommandParser` creates a `PersonHasTagPredicate` from the value after `/tag`, and `FindCommand` applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any non-empty value is accepted and a value that is not a valid tag simply matches nobody.
+
+### Fuzzy name search
+
+`find /name NAME` lists contacts whose name is close to `NAME`, so an RA on duty can find a resident despite a typo or
+only half-remembering their name. Fuzzy matching applies only to `find /name`; `delete /name` still uses the exact,
+case-sensitive `NameEqualsPredicate`, so a typo cannot delete a different contact.
+
+#### Implementation
+
+Given `find /name alx yeo`:
+
+1. `FindCommandParser` creates a `NameFuzzyMatchesPredicate` from the value after `/name`.
+2. The constructor collapses extra whitespace, converts the text to lowercase and splits it into the search words
+   `alx` and `yeo`. Blank text is rejected, although the parser already prevents this.
+3. `FindCommand` applies the predicate with `Model#updateFilteredPersonList()`.
+4. For each contact, `NameFuzzyMatchesPredicate#test()` normalizes the name the same way and checks that **every**
+   search word is close to **some** name word. Two words are close when their Levenshtein distance
+   (`StringUtil#levenshteinDistance()`), the minimum number of single-character insertions, deletions or substitutions
+   between them, is at most the number of typos allowed for the search word:
+
+   | Search word length | Typos allowed |
+   |--------------------|---------------|
+   | 1–2                | 0             |
+   | 3–5                | 1             |
+   | 6–9                | 2             |
+   | 10 or more         | 3             |
+
+   The tiers are kept in the private `TypoTolerance` enum, which `NameFuzzyMatchesPredicate#getAllowedTypos()` reads.
+5. `alx` is 1 typo from `alex` and `yeo` is 1 typo from `yeoh`, so `Alex Yeoh` is listed.
+
+#### Design considerations
+
+**Aspect: what is compared**
+
+* **Alternative 1 (current choice):** each search word against each word of the name.
+  * Pros: partial names (`find /name Yeoh`) and words in any order work, which suits an RA who remembers only part of
+    a name.
+  * Cons: a short surname such as `Tan` also matches similar names such as `Tay`.
+* **Alternative 2:** the whole search text against the whole name.
+  * Pros: fewer unexpected matches.
+  * Cons: `find /name Alex` does not find `Alex Yeoh`, as the distance is too large.
+
+**Aspect: how many typos are allowed**
+
+* **Alternative 1 (current choice):** more typos for longer words.
+  * Pros: long, hard-to-spell names tolerate several typos, while 1–2 letter words cannot match every contact.
+  * Cons: the tiers are a judgement call that may need tuning from user feedback.
+* **Alternative 2:** a fixed number of typos for every word.
+  * Pros: simpler to explain.
+  * Cons: short words match too many names, or long words tolerate too few typos.
+
+**Aspect: where the distance is computed**
+
+* **Alternative 1 (current choice):** our own `StringUtil#levenshteinDistance()`.
+  * Pros: no new dependency, and it is short and fully unit-tested.
+* **Alternative 2:** Apache Commons Text's `LevenshteinDistance`.
+  * Cons: it adds a library for one method.
+
+**Aspect: scalability**
+
+Each search compares every search word with every word of every contact's name, so its cost grows linearly with the
+number of contacts (and with the square of the word length). A hall has at most a few hundred residents plus staff,
+vendors and emergency services, so a search takes milliseconds, which fits the expected needs of the target user.
+
+If the number of contacts became very large (for example, tens of thousands or more), a different approach to fuzzy
+search would have to be supported, such as:
+
+* indexing the words of all names, for example in a BK-tree or a trigram index, kept up to date as contacts are
+  added and deleted, so that only likely candidates are compared, and
+* stopping each distance calculation early once it exceeds the number of typos allowed.
 
 ### Emergency contact listing
 
@@ -239,6 +329,53 @@ It searches all stored contacts, preserves their order, and leaves stored data u
 the normal contact list. If there are no matches, the result message is `No emergency contacts found.`;
 otherwise it is `Listed all emergency contacts.`. `find /tag Emergency` produces the same contact list
 through the general tag search, while `list` restores all contacts.
+
+### Command recall
+
+Users browse submitted command text with Up/Down in the command box and press Enter to submit it again.
+Recall does not restore contact data or implement the proposed undo/redo feature below.
+
+#### Implementation
+
+Each `CommandBox` owns a `CommandHistory` instance. `CommandHistory` stores the latest 100 non-blank
+submissions in an `ArrayList`, from oldest to newest, preserving the submitted text and duplicates.
+It holds no contact data and is not serialized, so a new app session starts with empty history.
+
+* `add(commandText)` ignores blank input. Otherwise, it appends the text, evicts the oldest entry if needed,
+  resets `historyPosition` to `commands.size()`, and clears the saved draft.
+* `historyPosition == commands.size()` means the user is not browsing history. The first
+  `navigatePrevious(currentInput)` saves `currentInput` as the draft, then moves towards older entries.
+  At the oldest entry it returns that entry again; with empty history it returns the input unchanged.
+* `navigateNext(currentInput)` moves towards newer entries. Passing the newest entry restores the saved
+  draft. When not browsing, it returns the input unchanged.
+* Editing recalled text does not update a stored entry or the draft. Only a new submission records it.
+  `getCommands()` returns an unmodifiable snapshot for inspecting the history without changing it.
+
+`CommandBox` installs a `KEY_PRESSED` filter on its text field, before JavaFX's normal key handling.
+Unmodified Up/Down events call the corresponding navigation method, display the returned text, move the
+caret to the end, and consume the event. Other keys and modified arrows retain their normal behavior.
+Because the filter belongs to the command field, arrow events in other controls do not navigate history.
+
+On Enter, `CommandBox` records non-blank input before calling `CommandExecutor#execute()`, so both parse
+failures and execution failures remain recallable. Successful execution clears the field; failures retain
+the submitted text and existing error styling. Navigation itself never calls the executor.
+
+#### Design considerations
+
+* **Session-only text history:** keeps recall independent of contact storage and avoids saving command
+  parameters to a history file. Earlier sessions cannot be recalled.
+* **A separate history helper:** lets storage, bounds, and draft handling be tested without JavaFX.
+  The command box remains responsible for key events, display, submission, and error styling.
+* **One saved draft:** preserves the unfinished input present before browsing. Edits to recalled entries
+  are discarded when navigating rather than maintained as additional drafts.
+
+#### Testing
+
+`CommandHistoryTest` covers storage, the 100-entry limit, navigation boundaries, drafts, and resets.
+`CommandBoxTest` uses real JavaFX controls and dispatched key events to cover their integration with
+submission and error handling, including index-based commands using the current contact list.
+See the [testing guide](Testing.md) for JavaFX display requirements and the
+[manual checks](#recalling-previous-commands) for keyboard behavior in the running app.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -450,12 +587,12 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
-**Use case: Find a contact by full name**
+**Use case: Find a contact by name**
 
 **MSS**
 
-1.  User requests to find a contact by entering `find /name` followed by the contact's full name.
-2.  RAcontact lists the contacts whose full name exactly matches the entered name (case-sensitive) and shows the number of contacts listed.
+1.  User requests to find a contact by entering `find /name` followed by all or part of the contact's name.
+2.  RAcontact lists the contacts whose name is close to the entered name, ignoring case and small typos, and shows the number of contacts listed.
 
     Use case ends.
 
@@ -473,7 +610,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 2a. No contact has a full name that exactly matches the entered name.
+* 2a. No contact has a name close to the entered name.
 
     * 2a1. RAcontact shows the message `No contacts found` and an empty list.
 
@@ -676,6 +813,45 @@ testers are expected to do more *exploratory* testing.
 1. Test case: `list /filter friends`<br>
    Expected: The list is unchanged. Error: `Invalid command format. Usage: list`
 
+### Finding contacts by name
+
+1. Prerequisites: Start with the sample data.
+
+1. Test case: `find /name Alex Yeoh`<br>
+   Expected: Only `Alex Yeoh` is shown. The status message shows `1 person(s) listed!`.
+
+1. Test case: `find /name   alex   YEOH  `<br>
+   Expected: Same as above; case and extra spaces are ignored.
+
+1. Test case: `find /name alx yeo`<br>
+   Expected: Same as above; each word has one typo.
+
+1. Test case: `find /name Yeoh`<br>
+   Expected: Same as above; part of the name is enough.
+
+1. Test case: `find /name Charlote Oliviero`<br>
+   Expected: Only `Charlotte Oliveiro` is shown; 8-letter words allow 2 typos.
+
+1. Test case: `find /name Bolakrisnen`<br>
+   Expected: Only `Roy Balakrishnan` is shown; a word of 10 or more letters allows 3 typos.
+
+1. Test case: `find /name Li`<br>
+   Expected: Only `David Li` is shown. `find /name Ly` shows an empty list and `No contacts found`, because
+   2-letter words must be typed exactly.
+
+1. Test case: `find /name Alex Tan`<br>
+   Expected: An empty list. The status message shows `No contacts found`, because no word in any name is close to `Tan`.
+
+1. Test case: `find /name`<br>
+   Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
+
+1. Test case: `find /name Alex /name Bernice`<br>
+   Expected: The list is unchanged. An error names the repeated `/name` prefix.
+
+1. Test case: `delete /name alex yeoh`<br>
+   Expected: Nothing is deleted. The status message shows `No contacts found matching that search. No contacts deleted.`,
+   because `delete /name` still needs the exact full name.
+
 ### Listing emergency contacts
 
 1. Filtering all stored contacts
@@ -709,6 +885,72 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `list emerg`<br>
       Expected: An empty list and `No emergency contacts found.` in both cases.
+
+### Adding, editing and removing notes
+
+1. Adding a contact with a note
+
+   1. Prerequisites: Start with the sample data.
+
+   1. Test case: `add Wei Ming /phone 9876 5432 /note Allergic to peanuts,   carries an EpiPen`<br>
+      Expected: Wei Ming is added. The contact card shows `Note: Allergic to peanuts, carries an EpiPen`
+      below the phone number, with the extra spaces removed.
+
+   1. Test case: `add Wei Ling /phone 9876 5433`<br>
+      Expected: Wei Ling is added. The contact card shows no note line.
+
+   1. Test case: `add Wei Ling /phone 9876 5433 /note`<br>
+      Expected: No contact is added. Error: `Note cannot be empty.`
+
+   1. Test case: `add Wei Ling /phone 9876 5433 /note call w/ parent`<br>
+      Expected: No contact is added. Error: `Note cannot contain "/".`
+
+   1. Test case: `add Wei Ling /phone 9876 5433 /note a /note b`<br>
+      Expected: No contact is added. The error names `/note` as a repeated field.
+
+   1. Test case: `add Wei Ling /phone 9876 5433 /note ` followed by 201 letters<br>
+      Expected: No contact is added. Error: `Note too long, please shorten it and try again.`
+      With exactly 200 letters, the contact is added and the note wraps onto several lines on the card.
+
+1. Editing and removing a note
+
+   1. Prerequisites: Start with the sample data. The 1st contact, Alex Yeoh, has a note.
+
+   1. Test case: `edit 1 /note Prefers WhatsApp over calls`<br>
+      Expected: The 1st contact's note is replaced. The status message ends with `Note: Prefers WhatsApp over calls`.
+
+   1. Test case: `edit 1 /note`<br>
+      Expected: The 1st contact's note is removed and the card no longer shows a note line.
+
+   1. Test case: `edit 2 /room B-204`, then `edit 2 /room`<br>
+      Expected: The 2nd contact's card shows `Room: B-204`, then the room line is removed.
+
+   1. Test case: `edit 1 /note see /docs`<br>
+      Expected: No contact is changed. The status message shows the `edit` usage, because `/docs` is not a known field.
+
+   1. Test case: Close the app and reopen it.<br>
+      Expected: Notes added or edited above are still shown.
+
+### Assigning and replacing a person's emergency contact
+
+Use a disposable address book with just `Amy Bee`, created using
+`add Amy Bee /phone 85355255 /note Call after 6pm`. Run `list` so Amy is displayed as contact 1.
+
+| Test command or action | Expected result |
+|---|---|
+| `emergency 1 /name Bob Choo /phone 91234567 /relation Brother` | The card shows `emergency: Bob Choo(Brother) 91234567`; Amy's phone and note are unchanged. |
+| `emergency 1 /name Alex Yeoh /phone 87654321` | The previous details are replaced by `emergency: Alex Yeoh 87654321`, with no relation. |
+| `emergency 1 /name Bob Choo /phone abc` | Invalid-phone error; Alex's details remain unchanged. |
+| `emergency 1 /name Bob Choo` | Usage error; existing details remain unchanged. |
+| `emergency 2 /name Bob Choo /phone 91234567` | Invalid-index error; no contact is changed. |
+| `emergency 1 /name Bob Choo /phone 91234567 /phone 87654321` | Duplicate-prefix error; existing details remain unchanged. |
+| `edit 1 /note Changed note /room B-204 /tag` | Note and room change, tags are cleared, and Alex's emergency details remain. |
+| `edit 1 /note` | The note is cleared; emergency details remain. |
+| `list emerg`, then `list` | The general emergency list is empty; `list` restores Amy with her emergency details intact. |
+| Close and reopen the app | Amy's replacement emergency details and room are still present. |
+
+For filtered-list indexing, add a second person, use `find /name` to display only that person, and run
+`emergency 1 /name Bob Choo /phone 91234567`. Only the displayed person receives the details.
 
 ### Saving data
 

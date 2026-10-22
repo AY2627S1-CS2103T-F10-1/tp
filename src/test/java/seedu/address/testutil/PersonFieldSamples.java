@@ -16,7 +16,8 @@ public class PersonFieldSamples {
             PersonField.NAME, "Sample Name",
             PersonField.PHONE, "98765432",
             PersonField.ROOM, "Z-999",
-            PersonField.TAGS, "Sample Tag");
+            PersonField.TAGS, "Sample Tag",
+            PersonField.NOTE, "Sample note");
 
     /** Returns the sample text for {@code field}, as typed after its prefix. */
     public static String getText(PersonField<?> field) {

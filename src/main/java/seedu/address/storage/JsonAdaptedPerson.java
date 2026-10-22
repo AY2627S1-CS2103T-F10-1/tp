@@ -16,6 +16,7 @@ import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.EmergencyContact;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Note;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Room;
@@ -33,31 +34,34 @@ class JsonAdaptedPerson {
     private final String email;
     private final String address;
     private final String room;
-    private final JsonAdaptedEmergencyContact emergencyContact;
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
+    private final String note;
+    private final JsonAdaptedEmergencyContact emergencyContact;
 
     /**
      * Constructs a {@code JsonAdaptedPerson} with the given person details.
      */
     public JsonAdaptedPerson(String name, String phone, String email, String address, List<JsonAdaptedTag> tags) {
-        this(name, phone, email, address, tags, null);
+        this(name, phone, email, address, tags, null, null);
     }
 
     public JsonAdaptedPerson(String name, String phone, String email, String address,
-            List<JsonAdaptedTag> tags, String room) {
-        this(name, phone, email, address, tags, room, null);
+            List<JsonAdaptedTag> tags, String room, String note) {
+        this(name, phone, email, address, tags, room, note, null);
     }
 
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
             @JsonProperty("email") String email, @JsonProperty("address") String address,
             @JsonProperty("tags") List<JsonAdaptedTag> tags, @JsonProperty("room") String room,
+            @JsonProperty("note") String note,
             @JsonProperty("emergencyContact") JsonAdaptedEmergencyContact emergencyContact) {
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
         this.room = room;
+        this.note = note;
         this.emergencyContact = emergencyContact;
         if (tags != null) {
             this.tags.addAll(tags);
@@ -73,6 +77,7 @@ class JsonAdaptedPerson {
         email = source.getEmail().value;
         address = source.getAddress().value;
         room = source.getRoom().value;
+        note = source.getNote().value;
         emergencyContact = source.getEmergencyContact().map(JsonAdaptedEmergencyContact::new).orElse(null);
         tags.addAll(source.getTags().stream()
                 .map(JsonAdaptedTag::new)
@@ -126,14 +131,32 @@ class JsonAdaptedPerson {
         if (modelTags.size() > Person.MAX_TAGS) {
             throw new IllegalValueException(Person.MESSAGE_TAG_LIMIT_REACHED);
         }
-        String roomValue = room == null ? "" : StringUtil.collapseWhitespace(room);
+        Optional<EmergencyContact> modelEmergencyContact = emergencyContact == null
+                ? Optional.empty() : Optional.of(emergencyContact.toModelType());
+        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelTags, toModelRoom(), toModelNote(),
+                modelEmergencyContact);
+    }
+
+    /** Returns the stored room; a file without one gives a contact without a room. */
+    private Room toModelRoom() throws IllegalValueException {
+        String roomValue = normalizeOptional(room);
         if (!Room.isValidRoom(roomValue)) {
             throw new IllegalValueException(Room.MESSAGE_INVALID_CHARACTERS);
         }
-        Optional<EmergencyContact> modelEmergencyContact = emergencyContact == null
-                ? Optional.empty() : Optional.of(emergencyContact.toModelType());
-        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelTags, new Room(roomValue),
-                modelEmergencyContact);
+        return new Room(roomValue);
+    }
+
+    /** Returns the stored note; a file without one gives a contact without a note. */
+    private Note toModelNote() throws IllegalValueException {
+        String noteValue = normalizeOptional(note);
+        if (!Note.isValidNote(noteValue)) {
+            throw new IllegalValueException(Note.MESSAGE_CONSTRAINTS);
+        }
+        return new Note(noteValue);
+    }
+
+    private static String normalizeOptional(String value) {
+        return value == null ? "" : StringUtil.collapseWhitespace(value);
     }
 
 }

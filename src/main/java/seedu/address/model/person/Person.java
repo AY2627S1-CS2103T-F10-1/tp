@@ -30,8 +30,9 @@ public class Person {
     // Data fields
     private final Address address;
     private final Room room;
-    private final Optional<EmergencyContact> emergencyContact;
     private final Set<Tag> tags = new LinkedHashSet<>();
+    private final Note note;
+    private final Optional<EmergencyContact> emergencyContact;
 
     /**
      * Every field must be present and not null, and there must be at most {@link #MAX_TAGS} tags.
@@ -43,21 +44,27 @@ public class Person {
 
     /** Creates a contact with an optional room number. */
     public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room) {
-        this(name, phone, email, address, tags, room, Optional.empty());
+        this(name, phone, email, address, tags, room, new Note(""));
     }
 
-    /** Creates a contact with optional room and emergency details. */
-    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room,
+    /** Creates a contact with an optional room number and note. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note) {
+        this(name, phone, email, address, tags, room, note, Optional.empty());
+    }
+
+    /** Creates a contact with a room, note and optional emergency details. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note,
             Optional<EmergencyContact> emergencyContact) {
-        requireAllNonNull(name, phone, email, address, tags, room, emergencyContact);
+        requireAllNonNull(name, phone, email, address, tags, room, note, emergencyContact);
         checkArgument(tags.size() <= MAX_TAGS, MESSAGE_TAG_LIMIT_REACHED);
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
         this.room = room;
-        this.emergencyContact = emergencyContact;
         this.tags.addAll(tags);
+        this.note = note;
+        this.emergencyContact = emergencyContact;
     }
 
     public Name getName() {
@@ -76,17 +83,21 @@ public class Person {
         return room;
     }
 
+    public Address getAddress() {
+        return address;
+    }
+
+    public Note getNote() {
+        return note;
+    }
+
     public Optional<EmergencyContact> getEmergencyContact() {
         return emergencyContact;
     }
 
-    /** Returns a copy with the given emergency details. */
+    /** Returns a copy with new emergency details, preserving every other field. */
     public Person withEmergencyContact(EmergencyContact contact) {
-        return new Person(name, phone, email, address, tags, room, Optional.of(contact));
-    }
-
-    public Address getAddress() {
-        return address;
+        return new Person(name, phone, email, address, tags, room, note, Optional.of(contact));
     }
 
     /**
@@ -131,13 +142,14 @@ public class Person {
                 && address.equals(otherPerson.address)
                 && room.equals(otherPerson.room)
                 && tags.equals(otherPerson.tags)
+                && note.equals(otherPerson.note)
                 && emergencyContact.equals(otherPerson.emergencyContact);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, tags, room, emergencyContact);
+        return Objects.hash(name, phone, email, address, tags, room, note, emergencyContact);
     }
 
     @Override
@@ -150,6 +162,9 @@ public class Person {
                 .add("tags", tags);
         if (!room.value.isEmpty()) {
             builder.add("room", room);
+        }
+        if (!note.value.isEmpty()) {
+            builder.add("note", note);
         }
         emergencyContact.ifPresent(contact -> builder.add("emergencyContact", contact));
         return builder.toString();
