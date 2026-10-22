@@ -1,10 +1,12 @@
 package seedu.address.testutil;
 
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.EmergencyContact;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Note;
 import seedu.address.model.person.Person;
@@ -32,6 +34,7 @@ public class PersonBuilder {
     private Set<Tag> tags;
     private Room room;
     private Note note;
+    private Optional<EmergencyContact> emergencyContact = Optional.empty();
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -57,6 +60,7 @@ public class PersonBuilder {
         tags = new LinkedHashSet<>(personToCopy.getTags());
         room = personToCopy.getRoom();
         note = personToCopy.getNote();
+        emergencyContact = personToCopy.getEmergencyContact();
     }
 
     /**
@@ -116,7 +120,7 @@ public class PersonBuilder {
     }
 
     public Person build() {
-        return new Person(name, phone, email, address, tags, room, note);
+        return new Person(name, phone, email, address, tags, room, note, emergencyContact);
     }
 
 }

@@ -6,6 +6,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import seedu.address.commons.util.ToStringBuilder;
@@ -31,6 +32,7 @@ public class Person {
     private final Room room;
     private final Set<Tag> tags = new LinkedHashSet<>();
     private final Note note;
+    private final Optional<EmergencyContact> emergencyContact;
 
     /**
      * Every field must be present and not null, and there must be at most {@link #MAX_TAGS} tags.
@@ -47,7 +49,13 @@ public class Person {
 
     /** Creates a contact with an optional room number and note. */
     public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note) {
-        requireAllNonNull(name, phone, email, address, tags, room, note);
+        this(name, phone, email, address, tags, room, note, Optional.empty());
+    }
+
+    /** Creates a contact with a room, note and optional emergency details. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note,
+            Optional<EmergencyContact> emergencyContact) {
+        requireAllNonNull(name, phone, email, address, tags, room, note, emergencyContact);
         checkArgument(tags.size() <= MAX_TAGS, MESSAGE_TAG_LIMIT_REACHED);
         this.name = name;
         this.phone = phone;
@@ -56,6 +64,7 @@ public class Person {
         this.room = room;
         this.tags.addAll(tags);
         this.note = note;
+        this.emergencyContact = emergencyContact;
     }
 
     public Name getName() {
@@ -80,6 +89,15 @@ public class Person {
 
     public Note getNote() {
         return note;
+    }
+
+    public Optional<EmergencyContact> getEmergencyContact() {
+        return emergencyContact;
+    }
+
+    /** Returns a copy with new emergency details, preserving every other field. */
+    public Person withEmergencyContact(EmergencyContact contact) {
+        return new Person(name, phone, email, address, tags, room, note, Optional.of(contact));
     }
 
     /**
@@ -124,13 +142,14 @@ public class Person {
                 && address.equals(otherPerson.address)
                 && room.equals(otherPerson.room)
                 && tags.equals(otherPerson.tags)
-                && note.equals(otherPerson.note);
+                && note.equals(otherPerson.note)
+                && emergencyContact.equals(otherPerson.emergencyContact);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, tags, room, note);
+        return Objects.hash(name, phone, email, address, tags, room, note, emergencyContact);
     }
 
     @Override
@@ -147,6 +166,7 @@ public class Person {
         if (!note.value.isEmpty()) {
             builder.add("note", note);
         }
+        emergencyContact.ifPresent(contact -> builder.add("emergencyContact", contact));
         return builder.toString();
     }
 

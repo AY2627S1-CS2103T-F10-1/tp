@@ -3,6 +3,7 @@ package seedu.address.storage;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -13,6 +14,7 @@ import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.EmergencyContact;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Note;
 import seedu.address.model.person.Person;
@@ -34,6 +36,7 @@ class JsonAdaptedPerson {
     private final String room;
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
     private final String note;
+    private final JsonAdaptedEmergencyContact emergencyContact;
 
     /**
      * Constructs a {@code JsonAdaptedPerson} with the given person details.
@@ -42,17 +45,24 @@ class JsonAdaptedPerson {
         this(name, phone, email, address, tags, null, null);
     }
 
+    public JsonAdaptedPerson(String name, String phone, String email, String address,
+            List<JsonAdaptedTag> tags, String room, String note) {
+        this(name, phone, email, address, tags, room, note, null);
+    }
+
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
             @JsonProperty("email") String email, @JsonProperty("address") String address,
             @JsonProperty("tags") List<JsonAdaptedTag> tags, @JsonProperty("room") String room,
-            @JsonProperty("note") String note) {
+            @JsonProperty("note") String note,
+            @JsonProperty("emergencyContact") JsonAdaptedEmergencyContact emergencyContact) {
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
         this.room = room;
         this.note = note;
+        this.emergencyContact = emergencyContact;
         if (tags != null) {
             this.tags.addAll(tags);
         }
@@ -68,6 +78,7 @@ class JsonAdaptedPerson {
         address = source.getAddress().value;
         room = source.getRoom().value;
         note = source.getNote().value;
+        emergencyContact = source.getEmergencyContact().map(JsonAdaptedEmergencyContact::new).orElse(null);
         tags.addAll(source.getTags().stream()
                 .map(JsonAdaptedTag::new)
                 .collect(Collectors.toList()));
@@ -120,7 +131,10 @@ class JsonAdaptedPerson {
         if (modelTags.size() > Person.MAX_TAGS) {
             throw new IllegalValueException(Person.MESSAGE_TAG_LIMIT_REACHED);
         }
-        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelTags, toModelRoom(), toModelNote());
+        Optional<EmergencyContact> modelEmergencyContact = emergencyContact == null
+                ? Optional.empty() : Optional.of(emergencyContact.toModelType());
+        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelTags, toModelRoom(), toModelNote(),
+                modelEmergencyContact);
     }
 
     /** Returns the stored room; a file without one gives a contact without a room. */

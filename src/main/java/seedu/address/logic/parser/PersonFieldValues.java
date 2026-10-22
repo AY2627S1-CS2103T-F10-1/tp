@@ -11,6 +11,7 @@ import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.EmergencyContact;
 import seedu.address.model.person.Person;
 
 /**
@@ -87,9 +88,14 @@ public class PersonFieldValues {
      * The legacy {@code email} and {@code address}, which are not fields, are given separately.
      */
     public Person toPerson(Email email, Address address) {
-        requireAllNonNull(email, address);
+        return toPerson(email, address, Optional.empty());
+    }
+
+    /** Creates a person while preserving emergency details managed outside the add/edit field registry. */
+    public Person toPerson(Email email, Address address, Optional<EmergencyContact> emergencyContact) {
+        requireAllNonNull(email, address, emergencyContact);
         return new Person(require(PersonField.NAME), require(PersonField.PHONE), email, address,
-                require(PersonField.TAGS), require(PersonField.ROOM), require(PersonField.NOTE));
+                require(PersonField.TAGS), require(PersonField.ROOM), require(PersonField.NOTE), emergencyContact);
     }
 
     private <T> T require(PersonField<T> field) {

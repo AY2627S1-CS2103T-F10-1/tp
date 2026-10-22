@@ -40,6 +40,8 @@ public class PersonCard extends UiPart<Region> {
     private Label room;
     @FXML
     private Label note;
+    @FXML
+    private Label emergencyContact;
 
     /**
      * Creates a {@code PersonCard} with the given {@code Person} and index to display.
@@ -52,6 +54,8 @@ public class PersonCard extends UiPart<Region> {
         phone.setText(person.getPhone().value);
         showIfPresent(room, ROOM_LABEL_PREFIX, person.getRoom().value);
         showIfPresent(note, NOTE_LABEL_PREFIX, person.getNote().value);
+        showIfPresent(emergencyContact, "emergency: ",
+                person.getEmergencyContact().map(Object::toString).orElse(""));
         person.getTags().forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
     }
 

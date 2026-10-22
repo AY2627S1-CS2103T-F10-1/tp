@@ -213,6 +213,26 @@ Examples:
 * `edit 1 /note` removes the note of the 1st contact.
 
 
+### Assigning an emergency contact: `emergency`
+
+Stores emergency details for a person without adding another entry to the contact list.
+
+Format: `emergency INDEX /name NAME /phone PHONE [/relation RELATION]`
+
+* `INDEX` identifies the person in the currently displayed list, as with `edit`.
+* Name and phone are required and follow the same rules as `add`. Fields may appear in any order.
+* Relation is optional free text, up to 50 characters. Extra whitespace is collapsed.
+* Each prefix may appear only once. Invalid input leaves the contact unchanged.
+* A person can have one emergency contact. Running the command again replaces all previous emergency details.
+  Name and phone are required each time; omitting relation replaces the previous relation with an empty value.
+* Emergency details are a separate person field. Replacing or clearing tags does not remove them.
+  Clearing emergency details without providing a replacement is not supported yet.
+* Details appear on the person's card and are saved automatically. Ordinary edits preserve them.
+* The same emergency details may be assigned to several people independently.
+* This does not change `list emerg`, which lists the app's tagged emergency resources.
+
+Example: `emergency 1 /name Bob Choo /phone 9123 4567 /relation Brother`
+
 ### Locating persons by name, tag or phone: `find`
 
 Finds persons whose name is close to the given name, or who have the given tag or phone number.
@@ -338,5 +358,6 @@ Action | Format, Examples
 **Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /tag friends`
 **List** | `list`
 **List emergency contacts** | `list emerg`
+**Assign emergency contact** | `emergency INDEX /name NAME /phone PHONE [/relation RELATION]`
 **Help** | `help`
 **Recall commands** | ↑ for older commands; ↓ for newer commands or the saved unfinished input. Press Enter to execute. The command box must be focused.
