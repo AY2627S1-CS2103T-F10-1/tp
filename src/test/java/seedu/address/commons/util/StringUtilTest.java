@@ -156,4 +156,41 @@ public class StringUtilTest {
         assertEquals("Resident Fellow", StringUtil.collapseWhitespace("  Resident \t  Fellow \n"));
     }
 
+    //---------------- Tests for levenshteinDistance --------------------------------------
+
+    @Test
+    public void levenshteinDistance_nullGiven_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> StringUtil.levenshteinDistance(null, "abc"));
+        assertThrows(NullPointerException.class, () -> StringUtil.levenshteinDistance("abc", null));
+    }
+
+    @Test
+    public void levenshteinDistance() {
+        // EP: empty strings
+        assertEquals(0, StringUtil.levenshteinDistance("", ""));
+        assertEquals(3, StringUtil.levenshteinDistance("", "abc"));
+        assertEquals(3, StringUtil.levenshteinDistance("abc", ""));
+
+        // EP: identical strings
+        assertEquals(0, StringUtil.levenshteinDistance("alex", "alex"));
+
+        // EP: one edit of each kind
+        assertEquals(1, StringUtil.levenshteinDistance("alx", "alex")); // insertion
+        assertEquals(1, StringUtil.levenshteinDistance("alexx", "alex")); // deletion
+        assertEquals(1, StringUtil.levenshteinDistance("alax", "alex")); // substitution
+
+        // EP: several edits, symmetric
+        assertEquals(3, StringUtil.levenshteinDistance("kitten", "sitting"));
+        assertEquals(3, StringUtil.levenshteinDistance("sitting", "kitten"));
+
+        // EP: completely different strings
+        assertEquals(4, StringUtil.levenshteinDistance("abcd", "wxyz"));
+
+        // EP: case differences count as edits
+        assertEquals(1, StringUtil.levenshteinDistance("Alex", "alex"));
+
+        // EP: special characters
+        assertEquals(1, StringUtil.levenshteinDistance("o'brien", "obrien"));
+    }
+
 }

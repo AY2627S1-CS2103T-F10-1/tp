@@ -6,9 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_NO_PERSONS_FOUND;
 import static seedu.address.logic.Messages.MESSAGE_PERSONS_LISTED_OVERVIEW;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.DANIEL;
+import static seedu.address.testutil.TypicalPersons.ELLE;
 import static seedu.address.testutil.TypicalPersons.FIONA;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
@@ -19,7 +21,8 @@ import org.junit.jupiter.api.Test;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
-import seedu.address.model.person.NameEqualsPredicate;
+import seedu.address.model.person.NameFuzzyMatchesPredicate;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonHasTagPredicate;
 import seedu.address.model.person.PhoneEqualsPredicate;
 import seedu.address.testutil.PersonBuilder;
@@ -33,8 +36,8 @@ public class FindCommandTest {
 
     @Test
     public void equals() {
-        NameEqualsPredicate firstPredicate = new NameEqualsPredicate("first");
-        NameEqualsPredicate secondPredicate = new NameEqualsPredicate("second");
+        NameFuzzyMatchesPredicate firstPredicate = new NameFuzzyMatchesPredicate("first");
+        NameFuzzyMatchesPredicate secondPredicate = new NameFuzzyMatchesPredicate("second");
 
         FindCommand findFirstCommand = new FindCommand(firstPredicate);
         FindCommand findSecondCommand = new FindCommand(secondPredicate);
@@ -57,40 +60,49 @@ public class FindCommandTest {
     }
 
     @Test
-    public void execute_nameNotInAddressBook_noPersonFound() {
-        String expectedMessage = MESSAGE_NO_PERSONS_FOUND;
-        NameEqualsPredicate predicate = new NameEqualsPredicate("Nobody Here");
-        FindCommand command = new FindCommand(predicate);
-        expectedModel.updateFilteredPersonList(predicate);
-        assertCommandSuccess(command, model, expectedMessage, expectedModel);
-        assertEquals(List.of(), model.getFilteredPersonList());
+    public void constructor_nullPredicate_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new FindCommand(null));
     }
 
     @Test
-    public void execute_partialOrDifferentCaseName_noPersonFound() {
-        String expectedMessage = MESSAGE_NO_PERSONS_FOUND;
+    public void execute_nameNotInAddressBook_noPersonFound() {
+        assertNameSearchFinds("Nobody Here");
+    }
 
-        // only part of the full name
-        NameEqualsPredicate predicate = new NameEqualsPredicate("Meier");
-        expectedModel.updateFilteredPersonList(predicate);
-        assertCommandSuccess(new FindCommand(predicate), model, expectedMessage, expectedModel);
-        assertEquals(List.of(), model.getFilteredPersonList());
-
-        // different case
-        predicate = new NameEqualsPredicate("benson meier");
-        expectedModel.updateFilteredPersonList(predicate);
-        assertCommandSuccess(new FindCommand(predicate), model, expectedMessage, expectedModel);
-        assertEquals(List.of(), model.getFilteredPersonList());
+    @Test
+    public void execute_partialName_similarNamesFound() {
+        // "Meyer" is one typo away from "Meier", so Elle Meyer is listed too
+        assertNameSearchFinds("Meier", BENSON, DANIEL, ELLE);
     }
 
     @Test
     public void execute_exactFullName_onePersonFound() {
-        String expectedMessage = String.format(MESSAGE_PERSONS_LISTED_OVERVIEW, 1);
-        NameEqualsPredicate predicate = new NameEqualsPredicate("Fiona Kunz");
-        FindCommand command = new FindCommand(predicate);
+        assertNameSearchFinds("Fiona Kunz", FIONA);
+    }
+
+    @Test
+    public void execute_differentCaseName_onePersonFound() {
+        assertNameSearchFinds("benson meier", BENSON);
+    }
+
+    @Test
+    public void execute_nameWithTypo_onePersonFound() {
+        assertNameSearchFinds("Fiona Kuns", FIONA);
+    }
+
+    /**
+     * Asserts that searching by {@code searchText} lists exactly {@code expectedPersons}, in order,
+     * with the matching status message.
+     */
+    private void assertNameSearchFinds(String searchText, Person... expectedPersons) {
+        boolean isNoneExpected = expectedPersons.length == 0;
+        String expectedMessage = isNoneExpected
+                ? MESSAGE_NO_PERSONS_FOUND
+                : String.format(MESSAGE_PERSONS_LISTED_OVERVIEW, expectedPersons.length);
+        NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate(searchText);
         expectedModel.updateFilteredPersonList(predicate);
-        assertCommandSuccess(command, model, expectedMessage, expectedModel);
-        assertEquals(List.of(FIONA), model.getFilteredPersonList());
+        assertCommandSuccess(new FindCommand(predicate), model, expectedMessage, expectedModel);
+        assertEquals(List.of(expectedPersons), model.getFilteredPersonList());
     }
 
     @Test
@@ -114,7 +126,7 @@ public class FindCommandTest {
 
     @Test
     public void toStringMethod() {
-        NameEqualsPredicate predicate = new NameEqualsPredicate("Alice Bob");
+        NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate("Alice Bob");
         FindCommand findCommand = new FindCommand(predicate);
         String expected = FindCommand.class.getCanonicalName() + "{predicate=" + predicate + "}";
         assertEquals(expected, findCommand.toString());

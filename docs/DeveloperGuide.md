@@ -214,6 +214,76 @@ To add a new field, add it to `Person`, add a constant to `PersonField` and list
 
 `find /tag TAG` shows only contacts with the given tag. `FindCommandParser` creates a `PersonHasTagPredicate` from the value after `/tag`, and `FindCommand` applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any non-empty value is accepted and a value that is not a valid tag simply matches nobody.
 
+### Fuzzy name search
+
+`find /name NAME` lists contacts whose name is close to `NAME`, so an RA on duty can find a resident despite a typo or
+only half-remembering their name. Fuzzy matching applies only to `find /name`; `delete /name` still uses the exact,
+case-sensitive `NameEqualsPredicate`, so a typo cannot delete a different contact.
+
+#### Implementation
+
+Given `find /name alx yeo`:
+
+1. `FindCommandParser` creates a `NameFuzzyMatchesPredicate` from the value after `/name`.
+2. The constructor collapses extra whitespace, converts the text to lowercase and splits it into the search words
+   `alx` and `yeo`. Blank text is rejected, although the parser already prevents this.
+3. `FindCommand` applies the predicate with `Model#updateFilteredPersonList()`.
+4. For each contact, `NameFuzzyMatchesPredicate#test()` normalizes the name the same way and checks that **every**
+   search word is close to **some** name word. Two words are close when their Levenshtein distance
+   (`StringUtil#levenshteinDistance()`), the minimum number of single-character insertions, deletions or substitutions
+   between them, is at most the number of typos allowed for the search word:
+
+   | Search word length | Typos allowed |
+   |--------------------|---------------|
+   | 1–2                | 0             |
+   | 3–5                | 1             |
+   | 6–9                | 2             |
+   | 10 or more         | 3             |
+
+   The tiers are kept in the private `TypoTolerance` enum, which `NameFuzzyMatchesPredicate#getAllowedTypos()` reads.
+5. `alx` is 1 typo from `alex` and `yeo` is 1 typo from `yeoh`, so `Alex Yeoh` is listed.
+
+#### Design considerations
+
+**Aspect: what is compared**
+
+* **Alternative 1 (current choice):** each search word against each word of the name.
+  * Pros: partial names (`find /name Yeoh`) and words in any order work, which suits an RA who remembers only part of
+    a name.
+  * Cons: a short surname such as `Tan` also matches similar names such as `Tay`.
+* **Alternative 2:** the whole search text against the whole name.
+  * Pros: fewer unexpected matches.
+  * Cons: `find /name Alex` does not find `Alex Yeoh`, as the distance is too large.
+
+**Aspect: how many typos are allowed**
+
+* **Alternative 1 (current choice):** more typos for longer words.
+  * Pros: long, hard-to-spell names tolerate several typos, while 1–2 letter words cannot match every contact.
+  * Cons: the tiers are a judgement call that may need tuning from user feedback.
+* **Alternative 2:** a fixed number of typos for every word.
+  * Pros: simpler to explain.
+  * Cons: short words match too many names, or long words tolerate too few typos.
+
+**Aspect: where the distance is computed**
+
+* **Alternative 1 (current choice):** our own `StringUtil#levenshteinDistance()`.
+  * Pros: no new dependency, and it is short and fully unit-tested.
+* **Alternative 2:** Apache Commons Text's `LevenshteinDistance`.
+  * Cons: it adds a library for one method.
+
+**Aspect: scalability**
+
+Each search compares every search word with every word of every contact's name, so its cost grows linearly with the
+number of contacts (and with the square of the word length). A hall has at most a few hundred residents plus staff,
+vendors and emergency services, so a search takes milliseconds, which fits the expected needs of the target user.
+
+If the number of contacts became very large (for example, tens of thousands or more), a different approach to fuzzy
+search would have to be supported, such as:
+
+* indexing the words of all names, for example in a BK-tree or a trigram index, kept up to date as contacts are
+  added and deleted, so that only likely candidates are compared, and
+* stopping each distance calculation early once it exceeds the number of typos allowed.
+
 ### Emergency contact listing
 
 `list emerg` is a shortcut to display contacts with the whole tag `Emergency`, ignoring the tag's case.
@@ -484,12 +554,12 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
-**Use case: Find a contact by full name**
+**Use case: Find a contact by name**
 
 **MSS**
 
-1.  User requests to find a contact by entering `find /name` followed by the contact's full name.
-2.  RAcontact lists the contacts whose full name exactly matches the entered name (case-sensitive) and shows the number of contacts listed.
+1.  User requests to find a contact by entering `find /name` followed by all or part of the contact's name.
+2.  RAcontact lists the contacts whose name is close to the entered name, ignoring case and small typos, and shows the number of contacts listed.
 
     Use case ends.
 
@@ -507,7 +577,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 2a. No contact has a full name that exactly matches the entered name.
+* 2a. No contact has a name close to the entered name.
 
     * 2a1. RAcontact shows the message `No contacts found` and an empty list.
 
@@ -709,6 +779,45 @@ testers are expected to do more *exploratory* testing.
 
 1. Test case: `list /filter friends`<br>
    Expected: The list is unchanged. Error: `Invalid command format. Usage: list`
+
+### Finding contacts by name
+
+1. Prerequisites: Start with the sample data.
+
+1. Test case: `find /name Alex Yeoh`<br>
+   Expected: Only `Alex Yeoh` is shown. The status message shows `1 person(s) listed!`.
+
+1. Test case: `find /name   alex   YEOH  `<br>
+   Expected: Same as above; case and extra spaces are ignored.
+
+1. Test case: `find /name alx yeo`<br>
+   Expected: Same as above; each word has one typo.
+
+1. Test case: `find /name Yeoh`<br>
+   Expected: Same as above; part of the name is enough.
+
+1. Test case: `find /name Charlote Oliviero`<br>
+   Expected: Only `Charlotte Oliveiro` is shown; 8-letter words allow 2 typos.
+
+1. Test case: `find /name Bolakrisnen`<br>
+   Expected: Only `Roy Balakrishnan` is shown; a word of 10 or more letters allows 3 typos.
+
+1. Test case: `find /name Li`<br>
+   Expected: Only `David Li` is shown. `find /name Ly` shows an empty list and `No contacts found`, because
+   2-letter words must be typed exactly.
+
+1. Test case: `find /name Alex Tan`<br>
+   Expected: An empty list. The status message shows `No contacts found`, because no word in any name is close to `Tan`.
+
+1. Test case: `find /name`<br>
+   Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
+
+1. Test case: `find /name Alex /name Bernice`<br>
+   Expected: The list is unchanged. An error names the repeated `/name` prefix.
+
+1. Test case: `delete /name alex yeoh`<br>
+   Expected: Nothing is deleted. The status message shows `No contacts found matching that search. No contacts deleted.`,
+   because `delete /name` still needs the exact full name.
 
 ### Listing emergency contacts
 
