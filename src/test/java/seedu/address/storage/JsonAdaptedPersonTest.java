@@ -18,6 +18,7 @@ import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.EmergencyContact;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Note;
 import seedu.address.model.person.Person;
@@ -43,7 +44,9 @@ public class JsonAdaptedPersonTest {
     @Test
     public void jsonRoundTrip_preservesArchiveState() throws Exception {
         for (boolean archive : new boolean[] {false, true}) {
-            Person original = BENSON.withArchive(archive);
+            Person original = new PersonBuilder(BENSON).withNote("Call after six").build()
+                    .withEmergencyContact(new EmergencyContact(new Name("Jane Tan"),
+                            new Phone("91234567"), "Sister")).withArchive(archive);
             String json = JsonUtil.toJsonString(new JsonAdaptedPerson(original));
             assertTrue(json.contains("\"archive\" : " + archive));
             assertEquals(original, JsonUtil.fromJsonString(json, JsonAdaptedPerson.class).toModelType());

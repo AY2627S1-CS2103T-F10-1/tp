@@ -28,9 +28,8 @@ import seedu.address.testutil.TypicalPersons;
  */
 public class PersonFieldTest {
     /** Person fields that are not set through add/edit arguments. */
-    private static final Set<String> NON_EDITABLE_PERSON_FIELDS = Set.of("email", "address", "archive");
-    /** Person fields that are not handled by add and edit. Emergency details have a separate command. */
-    private static final Set<String> LEGACY_PERSON_FIELDS = Set.of("email", "address", "emergencyContact");
+    private static final Set<String> NON_EDITABLE_PERSON_FIELDS =
+            Set.of("email", "address", "archive", "emergencyContact");
 
     @Test
     public void everyPersonFieldIsRegistered() {

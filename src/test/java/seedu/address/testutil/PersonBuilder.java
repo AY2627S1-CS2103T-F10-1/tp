@@ -34,6 +34,7 @@ public class PersonBuilder {
     private Set<Tag> tags;
     private Room room;
     private Note note;
+    private boolean archive;
     private Optional<EmergencyContact> emergencyContact = Optional.empty();
 
     /**
@@ -60,6 +61,7 @@ public class PersonBuilder {
         tags = new LinkedHashSet<>(personToCopy.getTags());
         room = personToCopy.getRoom();
         note = personToCopy.getNote();
+        archive = personToCopy.isArchived();
         emergencyContact = personToCopy.getEmergencyContact();
     }
 
@@ -120,7 +122,7 @@ public class PersonBuilder {
     }
 
     public Person build() {
-        return new Person(name, phone, email, address, tags, room, note, emergencyContact);
+        return new Person(name, phone, email, address, tags, room, note, emergencyContact, archive);
     }
 
 }
