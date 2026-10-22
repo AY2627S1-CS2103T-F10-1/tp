@@ -70,6 +70,30 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_favAndUnfav_persistsDisplayedTargetAndPreservesDetails() throws Exception {
+        Person otherContact = new PersonBuilder().withName("Other Contact").withRoom("B-204")
+                .withNote("Call after 6 pm").withTags("Resident", "Floor 3").build();
+        model.addPerson(AMY);
+        model.addPerson(otherContact);
+        logic.execute("find /name Other Contact");
+
+        logic.execute("fav 1");
+
+        assertEquals(List.of(otherContact.withFavourite(true)), logic.getFilteredPersonList());
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        ReadOnlyAddressBook saved = storage.readAddressBook().orElseThrow();
+        assertEquals(List.of(AMY, otherContact.withFavourite(true)), saved.getPersonList());
+
+        Model restartedModel = new ModelManager(saved, new UserPrefs());
+        Logic restartedLogic = new LogicManager(restartedModel, new StorageManager(storage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"))));
+        restartedLogic.execute("unfav 2");
+
+        assertEquals(List.of(AMY, otherContact), restartedLogic.getFilteredPersonList());
+        assertEquals(List.of(AMY, otherContact), storage.readAddressBook().orElseThrow().getPersonList());
+    }
+
+    @Test
     public void execute_listAfterFind_restoresAllContacts() throws Exception {
         Person otherPerson = new PersonBuilder().withName("Other Contact").build();
         model.addPerson(AMY);

@@ -16,10 +16,12 @@ import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.logic.commands.ExitCommand;
+import seedu.address.logic.commands.FavCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.ListEmergencyCommand;
+import seedu.address.logic.commands.UnfavCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.NameFuzzyMatchesPredicate;
 import seedu.address.model.person.Person;
@@ -66,6 +68,21 @@ public class AddressBookParserTest {
     public void parseCommand_exit() throws Exception {
         assertTrue(parser.parseCommand(ExitCommand.COMMAND_WORD) instanceof ExitCommand);
         assertTrue(parser.parseCommand(ExitCommand.COMMAND_WORD + " 3") instanceof ExitCommand);
+    }
+
+    @Test
+    public void parseCommand_favouriteCommands() throws Exception {
+        assertEquals(new FavCommand(INDEX_FIRST_PERSON), parser.parseCommand("fav 1"));
+        assertEquals(new FavCommand(INDEX_FIRST_PERSON), parser.parseCommand("  fav\t1  "));
+        assertEquals(new UnfavCommand(INDEX_FIRST_PERSON), parser.parseCommand("unfav 1"));
+        assertEquals(new UnfavCommand(INDEX_FIRST_PERSON), parser.parseCommand("  unfav\t1  "));
+    }
+
+    @Test
+    public void parseCommand_favouriteCommandsWithWrongCase_throwsParseException() {
+        for (String input : new String[] {"Fav 1", "FAV 1", "Unfav 1", "UNFAV 1"}) {
+            assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand(input));
+        }
     }
 
     @Test
