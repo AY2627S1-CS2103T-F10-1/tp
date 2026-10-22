@@ -30,6 +30,10 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
    * `list emerg` : Lists contacts tagged as emergency.
 
+   * `fav 1` : Marks the 1st displayed contact as a favourite.
+
+   * `list fav` : Lists favourite contacts.
+
    * `add John Doe /phone 98765432` : Adds a contact named `John Doe` to the Address Book.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
@@ -63,7 +67,8 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 * Parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
 
-* Extraneous parameters for `help`, `exit`, and `clear` are ignored. The `list` command rejects extra parameters.<br>
+* Extraneous parameters for `help`, `exit`, and `clear` are ignored. The `list`, `list emerg`, `list fav`,
+  `fav INDEX` and `unfav INDEX` commands reject extra parameters.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -153,13 +158,10 @@ This restores the full list after a search and does not change any stored contac
 
 Format: `list`
 
-* Any text after `list` is rejected. To show only contacts with a given tag, use [`find /tag`](#locating-persons-by-name-tag-or-phone-find).
-
-* The keyword is case-insensitive: `list`, `LIST`, and `LiSt` work the same way.
 * The command keyword is case-sensitive: use lowercase `list`. `LIST` and `LiSt` are rejected as unknown commands.
 * Leading and trailing spaces are ignored.
-* Use `list emerg` for the emergency shortcut described below. To search by any tag, use
-  [`find /tag`](#locating-persons-by-name-or-tag-find).
+* Use `list emerg` for emergency-tagged contacts or `list fav` for favourite contacts, as described below.
+  To search by any tag, use [`find /tag`](#locating-persons-by-name-tag-or-phone-find).
 * Unsupported arguments, such as `list abc` or the retired `list /filter Emergency`, are rejected with
   `Invalid command format. Usage: list`. The displayed list stays unchanged when the command is rejected.
 * When there are no stored contacts, the list is empty and the result message is `No contacts found.`.
@@ -192,6 +194,59 @@ Example using the existing tag syntax:
 1. `list emerg` shows Hall Security and any other emergency contacts.
 1. `list` restores all contacts.
 
+### Marking a contact as a favourite: `fav`
+
+Marks a frequently used contact for quick access. Favourite status is separate from tags:
+adding a tag named `fav` or `favourite` does not mark a contact as a favourite.
+
+Format: `fav INDEX`
+
+* `INDEX` must be a positive integer identifying a contact in the currently displayed list.
+  For example, after a search, `fav 1` marks the 1st search result.
+* The contact card shows a **★ Favourite** badge. Its other details and the current filter are preserved.
+* On success, the message starts with `Marked as favourite:` and includes the contact's details.
+* Repeating the command leaves the contact unchanged and shows `Contact is already a favourite:`
+  followed by its details. The command does not toggle the status.
+* Ordinary edits, including replacing or clearing tags, preserve favourite status.
+* The command word is case-sensitive. Leading and trailing spaces are ignored; extra arguments are rejected.
+* Missing, zero, negative, non-integer or overflowing indices show an invalid command format message with
+  the `fav` usage. A positive index outside the displayed list shows `The person index provided is invalid.`.
+  Rejected commands leave contact data and the displayed list unchanged.
+
+Example: `fav 2` marks the 2nd currently displayed contact.
+
+### Removing favourite status: `unfav`
+
+Removes a contact's favourite status while retaining the contact and all its other details.
+
+Format: `unfav INDEX`
+
+* The index and argument rules are the same as for `fav`, using the currently displayed list.
+* The badge disappears and the message starts with `Removed favourite status:` followed by the contact's details.
+* If the contact is not a favourite, it stays unchanged and the message starts with `Contact is not a favourite:`.
+* The current filter is preserved. In the `list fav` view, the contact disappears immediately and the
+  remaining displayed contacts are renumbered. Check the displayed numbers before the next command.
+
+Example: `unfav 1` removes favourite status from the 1st currently displayed contact.
+
+### Listing favourite contacts: `list fav`
+
+Shows favourite contacts from across the address book, including those hidden by an earlier search.
+
+Format: `list fav`
+
+* Contacts keep their relative order from the main list, rather than the order in which they were marked.
+  The displayed results are numbered consecutively from 1.
+* For example, if the main list contains Alice at #1, Bob at #2 and Charlie at #3, marking Alice and Charlie
+  shows Alice at #1 and Charlie at #2 in `list fav`. In that view, `unfav 2` removes Charlie's favourite status.
+* Listing favourites does not change stored contact data.
+* Both words must be lowercase. Extra spaces or tabs between them are accepted.
+* Extra arguments such as `list fav 1` are rejected with `Invalid command format. Usage: list fav`.
+  The displayed list stays unchanged.
+* With no favourites, the list is empty and the message is `No favourite contacts found.`.
+  Otherwise, the message is `Listed all favourite contacts.`.
+* Run `list` to show all contacts again.
+
 ### Editing a person: `edit`
 
 Changes one or more details of an existing contact.
@@ -202,6 +257,7 @@ Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​ [/
 * At least one field must be given, in any order. Fields you leave out stay as they are.
 * Each field follows the same rules as in `add`, so `/name`, `/phone`, `/room` and `/note` cannot be repeated.
 * `/tag` replaces all of the contact's existing tags with the tags given. Repeat `/tag` once per tag.
+* Favourite status is preserved, including when tags are replaced or cleared.
 * An optional field given with nothing after it is removed: `/room` on its own removes the room,
   `/note` on its own removes the note, and `/tag` on its own removes all tags. `/name` and `/phone` are required, so they cannot be removed.
 
@@ -295,9 +351,14 @@ Format: `exit`
 
 AddressBook automatically saves data after every command. You do not need to save manually.
 
+Favourite status is saved with each contact and remains after restarting, including when the status is removed.
+Older data files without favourite status still load; their contacts start unfavourited.
+
 ### Editing the data file
 
 AddressBook data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
+
+Each contact's `isFavourite` property is a JSON boolean, `true` or `false`. If the property is absent, it defaults to `false`.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
@@ -338,5 +399,8 @@ Action | Format, Examples
 **Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /tag friends`
 **List** | `list`
 **List emergency contacts** | `list emerg`
+**Mark favourite** | `fav INDEX`<br> e.g., `fav 2`
+**Remove favourite status** | `unfav INDEX`<br> e.g., `unfav 1`
+**List favourite contacts** | `list fav`
 **Help** | `help`
 **Recall commands** | ↑ for older commands; ↓ for newer commands or the saved unfinished input. Press Enter to execute. The command box must be focused.

@@ -202,13 +202,13 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
 
 #### Implementation
 
-`add` and `edit` share one definition of each field, so they cannot disagree about it. A `PersonField` holds a field's prefix, how its value is parsed and validated, how it is read from a `Person`, and the value `add` uses when the field is left out. `PersonField.values()` lists every field a user can set.
+`add` and `edit` share one definition of each field, so they cannot disagree about it. A `PersonField` holds a field's prefix, how its value is parsed and validated, how it is read from a `Person`, and the value `add` uses when the field is left out. `PersonField.values()` lists every field accepted by `add` and `edit`.
 
 * `AddCommandParser` and `EditCommandParser` build their prefixes, duplicate checks and parsing from `PersonField.values()`. `add` reads the name from the text before the first prefix, and every other field with its prefix.
-* `PersonFieldValues` stores a value per field. `EditPersonDescriptor` wraps one to hold the edited fields, and `EditCommand` copies the contact's current values, overwrites them with the edited ones and builds the new `Person`.
+* `PersonFieldValues` stores a value per editable field. `EditPersonDescriptor` wraps one to hold the edited fields, and `EditCommand` copies the contact's current values, overwrites them with the edited ones and builds the new `Person`. It explicitly reapplies the original favourite status, which is not an editable field.
 * `/tag` replaces all tags. Any optional field given with no value, such as `/tag` or `/room`, is reset to the value `add` uses when it is left out, which removes it. Required fields given with no value are rejected.
 
-To add a new field, add it to `Person`, add a constant to `PersonField` and list it in `PersonField.values()`, and add its `ParserUtil#parseXyz` method. `add` and `edit` then accept it without further changes. `PersonFieldTest` fails if a `Person` field is not registered or has no sample value.
+To add a new field supported by `add` and `edit`, add it to `Person`, add a constant to `PersonField` and list it in `PersonField.values()`, and add its `ParserUtil#parseXyz` method. `add` and `edit` then accept it without further changes. `PersonFieldTest` fails if such a field is not registered or has no sample value. Properties managed separately, such as `isFavourite`, are explicitly excluded in `NON_EDITABLE_PERSON_FIELDS` and must be preserved when editing.
 
 ### Note field
 
@@ -308,13 +308,66 @@ search would have to be supported, such as:
 `list emerg` is a shortcut to display contacts with the whole tag `Emergency`, ignoring the tag's case.
 The command words `list` and `emerg` must be lowercase. `AddressBookParser` routes `list` to
 `ListCommandParser`, which returns `ListCommand` for blank arguments and `ListEmergencyCommand` for `emerg`.
-Other arguments are rejected; additional arguments after `emerg` use the emergency command's usage message.
+`ListCommandParser` also accepts `fav` for favourite contacts. Unsupported arguments are rejected;
+additional arguments after `emerg` use the emergency command's usage message.
 
 `ListEmergencyCommand` applies `EmergencyContactPredicate` through `Model#updateFilteredPersonList()`.
 It searches all stored contacts, preserves their order, and leaves stored data unchanged. The GUI reuses
 the normal contact list. If there are no matches, the result message is `No emergency contacts found.`;
 otherwise it is `Listed all emergency contacts.`. `find /tag Emergency` produces the same contact list
 through the general tag search, while `list` restores all contacts.
+
+### Favourite contacts
+
+`fav INDEX` and `unfav INDEX` set a contact's favourite status. `list fav` displays favourite contacts
+using the existing observable contact list.
+
+#### Implementation
+
+* **Model:** `Person` stores an immutable `isFavourite` boolean, defaulting to `false` in the existing constructors.
+  `withFavourite(boolean)` returns a copy that preserves every other field, including notes and tag order.
+  Favourite status participates in `equals()` and `hashCode()`, but not `isSamePerson()`, so marking a contact
+  does not change its identity or allow duplicates. `EditCommand` preserves the flag when rebuilding a contact.
+* **Parsing:** `AddressBookParser` routes `fav` and `unfav` to `FavCommandParser` and `UnfavCommandParser`.
+  Both reuse `ParserUtil#parseIndex()` and wrap parsing failures in the respective command's usage message.
+  `ListCommandParser` returns `ListFavouriteCommand` for the exact `fav` argument and rejects extra arguments.
+* **Commands:** `FavCommand` and `UnfavCommand` resolve the target from `Model#getFilteredPersonList()` before
+  replacing it through `Model#setPerson()`. An out-of-range displayed index raises a `CommandException`.
+  Requests for an already-set status return explanatory feedback without replacing the contact.
+  Neither command resets the current filter.
+* **Listing:** `ListFavouriteCommand` applies `Person::isFavourite` through `Model#updateFilteredPersonList()`.
+  This replaces the previous filter and searches all stored contacts. Their relative stored order is retained,
+  while displayed indices start at 1. Unfavouriting a displayed contact removes it from this view immediately.
+* **Storage:** `JsonAdaptedPerson` reads and writes the JSON boolean `isFavourite`. Missing properties default to
+  `false`, so older files remain readable. `LogicManager` saves changes through the existing storage path.
+* **UI:** `PersonCard` shows the `favourite` label as `★ Favourite`, styled in `DarkTheme.css`.
+  For other contacts, both `visible` and `managed` are false, so no badge space is reserved.
+  Replacing a model entry refreshes its list cell with a new card and the updated status.
+
+#### Design considerations
+
+* A dedicated flag keeps favourite status independent of category tags and their replacement semantics.
+  A tag named `favourite` has no special meaning.
+* Separate set and unset commands make repeated submissions predictable: recalling `fav 1` cannot toggle
+  the current contact off. As with other index commands, resubmission uses the list displayed at that time.
+* Reusing the observable filtered list avoids a second collection of favourite contacts or a second index system.
+
+#### Integration considerations
+
+When adding other contact fields, such as per-resident emergency details or archive status, preserve them in
+`withFavourite()` and preserve favourite status in their copy helpers, ordinary edits, and JSON storage.
+The intended archive interaction is to retain favourite status, hide archived contacts from `list fav`, and
+show them again after restoration. Archive filtering requires integration with the separate archive feature
+and is not implemented by this branch.
+
+#### Testing
+
+`PersonTest` and `EditCommandTest` cover default values, immutable copies, identity, and preservation during edits.
+`FavouriteCommandsTest`, `FavouriteCommandParsersTest`, `ListFavouriteCommandTest` and the shared parser tests
+cover indices, invalid arguments, repeated commands, filtering and result order. Storage tests and
+`LogicManagerTest` check saving, reloading and compatibility with missing flags. `PersonCardTest` checks badge
+visibility and refreshes using real JavaFX controls. See the [testing guide](Testing.md#favourite-contact-tests)
+and the [manual checks](#managing-favourite-contacts).
 
 ### Command recall
 
@@ -916,6 +969,40 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: Close the app and reopen it.<br>
       Expected: Notes added or edited above are still shown.
+
+### Managing favourite contacts
+
+Use an empty, disposable address book for these checks. Add the following contacts in this order:
+
+```text
+add Favourite Test One /phone 91234567 /room B-204 /tag Resident /note Call after 6 pm
+add Favourite Test Two /phone 91234568 /tag favourite
+add Favourite Test Three /phone 91234569
+```
+
+Test | Commands or actions | Expected result
+-----|---------------------|----------------
+Initial status | `list` | All three contacts appear without a favourite badge, including Test Two with its `favourite` tag.
+Marking | `fav 3`, then `fav 1` | Test Three and Test One gain the badge; their other details stay unchanged.
+Listing and numbering | `list fav` | Test One is #1 and Test Three is #2, in stored order despite being marked in the reverse order. Message: `Listed all favourite contacts.`.
+Repeated marking | `fav 1` | Message starts with `Contact is already a favourite:`. Data and the favourite view stay unchanged.
+Removing from favourites | `unfav 2` | Test Three disappears from this view; Test One remains as #1. Test Three still exists in the address book.
+Current displayed index | Repeat `unfav 2` | Error: `The person index provided is invalid.`. No contact is changed.
+Ignoring previous filters | `find /phone 91234568`, then `list fav` | Test One is shown even though the previous search displayed only Test Two.
+Replacing and clearing tags | `find /phone 91234567`, `edit 1 /tag Staff`, `find /phone 91234567`, `edit 1 /tag`, then `list fav` | Test One stays a favourite, with its room and note intact. Its tags are cleared. Search again before each edit because editing restores the full list.
+Saving and restarting | Close and reopen the app, then `list fav` | Only Test One is a favourite. Its room, note and cleared tags remain as saved.
+Repeated removal | `find /phone 91234567`, then `unfav 1` twice | The first command removes the badge. The second message starts with `Contact is not a favourite:`. Test One's other details remain intact.
+No favourites | `list fav`, then `list` | The favourite view is empty with `No favourite contacts found.`. `list` restores all three contacts.
+Invalid formats | `fav`, `fav 0`, `fav -1`, `fav 2147483648`, `unfav 1 extra` | Invalid command format and the respective usage message; data and the displayed list stay unchanged.
+Out-of-range index | `fav 999999` | Error: `The person index provided is invalid.`; data and the displayed list stay unchanged.
+Invalid listing | `list fav 1` | Error: `Invalid command format. Usage: list fav`; the displayed list stays unchanged.
+Case sensitivity | `FAV 1`, `UNFAV 1`, `LIST fav`, `list FAV` | The first three report `Unknown command.`. The last reports `Invalid command format. Usage: list`. No data changes.
+
+Repeat `list fav` in an empty disposable address book; it should show the same no-favourites message.
+
+For backward compatibility, close the app and use a copy of a valid data file saved before this feature,
+with no `isFavourite` properties. Reopen the app: every contact should be unfavourited, with its existing
+details intact. Mark one contact, restart, and verify that the new status and existing details are retained.
 
 ### Saving data
 

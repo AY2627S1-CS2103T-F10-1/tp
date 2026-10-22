@@ -26,8 +26,9 @@ You can run tests in two ways.
 
 `CommandHistoryTest` tests the history helper without starting JavaFX. `CommandBoxTest` creates real
 JavaFX controls and dispatches key events to check recall, drafts, submission, and error handling.
-The tests start JavaFX once, run control interactions on its application thread with bounded waits,
-and shut down the toolkit afterwards. They do not open a visible application window.
+`JavaFxExtension` shares one JavaFX runtime across UI test classes, runs control interactions on its
+application thread with bounded waits, and shuts down the toolkit after the test suite.
+The tests do not open a visible application window.
 
 To run both test classes on Windows:
 
@@ -48,6 +49,37 @@ command. The same tests run on all three platforms, with no additional Java test
 
 Dispatched events do not test physical keyboard input, window focus, or visual appearance. Also follow
 the [command recall manual tests](DeveloperGuide.md#recalling-previous-commands) in the running app.
+
+### Favourite contact tests
+
+The favourite feature is covered at these levels:
+
+* `PersonTest` and `EditCommandTest`: default status, copies, equality, and preservation when editing fields
+  or replacing and clearing tags.
+* `FavouriteCommandsTest` and `ListFavouriteCommandTest`: displayed indices, repeated commands,
+  preservation of details and filters, stored result order, and removal from the favourite view.
+* `FavouriteCommandParsersTest`, `ListCommandParserTest` and `AddressBookParserTest`: supported syntax,
+  whitespace, case sensitivity, missing or invalid indices, and extra arguments.
+* `JsonAdaptedPersonTest`, `JsonAddressBookStorageTest` and `LogicManagerTest`: actual JSON round trips,
+  files without favourite status, notes and tag order, and command execution across a reload.
+* `PersonCardTest`: real JavaFX cards and list cells, badge visibility, command-driven updates,
+  preservation of other displayed details, and cell reuse after a contact is removed.
+
+Run the full checks on Windows:
+
+```powershell
+.\gradlew.bat check coverage
+```
+
+To run the card and command-box UI tests together:
+
+```powershell
+.\gradlew.bat test --tests seedu.address.ui.PersonCardTest --tests seedu.address.ui.CommandBoxTest
+```
+
+Both UI test classes use `JavaFxExtension`. The display and Linux Xvfb requirements above apply.
+Automated checks do not replace checking the badge's appearance in the running app; follow the
+[favourite contact manual checks](DeveloperGuide.md#managing-favourite-contacts).
 
 --------------------------------------------------------------------------------------------------------------------
 
