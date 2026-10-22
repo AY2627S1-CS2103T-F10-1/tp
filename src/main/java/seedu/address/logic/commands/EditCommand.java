@@ -87,7 +87,7 @@ public class EditCommand extends Command {
         PersonFieldValues editedValues = PersonFieldValues.of(personToEdit);
         editedValues.putAll(editPersonDescriptor.values);
         return editedValues.toPerson(personToEdit.getEmail(), personToEdit.getAddress(),
-                personToEdit.getEmergencyContact());
+                personToEdit.getEmergencyContact(), personToEdit.isFavourite());
     }
 
     @Override

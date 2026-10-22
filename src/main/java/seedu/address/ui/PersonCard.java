@@ -15,6 +15,7 @@ public class PersonCard extends UiPart<Region> {
     private static final String FXML = "PersonListCard.fxml";
     private static final String ROOM_LABEL_PREFIX = "Room: ";
     private static final String NOTE_LABEL_PREFIX = "Note: ";
+    private static final String FAVOURITE_LABEL_TEXT = "★ Favourite";
 
     /**
      * Note: Certain keywords such as "location" and "resources" are reserved keywords in JavaFX.
@@ -41,6 +42,8 @@ public class PersonCard extends UiPart<Region> {
     @FXML
     private Label note;
     @FXML
+    private Label favourite;
+    @FXML
     private Label emergencyContact;
 
     /**
@@ -52,6 +55,7 @@ public class PersonCard extends UiPart<Region> {
         id.setText(displayedIndex + ". ");
         name.setText(person.getName().fullName);
         phone.setText(person.getPhone().value);
+        showIfPresent(favourite, "", person.isFavourite() ? FAVOURITE_LABEL_TEXT : "");
         showIfPresent(room, ROOM_LABEL_PREFIX, person.getRoom().value);
         showIfPresent(note, NOTE_LABEL_PREFIX, person.getNote().value);
         showIfPresent(emergencyContact, "emergency: ",

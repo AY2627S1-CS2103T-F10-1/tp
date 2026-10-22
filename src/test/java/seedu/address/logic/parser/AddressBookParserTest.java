@@ -16,10 +16,13 @@ import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.logic.commands.ExitCommand;
+import seedu.address.logic.commands.FavCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.ListEmergencyCommand;
+import seedu.address.logic.commands.ListFavouriteCommand;
+import seedu.address.logic.commands.UnfavCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.NameFuzzyMatchesPredicate;
 import seedu.address.model.person.Person;
@@ -69,6 +72,21 @@ public class AddressBookParserTest {
     }
 
     @Test
+    public void parseCommand_favouriteCommands() throws Exception {
+        assertEquals(new FavCommand(INDEX_FIRST_PERSON), parser.parseCommand("fav 1"));
+        assertEquals(new FavCommand(INDEX_FIRST_PERSON), parser.parseCommand("  fav\t1  "));
+        assertEquals(new UnfavCommand(INDEX_FIRST_PERSON), parser.parseCommand("unfav 1"));
+        assertEquals(new UnfavCommand(INDEX_FIRST_PERSON), parser.parseCommand("  unfav\t1  "));
+    }
+
+    @Test
+    public void parseCommand_favouriteCommandsWithWrongCase_throwsParseException() {
+        for (String input : new String[] {"Fav 1", "FAV 1", "Unfav 1", "UNFAV 1"}) {
+            assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand(input));
+        }
+    }
+
+    @Test
     public void parseCommand_find() throws Exception {
         FindCommand command = (FindCommand) parser.parseCommand(
                 FindCommand.COMMAND_WORD + " /name foo bar baz");
@@ -99,6 +117,21 @@ public class AddressBookParserTest {
         assertTrue(parser.parseCommand("list emerg") instanceof ListEmergencyCommand);
         assertTrue(parser.parseCommand("  list   emerg  ") instanceof ListEmergencyCommand);
         assertTrue(parser.parseCommand("list\temerg") instanceof ListEmergencyCommand);
+    }
+
+    @Test
+    public void parseCommand_listFavourite() throws Exception {
+        assertEquals(new ListFavouriteCommand(), parser.parseCommand("list fav"));
+        assertEquals(new ListFavouriteCommand(), parser.parseCommand("  list   fav  "));
+        assertEquals(new ListFavouriteCommand(), parser.parseCommand("list\tfav"));
+    }
+
+    @Test
+    public void parseCommand_listFavouriteWithExtraArguments_throwsParseException() {
+        assertThrows(ParseException.class, ListFavouriteCommand.MESSAGE_INVALID_FORMAT, () ->
+                parser.parseCommand("list fav 1"));
+        assertThrows(ParseException.class, ListFavouriteCommand.MESSAGE_INVALID_FORMAT, () ->
+                parser.parseCommand("list fav emerg"));
     }
 
     @Test

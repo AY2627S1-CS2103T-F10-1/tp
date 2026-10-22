@@ -28,7 +28,7 @@ public class PersonFieldValues {
         values.putAll(toCopy.values);
     }
 
-    /** Returns values holding every field of {@code person}. */
+    /** Returns values holding every editable field of {@code person}. */
     public static PersonFieldValues of(Person person) {
         requireNonNull(person);
         PersonFieldValues personValues = new PersonFieldValues();
@@ -93,9 +93,16 @@ public class PersonFieldValues {
 
     /** Creates a person while preserving emergency details managed outside the add/edit field registry. */
     public Person toPerson(Email email, Address address, Optional<EmergencyContact> emergencyContact) {
+        return toPerson(email, address, emergencyContact, false);
+    }
+
+    /** Creates an active person while preserving emergency details and favourite status. */
+    public Person toPerson(Email email, Address address, Optional<EmergencyContact> emergencyContact,
+            boolean isFavourite) {
         requireAllNonNull(email, address, emergencyContact);
         return new Person(require(PersonField.NAME), require(PersonField.PHONE), email, address,
-                require(PersonField.TAGS), require(PersonField.ROOM), require(PersonField.NOTE), emergencyContact);
+                require(PersonField.TAGS), require(PersonField.ROOM), require(PersonField.NOTE), emergencyContact,
+                false, isFavourite);
     }
 
     private <T> T require(PersonField<T> field) {

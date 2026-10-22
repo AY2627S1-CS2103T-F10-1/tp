@@ -38,6 +38,7 @@ class JsonAdaptedPerson {
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
     private final String note;
     private final JsonAdaptedEmergencyContact emergencyContact;
+    private final boolean isFavourite;
 
     /**
      * Constructs a {@code JsonAdaptedPerson} with the given person details.
@@ -77,6 +78,14 @@ class JsonAdaptedPerson {
         this(name, phone, email, address, tags, room, note, emergencyContact, false);
     }
 
+    /** Creates an adapter with emergency details and archive state, defaulting to unfavourited. */
+    public JsonAdaptedPerson(String name, String phone, String email, String address,
+            List<JsonAdaptedTag> tags, String room, String note,
+            JsonAdaptedEmergencyContact emergencyContact, boolean archive) {
+        this(name, phone, email, address, tags, room, note, emergencyContact, archive, false);
+    }
+
+    /** Creates an adapter from JSON; missing status fields default to false. */
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name,
             @JsonProperty("phone") String phone,
@@ -86,7 +95,8 @@ class JsonAdaptedPerson {
             @JsonProperty("room") String room,
             @JsonProperty("note") String note,
             @JsonProperty("emergencyContact") JsonAdaptedEmergencyContact emergencyContact,
-            @JsonProperty("archive") boolean archive) {
+            @JsonProperty("archive") boolean archive,
+            @JsonProperty("isFavourite") boolean isFavourite) {
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -95,6 +105,7 @@ class JsonAdaptedPerson {
         this.note = note;
         this.emergencyContact = emergencyContact;
         this.archive = archive;
+        this.isFavourite = isFavourite;
         if (tags != null) {
             this.tags.addAll(tags);
         }
@@ -110,6 +121,7 @@ class JsonAdaptedPerson {
         address = source.getAddress().value;
         room = source.getRoom().value;
         archive = source.isArchived();
+        isFavourite = source.isFavourite();
         note = source.getNote().value;
         emergencyContact = source.getEmergencyContact().map(JsonAdaptedEmergencyContact::new).orElse(null);
         tags.addAll(source.getTags().stream()
@@ -168,7 +180,7 @@ class JsonAdaptedPerson {
                 ? Optional.empty() : Optional.of(emergencyContact.toModelType());
 
         return new Person(modelName, modelPhone, modelEmail, modelAddress,
-                modelTags, toModelRoom(), toModelNote(), modelEmergencyContact, archive);
+                modelTags, toModelRoom(), toModelNote(), modelEmergencyContact, archive, isFavourite);
     }
 
     /** Returns the stored room; a file without one gives a contact without a room. */

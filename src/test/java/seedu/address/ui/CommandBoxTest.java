@@ -3,18 +3,14 @@ package seedu.address.ui;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.testutil.JavaFxExtension.runOnFxThread;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
@@ -26,24 +22,10 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.ModelManager;
+import seedu.address.testutil.JavaFxExtension;
 
+@ExtendWith(JavaFxExtension.class)
 public class CommandBoxTest {
-    private static final int FX_TIMEOUT_SECONDS = 10;
-
-    @BeforeAll
-    public static void initializeJavaFx() throws Exception {
-        CountDownLatch started = new CountDownLatch(1);
-        Platform.startup(() -> {
-            Platform.setImplicitExit(false);
-            started.countDown();
-        });
-        assertTrue(started.await(FX_TIMEOUT_SECONDS, TimeUnit.SECONDS), "JavaFX did not start in time");
-    }
-
-    @AfterAll
-    public static void stopJavaFx() {
-        Platform.exit();
-    }
 
     @Test
     public void navigate_emptyHistory_preservesInput() throws Exception {
@@ -229,12 +211,6 @@ public class CommandBoxTest {
         fixture.press(KeyCode.UP);
         assertEquals("failed command", fixture.commandTextField.getText());
         assertEquals(List.of("failed command"), fixture.executedCommands);
-    }
-
-    private static void runOnFxThread(Runnable action) throws Exception {
-        FutureTask<Void> task = new FutureTask<>(action, null);
-        Platform.runLater(task);
-        task.get(FX_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
     private static void press(TextField textField, KeyCode code,

@@ -34,6 +34,7 @@ public class PersonBuilder {
     private Set<Tag> tags;
     private Room room;
     private Note note;
+    private boolean isFavourite;
     private boolean archive;
     private Optional<EmergencyContact> emergencyContact = Optional.empty();
 
@@ -48,6 +49,7 @@ public class PersonBuilder {
         tags = new LinkedHashSet<>();
         room = new Room(DEFAULT_ROOM);
         note = new Note(DEFAULT_NOTE);
+        isFavourite = false;
     }
 
     /**
@@ -61,6 +63,7 @@ public class PersonBuilder {
         tags = new LinkedHashSet<>(personToCopy.getTags());
         room = personToCopy.getRoom();
         note = personToCopy.getNote();
+        isFavourite = personToCopy.isFavourite();
         archive = personToCopy.isArchived();
         emergencyContact = personToCopy.getEmergencyContact();
     }
@@ -121,8 +124,18 @@ public class PersonBuilder {
         return this;
     }
 
+    /**
+     * Sets the favourite status of the {@code Person} that we are building.
+     */
+    public PersonBuilder withFavourite(boolean isFavourite) {
+        this.isFavourite = isFavourite;
+        return this;
+    }
+
+    /** Builds a contact retaining all editable fields and separately managed statuses. */
     public Person build() {
-        return new Person(name, phone, email, address, tags, room, note, emergencyContact, archive);
+        return new Person(name, phone, email, address, tags, room, note, emergencyContact, archive,
+                isFavourite);
     }
 
 }
