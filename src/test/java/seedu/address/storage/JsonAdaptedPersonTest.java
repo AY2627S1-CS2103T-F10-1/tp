@@ -44,6 +44,14 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_favouritePerson_preservesAllDetails() throws Exception {
+        Person favourite = new PersonBuilder(BENSON).withFavourite(true).withRoom("B-204")
+                .withNote("Allergic to peanuts").build();
+
+        assertEquals(favourite, new JsonAdaptedPerson(favourite).toModelType());
+    }
+
+    @Test
     public void toModelType_invalidName_throwsIllegalValueException() {
         JsonAdaptedPerson person =
                 new JsonAdaptedPerson(INVALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_TAGS);
