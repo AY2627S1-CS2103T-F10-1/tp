@@ -19,9 +19,11 @@ import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Note;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Room;
+import seedu.address.testutil.PersonBuilder;
 
 public class JsonAdaptedPersonTest {
     private static final String INVALID_NAME = "R@chel";
@@ -157,9 +159,37 @@ public class JsonAdaptedPersonTest {
 
     @Test
     public void toModelType_invalidRoom_throwsIllegalValueException() {
-        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS,
-                VALID_TAGS, "B#204");
+        JsonAdaptedPerson person = withRoomAndNote("B#204", null);
         assertThrows(IllegalValueException.class, Room.MESSAGE_INVALID_CHARACTERS, person::toModelType);
     }
 
+    @Test
+    public void toModelType_personWithNote_returnsPerson() throws Exception {
+        Person bensonWithNote = new PersonBuilder(BENSON).withNote("Allergic to peanuts").build();
+        assertEquals(bensonWithNote, new JsonAdaptedPerson(bensonWithNote).toModelType());
+    }
+
+    @Test
+    public void toModelType_missingNote_returnsPersonWithoutNote() throws Exception {
+        assertEquals(new Note(""), withRoomAndNote(null, null).toModelType().getNote());
+    }
+
+    @Test
+    public void toModelType_noteWithExtraWhitespace_returnsCollapsedNote() throws Exception {
+        assertEquals(new Note("Prefers WhatsApp"), withRoomAndNote(null, "  Prefers   WhatsApp ").toModelType()
+                .getNote());
+    }
+
+    @Test
+    public void toModelType_invalidNote_throwsIllegalValueException() {
+        String noteTooLong = "a".repeat(Note.MAX_LENGTH + 1);
+        assertThrows(IllegalValueException.class, Note.MESSAGE_CONSTRAINTS,
+                withRoomAndNote(null, noteTooLong)::toModelType);
+        assertThrows(IllegalValueException.class, Note.MESSAGE_CONSTRAINTS,
+                withRoomAndNote(null, "call w/ parent")::toModelType);
+    }
+
+    private static JsonAdaptedPerson withRoomAndNote(String room, String note) {
+        return new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_TAGS, room, note);
+    }
 }

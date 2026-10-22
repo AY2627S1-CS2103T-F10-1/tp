@@ -15,7 +15,7 @@ public class AddCommand extends Command {
     public static final String COMMAND_WORD = "add";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Adds a person to the address book. "
-            + "Parameters: NAME /phone PHONE [/room ROOM] [/tag TAG]...\n"
+            + "Parameters: NAME /phone PHONE [/room ROOM] [/tag TAG]... [/note NOTE]\n"
             + "Example: " + COMMAND_WORD + " Sarah Tan /phone 9123 4567 /room B-204 /tag Resident /tag Floor 3";
 
     public static final String MESSAGE_SUCCESS = "Contact %1$s added successfully.";

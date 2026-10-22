@@ -28,7 +28,7 @@ public class EditCommand extends Command {
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits the details of the person identified "
             + "by the index number used in the displayed person list. "
             + "Existing values will be overwritten by the input values; "
-            + "/tag replaces all tags, and /tag on its own removes them.\n"
+            + "/tag replaces all tags, and an optional field such as /room or /tag on its own removes it.\n"
             + "Parameters: INDEX (must be a positive integer) "
             + PersonField.values().stream().map(field -> field.getUsage(true)).collect(Collectors.joining(" "))
             + "\nExample: " + COMMAND_WORD + " 1 /phone 91234567 /room B-204";
@@ -146,7 +146,7 @@ public class EditCommand extends Command {
         }
 
         /**
-         * Sets {@code field} from {@code argMultimap} if it was given. A repeatable field given an empty
+         * Sets {@code field} from {@code argMultimap} if it was given. An optional field given an empty
          * value is cleared.
          *
          * @throws ParseException if the values given for {@code field} are invalid.

@@ -21,7 +21,7 @@ import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.ListEmergencyCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.person.NameEqualsPredicate;
+import seedu.address.model.person.NameFuzzyMatchesPredicate;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonHasTagPredicate;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
@@ -72,7 +72,7 @@ public class AddressBookParserTest {
     public void parseCommand_find() throws Exception {
         FindCommand command = (FindCommand) parser.parseCommand(
                 FindCommand.COMMAND_WORD + " /name foo bar baz");
-        assertEquals(new FindCommand(new NameEqualsPredicate("foo bar baz")), command);
+        assertEquals(new FindCommand(new NameFuzzyMatchesPredicate("foo bar baz")), command);
     }
 
     @Test

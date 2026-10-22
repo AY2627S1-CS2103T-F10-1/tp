@@ -31,6 +31,7 @@ public class Person {
     private final Room room;
     private final boolean archive;
     private final Set<Tag> tags = new LinkedHashSet<>();
+    private final Note note;
 
     /**
      * Every field must be present and not null, and there must be at most {@link #MAX_TAGS} tags.
@@ -48,12 +49,33 @@ public class Person {
     /** Creates a contact with the specified archive state. */
     public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, boolean archive) {
         requireAllNonNull(name, phone, email, address, tags, room);
+        this(name, phone, email, address, tags, room, new Note(""));
+    }
+
+    /** Creates a contact with an optional room number and note. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note) {
+        requireAllNonNull(name, phone, email, address, tags, room, note);
         checkArgument(tags.size() <= MAX_TAGS, MESSAGE_TAG_LIMIT_REACHED);
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
         this.room = room;
+        this.archive = archive;
+        this.tags.addAll(tags);
+        this.note = note;
+    }
+  
+    /** Creates a contact with both note and archive state. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note, boolean archive) {
+        requireAllNonNull(name, phone, email, address, tags, room, note);
+        checkArgument(tags.size() <= MAX_TAGS, MESSAGE_TAG_LIMIT_REACHED);
+        this.name = name;
+        this.phone = phone;
+        this.email = email;
+        this.address = address;
+        this.room = room;
+        this.note = note;
         this.archive = archive;
         this.tags.addAll(tags);
     }
@@ -64,7 +86,7 @@ public class Person {
 
     /** Returns a copy with the specified archive state, preserving all contact details. */
     public Person withArchive(boolean archive) {
-        return new Person(name, phone, email, address, tags, room, archive);
+      return new Person(name, phone, email, address, tags, room, note, archive);
     }
 
     public Name getName() {
@@ -85,6 +107,10 @@ public class Person {
 
     public Address getAddress() {
         return address;
+    }
+
+    public Note getNote() {
+        return note;
     }
 
     /**
@@ -129,13 +155,14 @@ public class Person {
                 && address.equals(otherPerson.address)
                 && room.equals(otherPerson.room)
                 && archive == otherPerson.archive
-                && tags.equals(otherPerson.tags);
+                && tags.equals(otherPerson.tags)
+                && note.equals(otherPerson.note);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, tags, room, archive);
+        return Objects.hash(name, phone, email, address, tags, room, note, archive);
     }
 
     @Override
@@ -148,6 +175,9 @@ public class Person {
                 .add("tags", tags);
         if (!room.value.isEmpty()) {
             builder.add("room", room);
+        }
+        if (!note.value.isEmpty()) {
+            builder.add("note", note);
         }
         return builder.toString();
     }
