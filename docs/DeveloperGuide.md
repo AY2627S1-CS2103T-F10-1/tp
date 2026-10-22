@@ -246,6 +246,53 @@ the normal contact list. If there are no matches, the result message is `No emer
 otherwise it is `Listed all emergency contacts.`. `find /tag Emergency` produces the same contact list
 through the general tag search, while `list` restores all contacts.
 
+### Command recall
+
+Users browse submitted command text with Up/Down in the command box and press Enter to submit it again.
+Recall does not restore contact data or implement the proposed undo/redo feature below.
+
+#### Implementation
+
+Each `CommandBox` owns a `CommandHistory` instance. `CommandHistory` stores the latest 100 non-blank
+submissions in an `ArrayList`, from oldest to newest, preserving the submitted text and duplicates.
+It holds no contact data and is not serialized, so a new app session starts with empty history.
+
+* `add(commandText)` ignores blank input. Otherwise, it appends the text, evicts the oldest entry if needed,
+  resets `historyPosition` to `commands.size()`, and clears the saved draft.
+* `historyPosition == commands.size()` means the user is not browsing history. The first
+  `navigatePrevious(currentInput)` saves `currentInput` as the draft, then moves towards older entries.
+  At the oldest entry it returns that entry again; with empty history it returns the input unchanged.
+* `navigateNext(currentInput)` moves towards newer entries. Passing the newest entry restores the saved
+  draft. When not browsing, it returns the input unchanged.
+* Editing recalled text does not update a stored entry or the draft. Only a new submission records it.
+  `getCommands()` returns an unmodifiable snapshot for inspecting the history without changing it.
+
+`CommandBox` installs a `KEY_PRESSED` filter on its text field, before JavaFX's normal key handling.
+Unmodified Up/Down events call the corresponding navigation method, display the returned text, move the
+caret to the end, and consume the event. Other keys and modified arrows retain their normal behavior.
+Because the filter belongs to the command field, arrow events in other controls do not navigate history.
+
+On Enter, `CommandBox` records non-blank input before calling `CommandExecutor#execute()`, so both parse
+failures and execution failures remain recallable. Successful execution clears the field; failures retain
+the submitted text and existing error styling. Navigation itself never calls the executor.
+
+#### Design considerations
+
+* **Session-only text history:** keeps recall independent of contact storage and avoids saving command
+  parameters to a history file. Earlier sessions cannot be recalled.
+* **A separate history helper:** lets storage, bounds, and draft handling be tested without JavaFX.
+  The command box remains responsible for key events, display, submission, and error styling.
+* **One saved draft:** preserves the unfinished input present before browsing. Edits to recalled entries
+  are discarded when navigating rather than maintained as additional drafts.
+
+#### Testing
+
+`CommandHistoryTest` covers storage, the 100-entry limit, navigation boundaries, drafts, and resets.
+`CommandBoxTest` uses real JavaFX controls and dispatched key events to cover their integration with
+submission and error handling, including index-based commands using the current contact list.
+See the [testing guide](Testing.md) for JavaFX display requirements and the
+[manual checks](#recalling-previous-commands) for keyboard behavior in the running app.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
