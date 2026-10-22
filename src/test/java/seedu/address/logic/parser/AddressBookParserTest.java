@@ -21,6 +21,7 @@ import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.ListEmergencyCommand;
+import seedu.address.logic.commands.ListFavouriteCommand;
 import seedu.address.logic.commands.UnfavCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.NameFuzzyMatchesPredicate;
@@ -116,6 +117,21 @@ public class AddressBookParserTest {
         assertTrue(parser.parseCommand("list emerg") instanceof ListEmergencyCommand);
         assertTrue(parser.parseCommand("  list   emerg  ") instanceof ListEmergencyCommand);
         assertTrue(parser.parseCommand("list\temerg") instanceof ListEmergencyCommand);
+    }
+
+    @Test
+    public void parseCommand_listFavourite() throws Exception {
+        assertEquals(new ListFavouriteCommand(), parser.parseCommand("list fav"));
+        assertEquals(new ListFavouriteCommand(), parser.parseCommand("  list   fav  "));
+        assertEquals(new ListFavouriteCommand(), parser.parseCommand("list\tfav"));
+    }
+
+    @Test
+    public void parseCommand_listFavouriteWithExtraArguments_throwsParseException() {
+        assertThrows(ParseException.class, ListFavouriteCommand.MESSAGE_INVALID_FORMAT, () ->
+                parser.parseCommand("list fav 1"));
+        assertThrows(ParseException.class, ListFavouriteCommand.MESSAGE_INVALID_FORMAT, () ->
+                parser.parseCommand("list fav emerg"));
     }
 
     @Test

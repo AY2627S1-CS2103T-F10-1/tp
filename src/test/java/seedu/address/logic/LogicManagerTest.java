@@ -20,6 +20,7 @@ import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.ListEmergencyCommand;
+import seedu.address.logic.commands.ListFavouriteCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
@@ -107,6 +108,55 @@ public class LogicManagerTest {
         assertEquals(List.of(AMY, otherPerson), model.getAddressBook().getPersonList());
         assertFalse(result.isShowHelp());
         assertFalse(result.isExit());
+    }
+
+    @Test
+    public void execute_listFavAfterFind_usesAllContactsAndPersistsUnfav() throws Exception {
+        Person firstFavourite = new PersonBuilder(AMY).withFavourite(true).withRoom("B-204")
+                .withNote("Call after 6 pm").build();
+        Person otherContact = new PersonBuilder().withName("Other Contact").build();
+        Person secondFavourite = new PersonBuilder().withName("Second Favourite").withFavourite(true).build();
+        model.addPerson(firstFavourite);
+        model.addPerson(otherContact);
+        model.addPerson(secondFavourite);
+        logic.execute("find /name Other Contact");
+
+        CommandResult result = logic.execute("list fav");
+
+        assertEquals(ListFavouriteCommand.MESSAGE_SUCCESS, result.getFeedbackToUser());
+        assertEquals(List.of(firstFavourite, secondFavourite), logic.getFilteredPersonList());
+        assertEquals(List.of(firstFavourite, otherContact, secondFavourite), model.getAddressBook().getPersonList());
+
+        logic.execute("unfav 1");
+        assertEquals(List.of(secondFavourite), logic.getFilteredPersonList());
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        ReadOnlyAddressBook saved = storage.readAddressBook().orElseThrow();
+        assertEquals(List.of(firstFavourite.withFavourite(false), otherContact, secondFavourite),
+                saved.getPersonList());
+        Model restartedModel = new ModelManager(saved, new UserPrefs());
+        Logic restartedLogic = new LogicManager(restartedModel, new StorageManager(storage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"))));
+
+        restartedLogic.execute("list fav");
+        assertEquals(List.of(secondFavourite), restartedLogic.getFilteredPersonList());
+        restartedLogic.execute("list");
+        assertEquals(saved.getPersonList(), restartedLogic.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_invalidListFav_preservesFavouriteViewAndData() throws Exception {
+        model.addPerson(AMY.withFavourite(true));
+        model.addPerson(new PersonBuilder().withName("Other Contact").build());
+        logic.execute("list fav");
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.updateFilteredPersonList(Person::isFavourite);
+
+        for (String input : List.of("list fav 1", "list fav fav", "list fav emerg", "list fav /tag friend")) {
+            assertCommandFailure(input, ParseException.class, ListFavouriteCommand.MESSAGE_INVALID_FORMAT,
+                    expectedModel);
+        }
+        assertCommandFailure("list FAV", ParseException.class, ListCommand.MESSAGE_INVALID_FORMAT, expectedModel);
+        assertCommandFailure("LIST fav", ParseException.class, MESSAGE_UNKNOWN_COMMAND, expectedModel);
     }
 
     @Test
