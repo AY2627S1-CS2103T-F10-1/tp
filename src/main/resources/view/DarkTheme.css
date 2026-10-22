@@ -342,6 +342,14 @@
     -fx-vgap: 3;
 }
 
+#favourite {
+    -fx-text-fill: #f2c14e;
+    -fx-background-color: #4b3b16;
+    -fx-padding: 1 5 1 5;
+    -fx-background-radius: 3;
+    -fx-font-weight: bold;
+}
+
 #note {
     -fx-text-fill: #2b2100;
     -fx-background-color: #f2c14e;
