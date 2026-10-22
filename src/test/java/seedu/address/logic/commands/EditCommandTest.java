@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_NOTE_AMY;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_NOTE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ROOM_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_FRIEND;
@@ -17,6 +19,8 @@ import static seedu.address.logic.commands.CommandTestUtil.showPersonAtIndex;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
+
+import java.util.function.UnaryOperator;
 
 import org.junit.jupiter.api.Test;
 
@@ -76,6 +80,51 @@ public class EditCommandTest {
         expectedModel.setPerson(lastPerson, editedPerson);
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_clearRoom_removesRoom() {
+        Person withRoom = replaceFirstPerson(person -> person.withRoom(VALID_ROOM_BOB));
+        assertFirstPersonEdited(withRoom, new PersonBuilder(withRoom).withRoom("").build(),
+                new EditPersonDescriptorBuilder().withRoom("").build());
+    }
+
+    @Test
+    public void execute_setNote_addsNote() {
+        Person original = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        assertFirstPersonEdited(original, new PersonBuilder(original).withNote(VALID_NOTE_AMY).build(),
+                new EditPersonDescriptorBuilder().withNote(VALID_NOTE_AMY).build());
+    }
+
+    @Test
+    public void execute_replaceNote_replacesNote() {
+        Person withNote = replaceFirstPerson(person -> person.withNote(VALID_NOTE_AMY));
+        assertFirstPersonEdited(withNote, new PersonBuilder(withNote).withNote(VALID_NOTE_BOB).build(),
+                new EditPersonDescriptorBuilder().withNote(VALID_NOTE_BOB).build());
+    }
+
+    @Test
+    public void execute_clearNote_removesNote() {
+        Person withNote = replaceFirstPerson(person -> person.withNote(VALID_NOTE_AMY));
+        assertFirstPersonEdited(withNote, new PersonBuilder(withNote).withNote("").build(),
+                new EditPersonDescriptorBuilder().withNote("").build());
+    }
+
+    /** Replaces the first person in {@code model} with a copy changed by {@code change}, and returns the copy. */
+    private Person replaceFirstPerson(UnaryOperator<PersonBuilder> change) {
+        Person original = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        Person replacement = change.apply(new PersonBuilder(original)).build();
+        model.setPerson(original, replacement);
+        return replacement;
+    }
+
+    /** Asserts that editing the first person, {@code original}, with {@code descriptor} gives {@code edited}. */
+    private void assertFirstPersonEdited(Person original, Person edited, EditPersonDescriptor descriptor) {
+        String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS, Messages.format(edited));
+        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expectedModel.setPerson(original, edited);
+
+        assertCommandSuccess(new EditCommand(INDEX_FIRST_PERSON, descriptor), model, expectedMessage, expectedModel);
     }
 
     @Test

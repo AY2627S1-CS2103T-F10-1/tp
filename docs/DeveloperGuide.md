@@ -198,7 +198,7 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
 
 ### Edit feature
 
-`edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…` replaces only the fields that are given.
+`edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]… [/note NOTE]` replaces only the fields that are given.
 
 #### Implementation
 
@@ -206,9 +206,28 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
 
 * `AddCommandParser` and `EditCommandParser` build their prefixes, duplicate checks and parsing from `PersonField.values()`. `add` reads the name from the text before the first prefix, and every other field with its prefix.
 * `PersonFieldValues` stores a value per field. `EditPersonDescriptor` wraps one to hold the edited fields, and `EditCommand` copies the contact's current values, overwrites them with the edited ones and builds the new `Person`.
-* `/tag` replaces all tags, and `/tag` with no value removes them. This applies to any repeatable field.
+* `/tag` replaces all tags. Any optional field given with no value, such as `/tag` or `/room`, is reset to the value `add` uses when it is left out, which removes it. Required fields given with no value are rejected.
 
-To add a new field, add it to `Person`, add a constant to `PersonField` and list it in `PersonField.values()`. `add` and `edit` then accept it without further changes. `PersonFieldTest` fails if a `Person` field is not registered or has no sample value.
+To add a new field, add it to `Person`, add a constant to `PersonField` and list it in `PersonField.values()`, and add its `ParserUtil#parseXyz` method. `add` and `edit` then accept it without further changes. `PersonFieldTest` fails if a `Person` field is not registered or has no sample value.
+
+### Note field
+
+`/note NOTE` gives a contact a short free-text note, such as an allergy or how they prefer to be reached, so an RA on duty sees it on the contact card without looking elsewhere.
+
+#### Implementation
+
+`Note` is an immutable value class like `Room`, where an empty value means the contact has no note. It is added as the `PersonField.NOTE` field, so `add` and `edit` support `/note` through the mechanism above with no changes to either parser. `ParserUtil#parseNote` collapses whitespace and rejects an empty note, a note longer than 200 characters and a note containing `/`. `JsonAdaptedPerson` stores the note as an optional `note` property, so data files saved before this feature still load. `PersonCard` shows the note as a wrapped label that is hidden when the note is empty.
+
+#### Design considerations
+
+* **Alternative 1 (current choice):** a field set through `add` and `edit`.
+  * Pros: one way to set every field, and `edit 1 /note` clears it like any other optional field.
+  * Cons: a note is slightly longer to type than with a dedicated command.
+* **Alternative 2:** a dedicated `note INDEX TEXT` command.
+  * Pros: shorter to type.
+  * Cons: a second way to change the same field, with its own parser and validation to keep in step with `edit`.
+
+`/` is not allowed in a note because the parser treats a word starting with `/` as a field prefix. Allowing it only in the middle of a word would make the rule hard to explain to users.
 
 ### Filter by tag feature
 
@@ -853,96 +872,50 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `list emerg`<br>
       Expected: An empty list and `No emergency contacts found.` in both cases.
 
-### Recalling previous commands
+### Adding, editing and removing notes
 
-Use the command box for all key presses below unless another control is specified.
+1. Adding a contact with a note
 
-1. Empty history, navigation, and boundaries
+   1. Prerequisites: Start with the sample data.
 
-   1. Prerequisites: Restart the app so command history is empty.
+   1. Test case: `add Wei Ming /phone 9876 5432 /note Allergic to peanuts,   carries an EpiPen`<br>
+      Expected: Wei Ming is added. The contact card shows `Note: Allergic to peanuts, carries an EpiPen`
+      below the phone number, with the extra spaces removed.
 
-   1. Test case: Type `unfinished` without submitting, then press Up and Down.<br>
-      Expected: The text remains `unfinished` and no command executes. Clear the input afterwards.
+   1. Test case: `add Wei Ling /phone 9876 5433`<br>
+      Expected: Wei Ling is added. The contact card shows no note line.
 
-   1. Test case: Submit `list`, then `find /tag Resident`. Press Up three times.<br>
-      Expected: The input shows `find /tag Resident`, then `list`, then stays at `list`.
-      The contact list and result message remain as they were after the search.
+   1. Test case: `add Wei Ling /phone 9876 5433 /note`<br>
+      Expected: No contact is added. Error: `Note cannot be empty.`
 
-   1. Test case: Press Down three times.<br>
-      Expected: The input shows `find /tag Resident`, becomes empty, then stays empty.
-      Recalled text has its caret at the end.
+   1. Test case: `add Wei Ling /phone 9876 5433 /note call w/ parent`<br>
+      Expected: No contact is added. Error: `Note cannot contain "/".`
 
-1. Restoring a draft and editing recalled text
+   1. Test case: `add Wei Ling /phone 9876 5433 /note a /note b`<br>
+      Expected: No contact is added. The error names `/note` as a repeated field.
 
-   1. Prerequisites: Submit `list`, then `find /tag Resident`.
+   1. Test case: `add Wei Ling /phone 9876 5433 /note ` followed by 201 letters<br>
+      Expected: No contact is added. Error: `Note too long, please shorten it and try again.`
+      With exactly 200 letters, the contact is added and the note wraps onto several lines on the card.
 
-   1. Test case: Type `find /name Al` without submitting. Press Up, edit the recalled text to
-      `find /tag Staff` without submitting, then press Down.<br>
-      Expected: `find /name Al` is restored. The edit to the recalled command is discarded.
+1. Editing and removing a note
 
-   1. Test case: Press Up again.<br>
-      Expected: The original `find /tag Resident` is recalled. No command executes.
+   1. Prerequisites: Start with the sample data. The 1st contact, Alex Yeoh, has a note.
 
-   1. Test case: Replace the recalled text with `list` and press Enter. Press Up, then Down.<br>
-      Expected: `list` executes once and clears the field. Up recalls `list`; Down restores empty input.
-      The previous `find /name Al` draft is discarded after submission.
+   1. Test case: `edit 1 /note Prefers WhatsApp over calls`<br>
+      Expected: The 1st contact's note is replaced. The status message ends with `Note: Prefers WhatsApp over calls`.
 
-1. Failed, blank, and repeated submissions
+   1. Test case: `edit 1 /note`<br>
+      Expected: The 1st contact's note is removed and the card no longer shows a note line.
 
-   1. Test case: Submit `notacommand`. Clear the retained text manually, then press Up.<br>
-      Expected: The unknown-command error is shown on submission, and `notacommand` can be recalled.
-      Correct it to `list` and press Enter to execute the corrected text.
+   1. Test case: `edit 2 /room B-204`, then `edit 2 /room`<br>
+      Expected: The 2nd contact's card shows `Room: B-204`, then the room line is removed.
 
-   1. Test case: Submit `delete 2147483647` in an address book with fewer contacts than that index.
-      Clear the retained text manually, then press Up.<br>
-      Expected: The invalid displayed-index error is shown without deleting a contact, and the command
-      is recallable despite its execution failure.
+   1. Test case: `edit 1 /note see /docs`<br>
+      Expected: No contact is changed. The status message shows the `edit` usage, because `/docs` is not a known field.
 
-   1. Test case: Submit `list`, then submit an input containing only spaces. Clear the input and press Up.<br>
-      Expected: Spaces do not execute a command or add a history entry; Up recalls `list`.
-
-   1. Test case: Submit `list` twice, then type `draft` without submitting.
-      Press Up twice, then Down twice.<br>
-      Expected: Both Up presses show `list`; Down shows `list` and then `draft`, demonstrating that
-      repeated submissions occupy separate history entries.
-
-1. Normal editing keys and focus
-
-   1. Prerequisites: Submit at least one command, then type a draft without submitting.
-
-   1. Test case: Use Left/Right and modified arrows such as Shift+Up or Ctrl+Down.<br>
-      Expected: Normal text editing remains available and modified arrows do not recall commands.
-
-   1. Test case: Click the contact list and press Up/Down.<br>
-      Expected: The command box text remains unchanged. Click the command box again to resume recall.
-
-1. Resubmitting an index command against the current list
-
-   1. Prerequisites: Use a disposable copy of the address book with no contacts named `Recall Alice`,
-      `Recall Bob`, or `Recall Carol`, and no contacts tagged `RecallTest`.
-
-   1. Test case: Submit these commands in order:
-      `add Recall Alice /phone 91234567 /tag RecallTest`,
-      `add Recall Bob /phone 87654321 /tag RecallTest`, `find /tag RecallTest`, `delete 2`,
-      `add Recall Carol /phone 98765432 /tag RecallTest`, then `find /tag RecallTest`.<br>
-      Expected: Recall Bob is deleted, and the displayed list contains Recall Alice followed by Recall Carol.
-
-   1. Test case: Press Up three times to recall `delete 2`, without pressing Enter.<br>
-      Expected: Both displayed contacts remain; browsing does not delete anything.
-
-   1. Test case: Press Enter.<br>
-      Expected: Recall Carol, the current second contact, is deleted. Recall Alice remains.
-      The command does not restore or target the previously deleted Recall Bob.
-
-1. History limit and session lifetime
-
-   1. Test case (optional): In a fresh session, submit 101 distinct commands such as
-      `find /name History1` through `find /name History101`. Press Up 100 times, then once more.<br>
-      Expected: The oldest retained command is `find /name History2`; another Up keeps showing it.
-      Automated tests also cover this limit without requiring manual entry of 101 commands.
-
-   1. Test case: Close and reopen the app, then press Up in the empty command box.<br>
-      Expected: No command from the earlier session is recalled.
+   1. Test case: Close the app and reopen it.<br>
+      Expected: Notes added or edited above are still shown.
 
 ### Saving data
 

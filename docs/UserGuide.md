@@ -114,27 +114,29 @@ Example:
 
 ### Adding a contact: `add`
 
-Adds a contact with a required name and phone number, and optional room and tags. Tags show a contact's category at a glance (e.g., `Resident`, `Resident Fellow`, `Staff`).
+Adds a contact with a required name and phone number, and optional room, tags and note. Tags show a contact's category at a glance (e.g., `Resident`, `Resident Fellow`, `Staff`).
 
-Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​`
+Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
 
 * Name is required and can contain up to 100 characters. Existing name character rules apply.
 * Phone is required and can contain up to 20 characters: digits, spaces, `+`, hyphens and parentheses.
 * Room is optional for any contact, regardless of tags. It can contain up to 20 characters:
   letters, digits, spaces and hyphens.
-* Enter the name first. `/phone`, `/room` and `/tag` can then be given in any order.
-  `/phone` and `/room` cannot be repeated.
+* Note is optional free text, such as an allergy or how the contact prefers to be reached. It can contain
+  up to 200 characters of any kind except `/`, which marks the start of a field.
+* Enter the name first. `/phone`, `/room`, `/tag` and `/note` can then be given in any order.
+  `/phone`, `/room` and `/note` cannot be repeated.
 * Repeat `/tag` once per tag, up to five tags. Spaces inside a tag are allowed, so `/tag Resident Fellow` is one tag.
 * Tags may contain letters, digits, spaces and hyphens (`-`), up to 50 characters. They are not case-sensitive,
   and are displayed with the first letter of each word capitalized.
 * Duplicate tags, including tags differing only in case or extra spaces (e.g., `/tag RA /tag ra`), are rejected.
 * Leading and trailing spaces are trimmed, and extra whitespace is collapsed into one space.
-* Supplying `/room` or `/tag` without a value is rejected.
+* Supplying `/room`, `/tag` or `/note` without a value is rejected.
 * A contact is a duplicate when its name matches an existing contact (case-sensitive).
   The add command trims and collapses whitespace before comparing names. Phone number, room and tags do not
   affect duplicate detection.
 * Contacts with the same name cannot be added, even when their phone numbers differ.
-* On success, the contact appears in the list with its supplied room and tags, and
+* On success, the contact appears in the list with its supplied room, tags and note, and
   `Contact NAME added successfully.` is shown. On failure, no contact is added.
 
 Examples:
@@ -142,6 +144,7 @@ Examples:
 * `add Sarah Tan /phone 9123 4567`
 * `add Daniel Lim /phone +65 8123 4567 /room B-204`
 * `add Sarah Tan /phone 91234567 /room B-204 /tag Resident /tag Floor 3`
+* `add Wei Ming /phone 9876 5432 /room C-310 /note Allergic to peanuts, carries an EpiPen`
 
 ### Listing all contacts: `list`
 
@@ -193,17 +196,21 @@ Example using the existing tag syntax:
 
 Changes one or more details of an existing contact.
 
-Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​`
+Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​ [/note NOTE]`
 
 * `INDEX` is the number shown beside the contact in the current list, and must be a positive integer.
 * At least one field must be given, in any order. Fields you leave out stay as they are.
-* Each field follows the same rules as in `add`, so `/name`, `/phone` and `/room` cannot be repeated.
+* Each field follows the same rules as in `add`, so `/name`, `/phone`, `/room` and `/note` cannot be repeated.
 * `/tag` replaces all of the contact's existing tags with the tags given. Repeat `/tag` once per tag.
-  `/tag` on its own removes all tags.
+* An optional field given with nothing after it is removed: `/room` on its own removes the room,
+  `/note` on its own removes the note, and `/tag` on its own removes all tags. `/name` and `/phone` are required, so they cannot be removed.
 
 Examples:
 * `edit 2 /phone 9123 4567` changes the phone number of the 2nd contact.
 * `edit 1 /room B-204 /tag Resident /tag Floor 3` sets the room of the 1st contact and replaces their tags.
+* `edit 3 /room` removes the room of the 3rd contact.
+* `edit 1 /note Prefers WhatsApp over calls` sets or replaces the note of the 1st contact.
+* `edit 1 /note` removes the note of the 1st contact.
 
 
 ### Locating persons by name, tag or phone: `find`
@@ -322,7 +329,7 @@ _Details coming soon ..._
 
 Action | Format, Examples
 --------|------------------
-**Add** | `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​` <br> e.g., `add Daniel Lim /phone 8123 4567 /room B-204 /tag Resident Fellow /tag Floor 3`
+**Add** | `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]` <br> e.g., `add Daniel Lim /phone 8123 4567 /room B-204 /tag Resident Fellow /tag Floor 3 /note Prefers WhatsApp`
 **Clear** | `clear`
 **Delete** | `delete INDEX` or `delete /name NAME`<br> e.g., `delete 3`, `delete /name Alice Tan`
 **Edit (suspended)** | Temporarily unavailable. Displays `Edit not currently supported`.
