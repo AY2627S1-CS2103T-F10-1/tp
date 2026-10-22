@@ -30,6 +30,7 @@ public class Person {
     // Data fields
     private final Address address;
     private final Room room;
+    private final boolean archive;
     private final Set<Tag> tags = new LinkedHashSet<>();
     private final Note note;
     private final Optional<EmergencyContact> emergencyContact;
@@ -44,17 +45,34 @@ public class Person {
 
     /** Creates a contact with an optional room number. */
     public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room) {
-        this(name, phone, email, address, tags, room, new Note(""));
+        this(name, phone, email, address, tags, room, false);
+    }
+
+    /** Creates a contact with the specified archive state. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, boolean archive) {
+        this(name, phone, email, address, tags, room, new Note(""), Optional.empty(), archive);
     }
 
     /** Creates a contact with an optional room number and note. */
     public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note) {
-        this(name, phone, email, address, tags, room, note, Optional.empty());
+        this(name, phone, email, address, tags, room, note, Optional.empty(), false);
     }
 
-    /** Creates a contact with a room, note and optional emergency details. */
+    /** Creates an active contact with a room, note and optional emergency details. */
     public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note,
             Optional<EmergencyContact> emergencyContact) {
+        this(name, phone, email, address, tags, room, note, emergencyContact, false);
+    }
+
+    /** Creates a contact with both note and archive state. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note,
+            boolean archive) {
+        this(name, phone, email, address, tags, room, note, Optional.empty(), archive);
+    }
+
+    /** Creates a contact with all details and the specified archive state. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note,
+            Optional<EmergencyContact> emergencyContact, boolean archive) {
         requireAllNonNull(name, phone, email, address, tags, room, note, emergencyContact);
         checkArgument(tags.size() <= MAX_TAGS, MESSAGE_TAG_LIMIT_REACHED);
         this.name = name;
@@ -62,9 +80,19 @@ public class Person {
         this.email = email;
         this.address = address;
         this.room = room;
+        this.archive = archive;
         this.tags.addAll(tags);
         this.note = note;
         this.emergencyContact = emergencyContact;
+    }
+
+    public boolean isArchived() {
+        return archive;
+    }
+
+    /** Returns a copy with the specified archive state, preserving all contact details. */
+    public Person withArchive(boolean archive) {
+        return new Person(name, phone, email, address, tags, room, note, emergencyContact, archive);
     }
 
     public Name getName() {
@@ -97,7 +125,7 @@ public class Person {
 
     /** Returns a copy with new emergency details, preserving every other field. */
     public Person withEmergencyContact(EmergencyContact contact) {
-        return new Person(name, phone, email, address, tags, room, note, Optional.of(contact));
+        return new Person(name, phone, email, address, tags, room, note, Optional.of(contact), archive);
     }
 
     /**
@@ -141,6 +169,7 @@ public class Person {
                 && email.equals(otherPerson.email)
                 && address.equals(otherPerson.address)
                 && room.equals(otherPerson.room)
+                && archive == otherPerson.archive
                 && tags.equals(otherPerson.tags)
                 && note.equals(otherPerson.note)
                 && emergencyContact.equals(otherPerson.emergencyContact);
@@ -149,7 +178,7 @@ public class Person {
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, tags, room, note, emergencyContact);
+        return Objects.hash(name, phone, email, address, tags, room, note, emergencyContact, archive);
     }
 
     @Override

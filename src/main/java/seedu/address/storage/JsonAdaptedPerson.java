@@ -34,6 +34,7 @@ class JsonAdaptedPerson {
     private final String email;
     private final String address;
     private final String room;
+    private final boolean archive;
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
     private final String note;
     private final JsonAdaptedEmergencyContact emergencyContact;
@@ -45,17 +46,47 @@ class JsonAdaptedPerson {
         this(name, phone, email, address, tags, null, null);
     }
 
+    /** Creates an adapter without a note, emergency contact, or archive state. */
+    public JsonAdaptedPerson(String name, String phone, String email, String address,
+            List<JsonAdaptedTag> tags, String room) {
+        this(name, phone, email, address, tags, room, null, null, false);
+    }
+
+    /** Creates an adapter with archive state. */
+    public JsonAdaptedPerson(String name, String phone, String email, String address,
+            List<JsonAdaptedTag> tags, String room, boolean archive) {
+        this(name, phone, email, address, tags, room, null, null, archive);
+    }
+
+    /** Creates an adapter with a note. */
     public JsonAdaptedPerson(String name, String phone, String email, String address,
             List<JsonAdaptedTag> tags, String room, String note) {
-        this(name, phone, email, address, tags, room, note, null);
+        this(name, phone, email, address, tags, room, note, null, false);
+    }
+
+    /** Creates an adapter with a note and archive state. */
+    public JsonAdaptedPerson(String name, String phone, String email, String address,
+            List<JsonAdaptedTag> tags, String room, String note, boolean archive) {
+        this(name, phone, email, address, tags, room, note, null, archive);
+    }
+
+    /** Creates an adapter with a note and emergency contact. */
+    public JsonAdaptedPerson(String name, String phone, String email, String address,
+            List<JsonAdaptedTag> tags, String room, String note,
+            JsonAdaptedEmergencyContact emergencyContact) {
+        this(name, phone, email, address, tags, room, note, emergencyContact, false);
     }
 
     @JsonCreator
-    public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("phone") String phone,
-            @JsonProperty("email") String email, @JsonProperty("address") String address,
-            @JsonProperty("tags") List<JsonAdaptedTag> tags, @JsonProperty("room") String room,
+    public JsonAdaptedPerson(@JsonProperty("name") String name,
+            @JsonProperty("phone") String phone,
+            @JsonProperty("email") String email,
+            @JsonProperty("address") String address,
+            @JsonProperty("tags") List<JsonAdaptedTag> tags,
+            @JsonProperty("room") String room,
             @JsonProperty("note") String note,
-            @JsonProperty("emergencyContact") JsonAdaptedEmergencyContact emergencyContact) {
+            @JsonProperty("emergencyContact") JsonAdaptedEmergencyContact emergencyContact,
+            @JsonProperty("archive") boolean archive) {
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -63,6 +94,7 @@ class JsonAdaptedPerson {
         this.room = room;
         this.note = note;
         this.emergencyContact = emergencyContact;
+        this.archive = archive;
         if (tags != null) {
             this.tags.addAll(tags);
         }
@@ -77,6 +109,7 @@ class JsonAdaptedPerson {
         email = source.getEmail().value;
         address = source.getAddress().value;
         room = source.getRoom().value;
+        archive = source.isArchived();
         note = source.getNote().value;
         emergencyContact = source.getEmergencyContact().map(JsonAdaptedEmergencyContact::new).orElse(null);
         tags.addAll(source.getTags().stream()
@@ -133,8 +166,9 @@ class JsonAdaptedPerson {
         }
         Optional<EmergencyContact> modelEmergencyContact = emergencyContact == null
                 ? Optional.empty() : Optional.of(emergencyContact.toModelType());
-        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelTags, toModelRoom(), toModelNote(),
-                modelEmergencyContact);
+
+        return new Person(modelName, modelPhone, modelEmail, modelAddress,
+                modelTags, toModelRoom(), toModelNote(), modelEmergencyContact, archive);
     }
 
     /** Returns the stored room; a file without one gives a contact without a room. */

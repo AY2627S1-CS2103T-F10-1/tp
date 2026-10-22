@@ -3,12 +3,13 @@ package seedu.address.logic.parser;
 import static java.util.Objects.requireNonNull;
 
 import seedu.address.logic.commands.Command;
+import seedu.address.logic.commands.ListArchivedCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.ListEmergencyCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
- * Parses arguments for listing all contacts or emergency contacts.
+ * Parses arguments for listing active, archived, or emergency contacts.
  */
 public class ListCommandParser implements Parser<Command> {
 
@@ -26,11 +27,18 @@ public class ListCommandParser implements Parser<Command> {
             return new ListCommand();
         }
 
+        if (ListArchivedCommand.ARCHIVED_KEYWORD.equals(trimmedArgs)) {
+            return new ListArchivedCommand();
+        }
+
         if (ListEmergencyCommand.EMERGENCY_KEYWORD.equals(trimmedArgs)) {
             return new ListEmergencyCommand();
         }
 
         String firstArgument = trimmedArgs.split("\\s+", 2)[0];
+        if (ListArchivedCommand.ARCHIVED_KEYWORD.equals(firstArgument)) {
+            throw new ParseException(ListArchivedCommand.MESSAGE_INVALID_FORMAT);
+        }
         if (ListEmergencyCommand.EMERGENCY_KEYWORD.equals(firstArgument)) {
             throw new ParseException(ListEmergencyCommand.MESSAGE_INVALID_FORMAT);
         }
