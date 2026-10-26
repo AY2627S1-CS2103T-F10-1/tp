@@ -438,7 +438,7 @@ Each contact's `isFavourite` property is a JSON boolean, `true` or `false`. If t
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
-A contact with more than 5 distinct tags also makes the data file invalid.<br>
+A contact with more than 5 distinct tags also makes the data file invalid, as does a note longer than 200 characters or with a word starting with `/` (e.g., `see /docs`; a link such as `https://nus.edu.sg` is fine). See [`add`](#adding-a-contact-add) for the rules of each field.<br>
 Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
