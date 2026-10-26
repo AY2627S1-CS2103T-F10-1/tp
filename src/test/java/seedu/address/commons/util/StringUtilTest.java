@@ -154,6 +154,11 @@ public class StringUtilTest {
         assertEquals("", StringUtil.collapseWhitespace(" \t\n ")); // whitespace only
         assertEquals("RA", StringUtil.collapseWhitespace("RA")); // nothing to collapse
         assertEquals("Resident Fellow", StringUtil.collapseWhitespace("  Resident \t  Fellow \n"));
+
+        // Unicode spaces: non-breaking, narrow non-breaking, ideographic, line separator
+        assertEquals("Alex Yeoh", StringUtil.collapseWhitespace("Alex Yeoh"));
+        assertEquals("Alex Yeoh", StringUtil.collapseWhitespace(" Alex  　Yeoh "));
+        assertEquals("", StringUtil.collapseWhitespace("  ")); // Unicode spaces only
     }
 
     //---------------- Tests for levenshteinDistance --------------------------------------

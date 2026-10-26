@@ -80,6 +80,9 @@ public class NameFuzzyMatchesPredicateTest {
         // different case and extra whitespace
         assertMatches("  alex   YEOH ", "Alex Yeoh");
 
+        // non-breaking space between words, as in text pasted from a chat app
+        assertMatches("Alex Yeoh", "Alex Yeoh");
+
         // one word of a multi-word name, in any order
         assertMatches("Yeoh", "Alex Yeoh");
         assertMatches("Yeoh Alex", "Alex Yeoh");

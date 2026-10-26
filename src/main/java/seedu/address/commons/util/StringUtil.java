@@ -13,7 +13,8 @@ import java.util.stream.IntStream;
  */
 public class StringUtil {
 
-    private static final String WHITESPACE_RUN_REGEX = "\\s+";
+    /** Matches runs of ASCII whitespace and Unicode spaces, such as the non-breaking spaces of pasted text. */
+    private static final String WHITESPACE_RUN_REGEX = "[\\s\\p{Z}]+";
     private static final String SINGLE_SPACE = " ";
     /** Cost of one insertion, deletion or substitution when computing the Levenshtein distance. */
     private static final int EDIT_COST = 1;
@@ -47,12 +48,14 @@ public class StringUtil {
     /**
      * Returns {@code s} with leading and trailing whitespace removed and every inner run of whitespace
      * replaced by a single space, e.g. {@code "  Resident   Fellow "} becomes {@code "Resident Fellow"}.
+     * Unicode spaces, such as the non-breaking space (U+00A0), count as whitespace.
      *
      * @param s The string to normalize; cannot be null.
      */
     public static String collapseWhitespace(String s) {
         requireNonNull(s);
-        return s.trim().replaceAll(WHITESPACE_RUN_REGEX, SINGLE_SPACE);
+        // Collapse before trimming, as trim() only removes ASCII whitespace
+        return s.replaceAll(WHITESPACE_RUN_REGEX, SINGLE_SPACE).trim();
     }
 
     /**
