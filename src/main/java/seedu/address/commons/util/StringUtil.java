@@ -55,7 +55,10 @@ public class StringUtil {
     public static String collapseWhitespace(String s) {
         requireNonNull(s);
         // Collapse before trimming, as trim() only removes ASCII whitespace
-        return s.replaceAll(WHITESPACE_RUN_REGEX, SINGLE_SPACE).trim();
+        String collapsed = s.replaceAll(WHITESPACE_RUN_REGEX, SINGLE_SPACE).trim();
+        assert !collapsed.contains(SINGLE_SPACE + SINGLE_SPACE) : "Whitespace runs should be collapsed";
+        assert collapsed.equals(collapsed.strip()) : "Leading and trailing whitespace should be removed";
+        return collapsed;
     }
 
     /**
@@ -95,6 +98,7 @@ public class StringUtil {
      * given that the costs of all earlier cells are already filled in.
      */
     private static int cheapestEdit(String first, String second, int[][] costs, int i, int j) {
+        assert i >= 1 && j >= 1 : "Row 0 and column 0 of the typo distance table are filled in directly";
         boolean isSameChar = first.charAt(i - 1) == second.charAt(j - 1);
         int substitutionCost = isSameChar ? costs[i - 1][j - 1] : costs[i - 1][j - 1] + EDIT_COST;
         int deletionCost = costs[i - 1][j] + EDIT_COST;
@@ -112,6 +116,7 @@ public class StringUtil {
      * the first {@code j} characters of {@code second}, swapped.
      */
     private static boolean isAdjacentSwap(String first, String second, int i, int j) {
+        assert i <= first.length() && j <= second.length() : "Cell must lie within the typo distance table";
         boolean hasTwoCharsEach = i >= 2 && j >= 2;
         return hasTwoCharsEach
                 && first.charAt(i - 1) == second.charAt(j - 2)

@@ -55,6 +55,10 @@ public class NameFuzzyMatchesPredicate implements Predicate<Person> {
      * Orders persons by the ranking cost of their names under {@code predicate}, cheapest first.
      */
     private record RankingComparator(NameFuzzyMatchesPredicate predicate) implements Comparator<Person> {
+        private RankingComparator {
+            requireNonNull(predicate);
+        }
+
         @Override
         public int compare(Person first, Person second) {
             requireNonNull(first);
@@ -121,6 +125,7 @@ public class NameFuzzyMatchesPredicate implements Predicate<Person> {
             }
             totalCost += wordCost.getAsInt();
         }
+        assert totalCost >= EXACT_MATCH_COST : "Match cost cannot be below that of an exact match";
         return OptionalInt.of(totalCost);
     }
 
@@ -142,6 +147,8 @@ public class NameFuzzyMatchesPredicate implements Predicate<Person> {
      * such as {@code ng} must be typed exactly even when the search word is longer.
      */
     private static OptionalInt getWordMatchCost(String searchWord, String nameWord) {
+        assert !searchWord.isEmpty() && !nameWord.isEmpty() : "Words should be non-empty";
+        assert isNormalized(searchWord) && isNormalized(nameWord) : "Words should be lowercase without whitespace";
         if (searchWord.equals(nameWord)) {
             return OptionalInt.of(EXACT_MATCH_COST);
         }
@@ -165,6 +172,15 @@ public class NameFuzzyMatchesPredicate implements Predicate<Person> {
     private static boolean isPrefixMatch(String searchWord, String nameWord) {
         boolean isLongEnoughForPrefix = searchWord.length() >= MIN_PREFIX_LENGTH;
         return isLongEnoughForPrefix && nameWord.startsWith(searchWord);
+    }
+
+    /**
+     * Returns true if {@code word} is in the form {@link #toWords} produces: lowercase, without whitespace.
+     */
+    private static boolean isNormalized(String word) {
+        boolean isLowercase = word.equals(word.toLowerCase(Locale.ROOT));
+        boolean isSingleWord = !word.contains(WORD_SEPARATOR);
+        return isLowercase && isSingleWord;
     }
 
     /**

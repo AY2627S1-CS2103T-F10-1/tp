@@ -72,6 +72,8 @@ public class FindCommand extends Command {
             model.updateFilteredPersonList(activeMatches);
         }
         int count = model.getFilteredPersonList().size();
+        assert count <= model.getAddressBook().getPersonList().size()
+                : "Search cannot list more persons than the address book has";
         logger.fine("Find listed " + count + " person(s) matching " + predicate);
         if (count == 0) {
             return new CommandResult(Messages.MESSAGE_NO_PERSONS_FOUND);
