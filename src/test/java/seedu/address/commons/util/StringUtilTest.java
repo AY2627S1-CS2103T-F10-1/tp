@@ -161,41 +161,51 @@ public class StringUtilTest {
         assertEquals("", StringUtil.collapseWhitespace("  ")); // Unicode spaces only
     }
 
-    //---------------- Tests for levenshteinDistance --------------------------------------
+    //---------------- Tests for typoDistance --------------------------------------
 
     @Test
-    public void levenshteinDistance_nullGiven_throwsNullPointerException() {
-        assertThrows(NullPointerException.class, () -> StringUtil.levenshteinDistance(null, "abc"));
-        assertThrows(NullPointerException.class, () -> StringUtil.levenshteinDistance("abc", null));
+    public void typoDistance_nullGiven_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> StringUtil.typoDistance(null, "abc"));
+        assertThrows(NullPointerException.class, () -> StringUtil.typoDistance("abc", null));
     }
 
     @Test
-    public void levenshteinDistance() {
+    public void typoDistance() {
         // EP: empty strings
-        assertEquals(0, StringUtil.levenshteinDistance("", ""));
-        assertEquals(3, StringUtil.levenshteinDistance("", "abc"));
-        assertEquals(3, StringUtil.levenshteinDistance("abc", ""));
+        assertEquals(0, StringUtil.typoDistance("", ""));
+        assertEquals(3, StringUtil.typoDistance("", "abc"));
+        assertEquals(3, StringUtil.typoDistance("abc", ""));
 
         // EP: identical strings
-        assertEquals(0, StringUtil.levenshteinDistance("alex", "alex"));
+        assertEquals(0, StringUtil.typoDistance("alex", "alex"));
 
         // EP: one edit of each kind
-        assertEquals(1, StringUtil.levenshteinDistance("alx", "alex")); // insertion
-        assertEquals(1, StringUtil.levenshteinDistance("alexx", "alex")); // deletion
-        assertEquals(1, StringUtil.levenshteinDistance("alax", "alex")); // substitution
+        assertEquals(1, StringUtil.typoDistance("alx", "alex")); // insertion
+        assertEquals(1, StringUtil.typoDistance("alexx", "alex")); // deletion
+        assertEquals(1, StringUtil.typoDistance("alax", "alex")); // substitution
+        assertEquals(1, StringUtil.typoDistance("yoeh", "yeoh")); // swap in the middle
+
+        // EP: swaps at the boundaries
+        assertEquals(1, StringUtil.typoDistance("ab", "ba")); // whole string
+        assertEquals(1, StringUtil.typoDistance("aelx", "alex")); // near the start
+        assertEquals(1, StringUtil.typoDistance("alxe", "alex")); // at the end
+        assertEquals(2, StringUtil.typoDistance("yoeh alxe", "yeoh alex")); // two separate swaps
+
+        // EP: swapped characters cannot be edited again
+        assertEquals(3, StringUtil.typoDistance("ca", "abc"));
 
         // EP: several edits, symmetric
-        assertEquals(3, StringUtil.levenshteinDistance("kitten", "sitting"));
-        assertEquals(3, StringUtil.levenshteinDistance("sitting", "kitten"));
+        assertEquals(3, StringUtil.typoDistance("kitten", "sitting"));
+        assertEquals(3, StringUtil.typoDistance("sitting", "kitten"));
 
         // EP: completely different strings
-        assertEquals(4, StringUtil.levenshteinDistance("abcd", "wxyz"));
+        assertEquals(4, StringUtil.typoDistance("abcd", "wxyz"));
 
         // EP: case differences count as edits
-        assertEquals(1, StringUtil.levenshteinDistance("Alex", "alex"));
+        assertEquals(1, StringUtil.typoDistance("Alex", "alex"));
 
         // EP: special characters
-        assertEquals(1, StringUtil.levenshteinDistance("o'brien", "obrien"));
+        assertEquals(1, StringUtil.typoDistance("o'brien", "obrien"));
     }
 
 }

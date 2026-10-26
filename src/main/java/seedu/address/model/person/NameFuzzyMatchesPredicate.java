@@ -14,7 +14,7 @@ import seedu.address.commons.util.ToStringBuilder;
 /**
  * Tests that a {@code Person}'s {@code Name} closely matches the given search text, tolerating small typos.
  * Case and extra whitespace are ignored. Every search word must be within its allowed number of typos
- * (Levenshtein distance) of at least one word in the person's name. Longer search words allow more typos,
+ * ({@link StringUtil#typoDistance}) of at least one word in the person's name. Longer search words allow more typos,
  * so that short words do not match too many unrelated names.
  */
 public class NameFuzzyMatchesPredicate implements Predicate<Person> {
@@ -87,7 +87,7 @@ public class NameFuzzyMatchesPredicate implements Predicate<Person> {
      */
     private static boolean isCloseMatch(String searchWord, String nameWord) {
         int allowedTypos = getAllowedTypos(searchWord.length());
-        return StringUtil.levenshteinDistance(searchWord, nameWord) <= allowedTypos;
+        return StringUtil.typoDistance(searchWord, nameWord) <= allowedTypos;
     }
 
     /**

@@ -93,6 +93,10 @@ public class NameFuzzyMatchesPredicateTest {
         assertMatches("Bernse", "Bernice Yu"); // 6 chars, 2 typos
         assertMatches("Christopher", "Kristophe Lim"); // 11 chars, 3 typos
 
+        // two adjacent letters swapped count as 1 typo
+        assertMatches("Yoeh", "Alex Yeoh");
+        assertMatches("Aelx", "Alex Yeoh");
+
         // every search word close to some name word
         assertMatches("Alex Yoh", "Alex Yeoh");
 
