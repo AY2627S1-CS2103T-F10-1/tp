@@ -93,6 +93,12 @@ public class NameFuzzyMatchesPredicateTest {
         assertMatches("Bernse", "Bernice Yu"); // 6 chars, 2 typos
         assertMatches("Belakrishnonn", "Roy Balakrishnan"); // 12+ chars, 3 typos
 
+        // start of a name word, at least 3 letters
+        assertMatches("Bala", "Roy Balakrishnan");
+        assertMatches("Jon", "Jonathan Chua"); // Boundary value
+        assertMatches("char", "Charlotte Oliveiro");
+        assertMatches("Chu", "Jonathan Chua"); // start of a later name word
+
         // the shorter word decides the typos allowed
         assertMatches("Christopher", "Kristopher Lim"); // 10-char name word, 2 typos
         assertMatches("Kristopher", "Christopher Lim"); // 10-char search word, 2 typos
@@ -128,8 +134,18 @@ public class NameFuzzyMatchesPredicateTest {
         // one search word matches, another does not
         assertDoesNotMatch("Alex Tan", "Alex Yeoh");
 
-        // short prefix of a word
-        assertDoesNotMatch("Al", "Alex Yeoh");
+        // start of a name word, but too short
+        assertDoesNotMatch("Al", "Alex Yeoh"); // Boundary value
+
+        // start of a name word with a typo
+        assertDoesNotMatch("Blaa", "Roy Balakrishnan");
+
+        // middle or end of a name word
+        assertDoesNotMatch("Krish", "Roy Balakrishnan");
+        assertDoesNotMatch("shnan", "Roy Balakrishnan");
+
+        // longer than the name word it starts with
+        assertDoesNotMatch("Jonathans", "Jon Chua");
 
         // matches phone, email and address, but not name
         assertFalse(new NameFuzzyMatchesPredicate("12345").test(new PersonBuilder().withName("Alice")

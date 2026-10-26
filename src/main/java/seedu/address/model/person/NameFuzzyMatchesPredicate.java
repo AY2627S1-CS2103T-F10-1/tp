@@ -13,14 +13,16 @@ import seedu.address.commons.util.ToStringBuilder;
 
 /**
  * Tests that a {@code Person}'s {@code Name} closely matches the given search text, tolerating small typos.
- * Case and extra whitespace are ignored. Every search word must be within its allowed number of typos
- * ({@link StringUtil#typoDistance}) of at least one word in the person's name. Longer words allow more typos,
- * so that short words do not match too many unrelated names.
+ * Case and extra whitespace are ignored. Every search word must be the exact start of, or within the
+ * allowed number of typos ({@link StringUtil#typoDistance}) of, at least one word in the person's name.
+ * Longer words allow more typos, so that short words do not match too many unrelated names.
  */
 public class NameFuzzyMatchesPredicate implements Predicate<Person> {
 
     private static final String MESSAGE_BLANK_SEARCH_TEXT = "Search text cannot be blank";
     private static final String WORD_SEPARATOR = " ";
+    /** Minimum length of a search word that also matches the start of a name word. */
+    private static final int MIN_PREFIX_LENGTH = 3;
 
     /**
      * Number of typos allowed between two words, by the minimum length of the shorter word.
@@ -75,11 +77,22 @@ public class NameFuzzyMatchesPredicate implements Predicate<Person> {
     }
 
     /**
-     * Returns true if {@code searchWord} is within its allowed number of typos of any of {@code nameWords}.
+     * Returns true if {@code searchWord} starts, or is within the allowed number of typos of, any of
+     * {@code nameWords}.
      */
     private static boolean isCloseToAnyWord(String searchWord, List<String> nameWords) {
         return nameWords.stream()
-                .anyMatch(nameWord -> isCloseMatch(searchWord, nameWord));
+                .anyMatch(nameWord -> isPrefixMatch(searchWord, nameWord) || isCloseMatch(searchWord, nameWord));
+    }
+
+    /**
+     * Returns true if {@code nameWord} starts with {@code searchWord}, typed exactly.
+     * Search words shorter than {@code MIN_PREFIX_LENGTH} are not treated as prefixes, as they would match
+     * too many names.
+     */
+    private static boolean isPrefixMatch(String searchWord, String nameWord) {
+        boolean isLongEnoughForPrefix = searchWord.length() >= MIN_PREFIX_LENGTH;
+        return isLongEnoughForPrefix && nameWord.startsWith(searchWord);
     }
 
     /**
