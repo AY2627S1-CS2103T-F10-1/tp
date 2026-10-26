@@ -104,9 +104,9 @@ public class ParserUtil {
         if (!hasUnknownPrefix(args, knownPrefixes)) {
             return;
         }
-        boolean isInNote = arguments.getAllValues(PREFIX_NOTE_COMMAND).stream()
+        boolean isUnknownPrefixInNote = arguments.getAllValues(PREFIX_NOTE_COMMAND).stream()
                 .anyMatch(note -> hasUnknownPrefix(note, knownPrefixes));
-        if (isInNote) {
+        if (isUnknownPrefixInNote) {
             logger.fine("Rejecting a note with a word starting with \"/\": " + args);
             throw new ParseException(Note.MESSAGE_INVALID_CHARACTERS);
         }

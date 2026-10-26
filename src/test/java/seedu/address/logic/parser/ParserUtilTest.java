@@ -50,13 +50,18 @@ public class ParserUtilTest {
 
     /** Tokenizes {@code args} with the note and room prefixes and checks it for unknown prefixes. */
     private static void verifyNoUnknownPrefix(String args) throws ParseException {
-        ArgumentMultimap arguments = args == null ? null : ArgumentTokenizer.tokenize(args, NOTE_AND_ROOM);
-        ParserUtil.verifyNoUnknownPrefix(args, arguments, USAGE, NOTE_AND_ROOM);
+        ParserUtil.verifyNoUnknownPrefix(args, ArgumentTokenizer.tokenize(args, NOTE_AND_ROOM), USAGE, NOTE_AND_ROOM);
     }
 
     @Test
     public void verifyNoUnknownPrefix_null_throwsNullPointerException() {
-        assertThrows(NullPointerException.class, () -> verifyNoUnknownPrefix(null));
+        ArgumentMultimap arguments = new ArgumentMultimap();
+        assertThrows(NullPointerException.class, () ->
+                ParserUtil.verifyNoUnknownPrefix(null, arguments, USAGE, NOTE_AND_ROOM));
+        assertThrows(NullPointerException.class, () ->
+                ParserUtil.verifyNoUnknownPrefix("", null, USAGE, NOTE_AND_ROOM));
+        assertThrows(NullPointerException.class, () ->
+                ParserUtil.verifyNoUnknownPrefix("", arguments, null, NOTE_AND_ROOM));
     }
 
     @Test
