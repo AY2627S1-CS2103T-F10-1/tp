@@ -141,6 +141,15 @@ public class AddCommandParserTest {
     }
 
     @Test
+    public void parse_noteWithSlashInsideWord_success() {
+        assertParseSuccess(parser, VALID_NAME_AND_PHONE + " /note call w/ parent 24/7",
+                addCommandWithNote("call w/ parent 24/7"));
+        assertParseSuccess(parser, VALID_NAME_AND_PHONE + " /note see https://nus.edu.sg",
+                addCommandWithNote("see https://nus.edu.sg"));
+        assertParseSuccess(parser, VALID_NAME_AND_PHONE + " /note ends with/", addCommandWithNote("ends with/"));
+    }
+
+    @Test
     public void parse_noteLength() {
         String longestNote = "a".repeat(Note.MAX_LENGTH);
         assertParseSuccess(parser, VALID_NAME_AND_PHONE + " /note " + longestNote, addCommandWithNote(longestNote));
@@ -151,9 +160,6 @@ public class AddCommandParserTest {
     @Test
     public void parse_invalidNote_failure() {
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /note", Note.MESSAGE_EMPTY);
-        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /note call w/ parent", Note.MESSAGE_INVALID_CHARACTERS);
-        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /note ends with/", Note.MESSAGE_INVALID_CHARACTERS);
-
         // a word starting with / is taken as an unknown prefix
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /note see /docs", MESSAGE_INVALID_FORMAT);
     }

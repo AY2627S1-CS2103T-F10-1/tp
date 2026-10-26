@@ -216,7 +216,7 @@ To add a new field supported by `add` and `edit`, add it to `Person`, add a cons
 
 #### Implementation
 
-`Note` is an immutable value class like `Room`, where an empty value means the contact has no note. It is added as the `PersonField.NOTE` field, so `add` and `edit` support `/note` through the mechanism above with no changes to either parser. `ParserUtil#parseNote` collapses whitespace and rejects an empty note, a note longer than 200 characters and a note containing `/`. `JsonAdaptedPerson` stores the note as an optional `note` property, so data files saved before this feature still load. `PersonCard` shows the note as a wrapped label that is hidden when the note is empty.
+`Note` is an immutable value class like `Room`, where an empty value means the contact has no note. It is added as the `PersonField.NOTE` field, so `add` and `edit` support `/note` through the mechanism above with no changes to either parser. `ParserUtil#parseNote` collapses whitespace and rejects an empty note, a note longer than 200 characters and a note with a word starting with `/`. `JsonAdaptedPerson` stores the note as an optional `note` property, so data files saved before this feature still load. `PersonCard` shows the note as a wrapped label that is hidden when the note is empty.
 
 #### Design considerations
 
@@ -227,7 +227,7 @@ To add a new field supported by `add` and `edit`, add it to `Person`, add a cons
   * Pros: shorter to type.
   * Cons: a second way to change the same field, with its own parser and validation to keep in step with `edit`.
 
-`/` is not allowed in a note because the parser treats a word starting with `/` as a field prefix. Allowing it only in the middle of a word would make the rule hard to explain to users.
+A word in a note cannot start with `/`, because the parser treats such a word as a field prefix. A `/` inside a word (`24/7`, `and/or`, links) is allowed: `ArgumentTokenizer` only recognizes a prefix that follows a space, so it is never ambiguous, and RAs often need it in notes. Rejecting every `/` would be simpler to state, but it blocked common notes such as `Call 24/7`.
 
 ### Emergency contact assignment
 
@@ -961,8 +961,8 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `add Wei Ling /phone 9876 5433 /note`<br>
       Expected: No contact is added. Error: `Note cannot be empty.`
 
-   1. Test case: `add Wei Ling /phone 9876 5433 /note call w/ parent`<br>
-      Expected: No contact is added. Error: `Note cannot contain "/".`
+   1. Test case: `add Wei Hao /phone 9876 5434 /note Call w/ parent 24/7, see https://nus.edu.sg`<br>
+      Expected: Wei Hao is added. The note is shown in full, including each `/`.
 
    1. Test case: `add Wei Ling /phone 9876 5433 /note a /note b`<br>
       Expected: No contact is added. The error names `/note` as a repeated field.
