@@ -7,14 +7,24 @@ import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
+import static seedu.address.testutil.TypicalPersons.CARL;
+import static seedu.address.testutil.TypicalPersons.DANIEL;
+
+import java.util.Comparator;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.person.NameEqualsPredicate;
+import seedu.address.model.person.Person;
 import seedu.address.testutil.AddressBookBuilder;
 
 public class ModelManagerTest {
+
+    /** Orders persons by the length of their full name, shortest first. */
+    private static final Comparator<Person> NAME_LENGTH_ORDER =
+            Comparator.comparingInt(person -> person.getName().fullName.length());
 
     private ModelManager modelManager = new ModelManager();
 
@@ -72,6 +82,41 @@ public class ModelManagerTest {
     }
 
     @Test
+    public void updateFilteredPersonList_nullArguments_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> modelManager.updateFilteredPersonList(null));
+        assertThrows(NullPointerException.class, () ->
+                modelManager.updateFilteredPersonList(null, NAME_LENGTH_ORDER));
+        assertThrows(NullPointerException.class, () ->
+                modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS, null));
+    }
+
+    @Test
+    public void updateFilteredPersonList_withComparator_sortsKeepingTiesInOrder() {
+        modelManager = new ModelManager(getAddressBookOf(ALICE, BENSON, CARL, DANIEL), new UserPrefs());
+        modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS, NAME_LENGTH_ORDER);
+
+        // Benson Meier and Daniel Meier have names of the same length
+        assertEquals(List.of(CARL, BENSON, DANIEL, ALICE), modelManager.getFilteredPersonList());
+    }
+
+    @Test
+    public void updateFilteredPersonList_withoutComparator_restoresOriginalOrder() {
+        modelManager = new ModelManager(getAddressBookOf(ALICE, BENSON, CARL, DANIEL), new UserPrefs());
+        modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS, NAME_LENGTH_ORDER);
+        modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
+
+        assertEquals(List.of(ALICE, BENSON, CARL, DANIEL), modelManager.getFilteredPersonList());
+    }
+
+    private static AddressBook getAddressBookOf(Person... persons) {
+        AddressBookBuilder builder = new AddressBookBuilder();
+        for (Person person : persons) {
+            builder.withPerson(person);
+        }
+        return builder.build();
+    }
+
+    @Test
     public void equals() {
         AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).withPerson(BENSON).build();
         AddressBook differentAddressBook = new AddressBook();
@@ -96,6 +141,10 @@ public class ModelManagerTest {
 
         // different filteredList -> returns false
         modelManager.updateFilteredPersonList(new NameEqualsPredicate(ALICE.getName().fullName));
+        assertFalse(modelManager.equals(new ModelManager(addressBook, userPrefs)));
+
+        // same persons in a different order -> returns false
+        modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS, NAME_LENGTH_ORDER);
         assertFalse(modelManager.equals(new ModelManager(addressBook, userPrefs)));
 
         // resets modelManager to initial state for upcoming tests

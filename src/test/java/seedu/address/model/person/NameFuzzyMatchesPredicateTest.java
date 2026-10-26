@@ -2,8 +2,13 @@ package seedu.address.model.person;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -153,6 +158,55 @@ public class NameFuzzyMatchesPredicateTest {
     }
 
     @Test
+    public void getRankingComparator_wholeWordThenStartThenTypo_sortedByMatchQuality() {
+        Person wholeWord = personNamed("Lim Jun Jie");
+        Person startOfWord = personNamed("Limah Tan");
+        Person oneTypo = personNamed("Lin Xiao");
+        Person noMatch = personNamed("Tay Li Hua");
+
+        assertRankedOrder("Lim", List.of(noMatch, oneTypo, startOfWord, wholeWord),
+                List.of(wholeWord, startOfWord, oneTypo, noMatch));
+    }
+
+    @Test
+    public void getRankingComparator_severalSearchWords_sortedByTotalMatchQuality() {
+        Person allWholeWords = personNamed("Alex Yeoh");
+        Person oneStartOfWord = personNamed("Alexa Yeoh");
+        Person oneTypo = personNamed("Alex Yeo");
+        Person twoTypos = personNamed("Alix Yeo");
+
+        assertRankedOrder("Alex Yeoh", List.of(twoTypos, oneTypo, oneStartOfWord, allWholeWords),
+                List.of(allWholeWords, oneStartOfWord, oneTypo, twoTypos));
+    }
+
+    @Test
+    public void getRankingComparator_equallyCloseMatches_keepOrder() {
+        Person firstOneTypo = personNamed("Benson Meier");
+        Person secondOneTypo = personNamed("Daniel Meier");
+
+        assertRankedOrder("Meyer", List.of(firstOneTypo, secondOneTypo), List.of(firstOneTypo, secondOneTypo));
+        assertRankedOrder("Meyer", List.of(secondOneTypo, firstOneTypo), List.of(secondOneTypo, firstOneTypo));
+    }
+
+    @Test
+    public void getRankingComparator_nullPerson_throwsNullPointerException() {
+        Comparator<Person> ranking = new NameFuzzyMatchesPredicate("Alex").getRankingComparator();
+        assertThrows(NullPointerException.class, () -> ranking.compare(null, personNamed("Alex Yeoh")));
+        assertThrows(NullPointerException.class, () -> ranking.compare(personNamed("Alex Yeoh"), null));
+    }
+
+    @Test
+    public void getRankingComparator_equals() {
+        NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate("Alex");
+
+        // same search words -> returns true
+        assertEquals(predicate.getRankingComparator(), new NameFuzzyMatchesPredicate(" ALEX ").getRankingComparator());
+
+        // different search words -> returns false
+        assertNotEquals(predicate.getRankingComparator(), new NameFuzzyMatchesPredicate("Bob").getRankingComparator());
+    }
+
+    @Test
     public void toStringMethod() {
         NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate("Alex  Yeoh");
 
@@ -161,10 +215,23 @@ public class NameFuzzyMatchesPredicateTest {
     }
 
     private static void assertMatches(String searchText, String name) {
-        assertTrue(new NameFuzzyMatchesPredicate(searchText).test(new PersonBuilder().withName(name).build()));
+        assertTrue(new NameFuzzyMatchesPredicate(searchText).test(personNamed(name)));
     }
 
     private static void assertDoesNotMatch(String searchText, String name) {
-        assertFalse(new NameFuzzyMatchesPredicate(searchText).test(new PersonBuilder().withName(name).build()));
+        assertFalse(new NameFuzzyMatchesPredicate(searchText).test(personNamed(name)));
+    }
+
+    /**
+     * Asserts that sorting {@code persons} by the ranking of {@code searchText} gives {@code expectedOrder}.
+     */
+    private static void assertRankedOrder(String searchText, List<Person> persons, List<Person> expectedOrder) {
+        List<Person> sortedPersons = new ArrayList<>(persons);
+        sortedPersons.sort(new NameFuzzyMatchesPredicate(searchText).getRankingComparator());
+        assertEquals(expectedOrder, sortedPersons);
+    }
+
+    private static Person personNamed(String name) {
+        return new PersonBuilder().withName(name).build();
     }
 }

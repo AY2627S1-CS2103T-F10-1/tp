@@ -4,8 +4,10 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.OptionalInt;
 import java.util.function.Predicate;
 
 import seedu.address.commons.util.StringUtil;
@@ -23,6 +25,12 @@ public class NameFuzzyMatchesPredicate implements Predicate<Person> {
     private static final String WORD_SEPARATOR = " ";
     /** Minimum length of a search word that also matches the start of a name word. */
     private static final int MIN_PREFIX_LENGTH = 3;
+    /** Ranking cost of a search word that is a whole word of the name. */
+    private static final int EXACT_MATCH_COST = 0;
+    /** Ranking cost of a search word that starts a word of the name. A typo match costs this plus its typos. */
+    private static final int PREFIX_MATCH_COST = 1;
+    /** Ranking cost of a name that does not match, so that it is listed last. */
+    private static final int NO_MATCH_COST = Integer.MAX_VALUE;
 
     /**
      * Number of typos allowed between two words, by the minimum length of the shorter word.
@@ -43,6 +51,22 @@ public class NameFuzzyMatchesPredicate implements Predicate<Person> {
         }
     }
 
+    /**
+     * Orders persons by the ranking cost of their names under {@code predicate}, cheapest first.
+     */
+    private record RankingComparator(NameFuzzyMatchesPredicate predicate) implements Comparator<Person> {
+        @Override
+        public int compare(Person first, Person second) {
+            requireNonNull(first);
+            requireNonNull(second);
+            return Integer.compare(getRankingCost(first), getRankingCost(second));
+        }
+
+        private int getRankingCost(Person person) {
+            return predicate.getMatchCost(person).orElse(NO_MATCH_COST);
+        }
+    }
+
     private final List<String> searchWords;
 
     /**
@@ -59,9 +83,16 @@ public class NameFuzzyMatchesPredicate implements Predicate<Person> {
     @Override
     public boolean test(Person person) {
         requireNonNull(person);
-        List<String> nameWords = toWords(person.getName().fullName);
-        return searchWords.stream()
-                .allMatch(searchWord -> isCloseToAnyWord(searchWord, nameWords));
+        return getMatchCost(person).isPresent();
+    }
+
+    /**
+     * Returns a comparator that lists persons whose names match the search text more closely first:
+     * whole words before starts of words, and starts of words before typos, with fewer typos first.
+     * Persons whose names do not match are listed last.
+     */
+    public Comparator<Person> getRankingComparator() {
+        return new RankingComparator(this);
     }
 
     /**
@@ -77,12 +108,53 @@ public class NameFuzzyMatchesPredicate implements Predicate<Person> {
     }
 
     /**
-     * Returns true if {@code searchWord} starts, or is within the allowed number of typos of, any of
-     * {@code nameWords}.
+     * Returns the ranking cost of {@code person}'s name: the sum of the cheapest match cost of each search
+     * word, or an empty {@code OptionalInt} if some search word matches no word of the name.
      */
-    private static boolean isCloseToAnyWord(String searchWord, List<String> nameWords) {
+    private OptionalInt getMatchCost(Person person) {
+        List<String> nameWords = toWords(person.getName().fullName);
+        int totalCost = 0;
+        for (String searchWord : searchWords) {
+            OptionalInt wordCost = getCheapestWordMatchCost(searchWord, nameWords);
+            if (wordCost.isEmpty()) {
+                return OptionalInt.empty();
+            }
+            totalCost += wordCost.getAsInt();
+        }
+        return OptionalInt.of(totalCost);
+    }
+
+    /**
+     * Returns the cheapest match cost of {@code searchWord} with any of {@code nameWords},
+     * or an empty {@code OptionalInt} if it matches none of them.
+     */
+    private static OptionalInt getCheapestWordMatchCost(String searchWord, List<String> nameWords) {
         return nameWords.stream()
-                .anyMatch(nameWord -> isPrefixMatch(searchWord, nameWord) || isCloseMatch(searchWord, nameWord));
+                .map(nameWord -> getWordMatchCost(searchWord, nameWord))
+                .flatMapToInt(OptionalInt::stream)
+                .min();
+    }
+
+    /**
+     * Returns the match cost of {@code searchWord} with {@code nameWord}, or an empty {@code OptionalInt}
+     * if {@code searchWord} is neither the start of {@code nameWord} nor within the allowed number of typos
+     * of it. The shorter of the two words decides how many typos are allowed, so that a short name word
+     * such as {@code ng} must be typed exactly even when the search word is longer.
+     */
+    private static OptionalInt getWordMatchCost(String searchWord, String nameWord) {
+        if (searchWord.equals(nameWord)) {
+            return OptionalInt.of(EXACT_MATCH_COST);
+        }
+        if (isPrefixMatch(searchWord, nameWord)) {
+            return OptionalInt.of(PREFIX_MATCH_COST);
+        }
+
+        int typos = StringUtil.typoDistance(searchWord, nameWord);
+        int allowedTypos = getAllowedTypos(Math.min(searchWord.length(), nameWord.length()));
+        if (typos > allowedTypos) {
+            return OptionalInt.empty();
+        }
+        return OptionalInt.of(PREFIX_MATCH_COST + typos);
     }
 
     /**
@@ -93,16 +165,6 @@ public class NameFuzzyMatchesPredicate implements Predicate<Person> {
     private static boolean isPrefixMatch(String searchWord, String nameWord) {
         boolean isLongEnoughForPrefix = searchWord.length() >= MIN_PREFIX_LENGTH;
         return isLongEnoughForPrefix && nameWord.startsWith(searchWord);
-    }
-
-    /**
-     * Returns true if {@code searchWord} is within the allowed number of typos of {@code nameWord}.
-     * The shorter of the two words decides how many typos are allowed, so that a short name word
-     * such as {@code ng} must be typed exactly even when the search word is longer.
-     */
-    private static boolean isCloseMatch(String searchWord, String nameWord) {
-        int allowedTypos = getAllowedTypos(Math.min(searchWord.length(), nameWord.length()));
-        return StringUtil.typoDistance(searchWord, nameWord) <= allowedTypos;
     }
 
     /**
