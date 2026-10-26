@@ -160,8 +160,17 @@ public class AddCommandParserTest {
     @Test
     public void parse_invalidNote_failure() {
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /note", Note.MESSAGE_EMPTY);
-        // a word starting with / is taken as an unknown prefix
-        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /note see /docs", MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
+    public void parse_noteWithWordStartingWithSlash_failure() {
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /note see /docs", Note.MESSAGE_INVALID_CHARACTERS);
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /note ends with /", Note.MESSAGE_INVALID_CHARACTERS);
+        assertParseFailure(parser, " " + VALID_NAME + " /note see /docs /phone " + VALID_PHONE,
+                Note.MESSAGE_INVALID_CHARACTERS);
+
+        // an unknown prefix outside the note is still a format error
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /docs /note hi", MESSAGE_INVALID_FORMAT);
     }
 
     @Test

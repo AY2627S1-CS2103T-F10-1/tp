@@ -3,15 +3,18 @@ package seedu.address.logic.parser;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTE_COMMAND;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -33,6 +36,8 @@ public class ParserUtil {
 
     private static final String PREFIX_MARKER = "/";
 
+    private static final Logger logger = LogsCenter.getLogger(ParserUtil.class);
+
     private static final TextRules NAME_RULES = new TextRules(Name.MAX_LENGTH, Name::isValidName,
             Name.MESSAGE_EMPTY, Name.MESSAGE_TOO_LONG, Name.MESSAGE_CONSTRAINTS);
     private static final TextRules PHONE_RULES = new TextRules(Phone.MAX_LENGTH, Phone::isValidPhone,
@@ -49,10 +54,8 @@ public class ParserUtil {
             throws ParseException {
         requireNonNull(args);
         String normalized = " " + StringUtil.collapseWhitespace(args);
-        if (hasUnknownPrefix(normalized, prefixes)) {
-            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, usage));
-        }
         ArgumentMultimap arguments = ArgumentTokenizer.tokenize(normalized, prefixes);
+        verifyNoUnknownPrefix(normalized, arguments, usage, prefixes);
         try {
             parseIndex(arguments.getPreamble());
         } catch (ParseException exception) {
@@ -76,13 +79,38 @@ public class ParserUtil {
 
     /**
      * Returns true if {@code args} has a word that starts with {@code /} but is not one of {@code knownPrefixes},
-     * such as a misspelt or wrongly capitalised {@code /phone}. No field value contains {@code /}, so such a word
-     * is always a mistake rather than part of a value.
+     * such as a misspelt or wrongly capitalised {@code /phone}. No word of a field value starts with {@code /}, so
+     * such a word is always a mistake rather than part of a value.
      */
     public static boolean hasUnknownPrefix(String args, Prefix... knownPrefixes) {
         Set<String> known = Stream.of(knownPrefixes).map(Prefix::getPrefix).collect(Collectors.toSet());
         return Stream.of(args.trim().split("\\s+"))
                 .anyMatch(word -> word.startsWith(PREFIX_MARKER) && !known.contains(word));
+    }
+
+    /**
+     * Checks that {@code args} has no unknown prefix. A note is free text, so an unknown prefix inside it is more
+     * likely part of the note than a misspelt prefix, and is reported with the note's own rule instead.
+     *
+     * @param args Normalized arguments that {@code arguments} was tokenized from.
+     * @param arguments Values of {@code knownPrefixes} in {@code args}.
+     * @param usage Usage message of the command being parsed.
+     * @param knownPrefixes Prefixes that the command accepts.
+     * @throws ParseException if {@code args} has an unknown prefix.
+     */
+    public static void verifyNoUnknownPrefix(String args, ArgumentMultimap arguments, String usage,
+            Prefix... knownPrefixes) throws ParseException {
+        requireAllNonNull(args, arguments, usage, knownPrefixes);
+        if (!hasUnknownPrefix(args, knownPrefixes)) {
+            return;
+        }
+        boolean isInNote = arguments.getAllValues(PREFIX_NOTE_COMMAND).stream()
+                .anyMatch(note -> hasUnknownPrefix(note, knownPrefixes));
+        if (isInNote) {
+            logger.fine("Rejecting a note with a word starting with \"/\": " + args);
+            throw new ParseException(Note.MESSAGE_INVALID_CHARACTERS);
+        }
+        throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, usage));
     }
 
     /**

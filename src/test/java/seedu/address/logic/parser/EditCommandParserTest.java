@@ -150,6 +150,12 @@ public class EditCommandParserTest {
     }
 
     @Test
+    public void parse_noteWithWordStartingWithSlash_failure() {
+        assertParseFailure(parser, " 1 /note see /docs", Note.MESSAGE_INVALID_CHARACTERS);
+        assertParseFailure(parser, " 1 /note ends with /", Note.MESSAGE_INVALID_CHARACTERS);
+    }
+
+    @Test
     public void parse_noteWithSlashInsideWord_success() {
         assertParseSuccess(parser, " 1 /note call w/ parent 24/7", new EditCommand(INDEX_FIRST_PERSON,
                 new EditPersonDescriptorBuilder().withNote("call w/ parent 24/7").build()));

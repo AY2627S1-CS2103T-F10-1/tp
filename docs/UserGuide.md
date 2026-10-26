@@ -129,7 +129,9 @@ Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
   letters, digits, spaces and hyphens.
 * Note is optional free text, such as an allergy or how the contact prefers to be reached. It can contain
   up to 200 characters of any kind. `/` is allowed inside a word (e.g., `24/7`, `and/or`, `w/`, links), but a word
-  cannot start with `/`, because that marks the start of a field.
+  cannot start with `/`, because that marks the start of a field. If a word in the note is a field name such as
+  `/room` or `/tag`, the rest of the note is taken as that field: `/note talk to /room officer` gives the note
+  `talk to` and the room `officer`.
 * Enter the name first. `/phone`, `/room`, `/tag` and `/note` can then be given in any order.
   `/phone`, `/room` and `/note` cannot be repeated.
 * Repeat `/tag` once per tag, up to five tags. Spaces inside a tag are allowed, so `/tag Resident Fellow` is one tag.

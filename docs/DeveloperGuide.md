@@ -227,7 +227,7 @@ To add a new field supported by `add` and `edit`, add it to `Person`, add a cons
   * Pros: shorter to type.
   * Cons: a second way to change the same field, with its own parser and validation to keep in step with `edit`.
 
-A word in a note cannot start with `/`, because the parser treats such a word as a field prefix. A `/` inside a word (`24/7`, `and/or`, links) is allowed: `ArgumentTokenizer` only recognizes a prefix that follows a space, so it is never ambiguous, and RAs often need it in notes. Rejecting every `/` would be simpler to state, but it blocked common notes such as `Call 24/7`.
+A word in a note cannot start with `/`, because the parser treats such a word as a field prefix. `ParserUtil#verifyNoUnknownPrefix` reports an unknown prefix inside the note (e.g., `/note see /docs`) with the note's own error instead of the general usage message, as it is more likely part of the note than a misspelt prefix. A known prefix inside the note (e.g., `/note talk to /room officer`) cannot be told apart from a field given after the note, so it starts that field; the UG warns about this. A `/` inside a word (`24/7`, `and/or`, links) is allowed: `ArgumentTokenizer` only recognizes a prefix that follows a space, so it is never ambiguous, and RAs often need it in notes. Rejecting every `/` would be simpler to state, but it blocked common notes such as `Call 24/7`.
 
 ### Emergency contact assignment
 
@@ -963,6 +963,15 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `add Wei Hao /phone 9876 5434 /note Call w/ parent 24/7, see https://nus.edu.sg`<br>
       Expected: Wei Hao is added. The note is shown in full, including each `/`.
+
+   1. Test case: `add Wei Ling /phone 9876 5433 /note see /docs`<br>
+      Expected: No contact is added. Error: `No word in a note can start with "/", as that starts a new field.`
+
+   1. Test case: `add Wei Ling /phone 9876 5433 /note ends with /`<br>
+      Expected: Same error as above.
+
+   1. Test case: `add Wei Ling /phone 9876 5433 /note talk to /room officer`<br>
+      Expected: Wei Ling is added with the note `talk to` and the room `officer`, as described in the UG.
 
    1. Test case: `add Wei Ling /phone 9876 5433 /note a /note b`<br>
       Expected: No contact is added. The error names `/note` as a repeated field.
