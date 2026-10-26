@@ -101,8 +101,8 @@ public class ModelManager implements Model {
     //=========== Filtered Person List Accessors =============================================================
 
     /**
-     * Returns an unmodifiable view of the list of {@code Person} backed by the internal list of
-     * {@code addressBook}
+     * Returns an unmodifiable view of the filtered list of {@code Person} backed by the internal list of
+     * {@code addressBook}, in display order: sorted by the last comparator given, or in address book order.
      */
     @Override
     public ObservableList<Person> getFilteredPersonList() {

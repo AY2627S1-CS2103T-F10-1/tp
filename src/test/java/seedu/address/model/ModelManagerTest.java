@@ -25,6 +25,8 @@ public class ModelManagerTest {
     /** Orders persons by the length of their full name, shortest first. */
     private static final Comparator<Person> NAME_LENGTH_ORDER =
             Comparator.comparingInt(person -> person.getName().fullName.length());
+    /** Persons in the order they are added to the address book, which NAME_LENGTH_ORDER changes. */
+    private static final List<Person> ORIGINAL_ORDER = List.of(ALICE, BENSON, CARL, DANIEL);
 
     private ModelManager modelManager = new ModelManager();
 
@@ -92,7 +94,7 @@ public class ModelManagerTest {
 
     @Test
     public void updateFilteredPersonList_withComparator_sortsKeepingTiesInOrder() {
-        modelManager = new ModelManager(getAddressBookOf(ALICE, BENSON, CARL, DANIEL), new UserPrefs());
+        modelManager = getModelOf(ORIGINAL_ORDER);
         modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS, NAME_LENGTH_ORDER);
 
         // Benson Meier and Daniel Meier have names of the same length
@@ -101,19 +103,11 @@ public class ModelManagerTest {
 
     @Test
     public void updateFilteredPersonList_withoutComparator_restoresOriginalOrder() {
-        modelManager = new ModelManager(getAddressBookOf(ALICE, BENSON, CARL, DANIEL), new UserPrefs());
+        modelManager = getModelOf(ORIGINAL_ORDER);
         modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS, NAME_LENGTH_ORDER);
         modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
 
-        assertEquals(List.of(ALICE, BENSON, CARL, DANIEL), modelManager.getFilteredPersonList());
-    }
-
-    private static AddressBook getAddressBookOf(Person... persons) {
-        AddressBookBuilder builder = new AddressBookBuilder();
-        for (Person person : persons) {
-            builder.withPerson(person);
-        }
-        return builder.build();
+        assertEquals(ORIGINAL_ORDER, modelManager.getFilteredPersonList());
     }
 
     @Test
@@ -154,5 +148,14 @@ public class ModelManagerTest {
         UserPrefs differentUserPrefs = new UserPrefs();
         differentUserPrefs.setGuiSettings(new GuiSettings(1, 2, 3, 4));
         assertFalse(modelManager.equals(new ModelManager(addressBook, differentUserPrefs)));
+    }
+
+    /**
+     * Returns a model whose address book holds {@code persons}, in order, with default user prefs.
+     */
+    private static ModelManager getModelOf(List<Person> persons) {
+        AddressBookBuilder builder = new AddressBookBuilder();
+        persons.forEach(builder::withPerson);
+        return new ModelManager(builder.build(), new UserPrefs());
     }
 }

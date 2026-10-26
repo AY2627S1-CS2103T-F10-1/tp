@@ -18,6 +18,7 @@ import seedu.address.commons.util.ToStringBuilder;
  * Case and extra whitespace are ignored. Every search word must be the exact start of, or within the
  * allowed number of typos ({@link StringUtil#typoDistance}) of, at least one word in the person's name.
  * Longer words allow more typos, so that short words do not match too many unrelated names.
+ * {@link #getRankingComparator()} orders matching persons from the closest match to the loosest.
  */
 public class NameFuzzyMatchesPredicate implements Predicate<Person> {
 

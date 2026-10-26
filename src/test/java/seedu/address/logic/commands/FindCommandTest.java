@@ -17,6 +17,7 @@ import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
@@ -73,15 +74,10 @@ public class FindCommandTest {
     }
 
     @Test
-    public void constructor_nullPredicate_throwsNullPointerException() {
+    public void constructor_nullArguments_throwsNullPointerException() {
+        NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate("Alice");
         assertThrows(NullPointerException.class, () -> new FindCommand(null));
-        NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate("Alice");
         assertThrows(NullPointerException.class, () -> new FindCommand(null, predicate.getRankingComparator()));
-    }
-
-    @Test
-    public void constructor_nullRanking_throwsNullPointerException() {
-        NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate("Alice");
         assertThrows(NullPointerException.class, () -> new FindCommand(predicate, null));
     }
 
@@ -174,16 +170,18 @@ public class FindCommandTest {
     @Test
     public void toStringMethod() {
         NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate("Alice Bob");
-        FindCommand findCommand = new FindCommand(predicate);
-        String expected = FindCommand.class.getCanonicalName() + "{predicate=" + predicate
-                + ", ranking=" + Optional.empty() + "}";
-        assertEquals(expected, findCommand.toString());
+        assertEquals(getExpectedString(predicate, Optional.empty()), new FindCommand(predicate).toString());
 
         Comparator<Person> ranking = predicate.getRankingComparator();
-        FindCommand rankedFindCommand = new FindCommand(predicate, ranking);
-        String expectedRanked = FindCommand.class.getCanonicalName() + "{predicate=" + predicate
-                + ", ranking=" + Optional.of(ranking) + "}";
-        assertEquals(expectedRanked, rankedFindCommand.toString());
+        assertEquals(getExpectedString(predicate, Optional.of(ranking)),
+                new FindCommand(predicate, ranking).toString());
+    }
+
+    /**
+     * Returns the expected {@code toString()} of a {@code FindCommand} with {@code predicate} and {@code ranking}.
+     */
+    private static String getExpectedString(Predicate<Person> predicate, Optional<Comparator<Person>> ranking) {
+        return FindCommand.class.getCanonicalName() + "{predicate=" + predicate + ", ranking=" + ranking + "}";
     }
     @Test
     public void execute_phoneSearch_findsAllMatchesDespitePreviousFilter() {

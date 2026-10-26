@@ -18,6 +18,8 @@ public class StringUtil {
     private static final String SINGLE_SPACE = " ";
     /** Cost of one insertion, deletion, substitution or swap when computing the typo distance. */
     private static final int EDIT_COST = 1;
+    /** Number of adjacent characters exchanged by one swap. */
+    private static final int SWAP_LENGTH = 2;
 
     /**
      * Returns true if the {@code sentence} contains the {@code word}.
@@ -99,6 +101,7 @@ public class StringUtil {
      */
     private static int cheapestEdit(String first, String second, int[][] costs, int i, int j) {
         assert i >= 1 && j >= 1 : "Row 0 and column 0 of the typo distance table are filled in directly";
+        assert i <= first.length() && j <= second.length() : "Cell must lie within the typo distance table";
         boolean isSameChar = first.charAt(i - 1) == second.charAt(j - 1);
         int substitutionCost = isSameChar ? costs[i - 1][j - 1] : costs[i - 1][j - 1] + EDIT_COST;
         int deletionCost = costs[i - 1][j] + EDIT_COST;
@@ -108,7 +111,7 @@ public class StringUtil {
         if (!isAdjacentSwap(first, second, i, j)) {
             return cheapestCost;
         }
-        return Math.min(cheapestCost, costs[i - 2][j - 2] + EDIT_COST);
+        return Math.min(cheapestCost, costs[i - SWAP_LENGTH][j - SWAP_LENGTH] + EDIT_COST);
     }
 
     /**
@@ -116,8 +119,7 @@ public class StringUtil {
      * the first {@code j} characters of {@code second}, swapped.
      */
     private static boolean isAdjacentSwap(String first, String second, int i, int j) {
-        assert i <= first.length() && j <= second.length() : "Cell must lie within the typo distance table";
-        boolean hasTwoCharsEach = i >= 2 && j >= 2;
+        boolean hasTwoCharsEach = i >= SWAP_LENGTH && j >= SWAP_LENGTH;
         return hasTwoCharsEach
                 && first.charAt(i - 1) == second.charAt(j - 2)
                 && first.charAt(i - 2) == second.charAt(j - 1);
