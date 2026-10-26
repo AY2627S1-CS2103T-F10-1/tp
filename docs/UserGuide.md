@@ -311,15 +311,36 @@ Format: `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`
 * If `/name`, `/tag` or `/phone` is repeated, a message listing the repeated prefix is shown.
 
 Finding by name (`/name`):
-* You do not need the full name. Each word you type must be close to one of the words in the contact's name,
+* You do not need the full name. Each word you type must match one of the words in the contact's name,
   in any order; for example, `find /name Yeoh` and `find /name Yeoh Alex` both find `Alex Yeoh`.
 * Every word you type must match. For example, `find /name Alex Tan` does not find `Alex Yeoh`, because no part of
   the name is close to `Tan`.
-* Longer words can have more typos than shorter ones. Very short words (1 or 2 letters) must be typed exactly, so
-  `find /name Al` does not find `Alex Yeoh`.
+* A word you type matches a word of the name if it is:
+  * the same word, ignoring capital letters,
+  * the start of the word, typed exactly and at least 3 letters long; for example, `find /name Bala` finds
+    `Roy Balakrishnan`, or
+  * the same word with a few typos. One typo is one wrong, missing or extra letter, or two neighboring letters
+    swapped; for example, `Yoeh` is one typo away from `Yeoh`. The number of typos allowed depends on the
+    **shorter** of the two words:
+
+    | Letters in the shorter word | Typos allowed |
+    |-----------------------------|---------------|
+    | 1–2                         | 0             |
+    | 3–5                         | 1             |
+    | 6–9                         | 2             |
+    | 10 or more                  | 3             |
+
+    So `find /name Jonathn` (1 typo) finds `Jonathan Chua`, but `find /name Jnthn` (3 typos in a 5-letter word) does not.
+    Short words must be typed exactly, so `find /name Al` does not find `Alex Yeoh`, and `find /name Ong` does not
+    find `Ng Kai`.
 * Because small typos are allowed, a search may also list contacts with similar names; for example,
   `find /name Tan` may also list a contact named `Tay`.
-* Extra spaces between words are ignored.
+* The closest matches are listed first: contacts whose name contains the exact words you typed, then contacts
+  whose name words start with what you typed, then contacts with typos, fewest typos first. Contacts that match
+  equally well keep their usual order. For example, `find /name Tan` lists `Tan Wei Ming` before `Tay Li Hua`,
+  so `edit 1` changes `Tan Wei Ming`.
+* Extra spaces between words are ignored, including the non-breaking spaces that names pasted from a chat app
+  or web page may contain.
 
 Finding by phone (`/phone`):
 * Searches all active contacts for an exact phone number, including contacts hidden by an earlier search.
@@ -337,6 +358,7 @@ Examples:
 * `find /name Alex Yeoh` returns `Alex Yeoh`
 * `find /name alex` returns `Alex Yeoh`
 * `find /name Bernise` returns `Bernice Yu`, despite the typo
+* `find /name Bala` returns `Roy Balakrishnan`
 * `find /tag friends` returns all persons who have the tag `friends`
 
 ### Archiving contacts: `archive`
