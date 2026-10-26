@@ -91,7 +91,11 @@ public class NameFuzzyMatchesPredicateTest {
         assertMatches("Al", "Al Tan"); // 2 chars, exact
         assertMatches("Alx", "Alex Yeoh"); // 3 chars, 1 typo
         assertMatches("Bernse", "Bernice Yu"); // 6 chars, 2 typos
-        assertMatches("Christopher", "Kristophe Lim"); // 11 chars, 3 typos
+        assertMatches("Belakrishnonn", "Roy Balakrishnan"); // 12+ chars, 3 typos
+
+        // the shorter word decides the typos allowed
+        assertMatches("Christopher", "Kristopher Lim"); // 10-char name word, 2 typos
+        assertMatches("Kristopher", "Christopher Lim"); // 10-char search word, 2 typos
 
         // two adjacent letters swapped count as 1 typo
         assertMatches("Yoeh", "Alex Yeoh");
@@ -114,7 +118,12 @@ public class NameFuzzyMatchesPredicateTest {
         assertDoesNotMatch("Ab", "Al Tan"); // 2 chars, 1 typo
         assertDoesNotMatch("Akx", "Alex Yeoh"); // 3 chars, 2 typos
         assertDoesNotMatch("Bxxnce", "Bernice Yu"); // 6 chars, 3 typos
-        assertDoesNotMatch("Christopher", "Kristofer Lim"); // 11 chars, 4 typos
+        assertDoesNotMatch("Belakrishnonnn", "Roy Balakrishnan"); // 12+ chars, 4 typos
+
+        // the shorter word decides the typos allowed
+        assertDoesNotMatch("Ong", "Ng Kai"); // 2-char name word, 1 typo
+        assertDoesNotMatch("Lim", "Tay Li Hua"); // 2-char name word, 1 typo
+        assertDoesNotMatch("Christopher", "Kristophe Lim"); // 9-char name word, 3 typos
 
         // one search word matches, another does not
         assertDoesNotMatch("Alex Tan", "Alex Yeoh");

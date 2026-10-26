@@ -14,7 +14,7 @@ import seedu.address.commons.util.ToStringBuilder;
 /**
  * Tests that a {@code Person}'s {@code Name} closely matches the given search text, tolerating small typos.
  * Case and extra whitespace are ignored. Every search word must be within its allowed number of typos
- * ({@link StringUtil#typoDistance}) of at least one word in the person's name. Longer search words allow more typos,
+ * ({@link StringUtil#typoDistance}) of at least one word in the person's name. Longer words allow more typos,
  * so that short words do not match too many unrelated names.
  */
 public class NameFuzzyMatchesPredicate implements Predicate<Person> {
@@ -23,7 +23,7 @@ public class NameFuzzyMatchesPredicate implements Predicate<Person> {
     private static final String WORD_SEPARATOR = " ";
 
     /**
-     * Number of typos allowed for a search word, by its minimum length.
+     * Number of typos allowed between two words, by the minimum length of the shorter word.
      * Declared from the longest words down, so the first tier a word is long enough for applies.
      */
     private enum TypoTolerance {
@@ -63,7 +63,7 @@ public class NameFuzzyMatchesPredicate implements Predicate<Person> {
     }
 
     /**
-     * Returns the number of typos allowed when matching a search word of length {@code wordLength}.
+     * Returns the number of typos allowed between two words whose shorter word has length {@code wordLength}.
      */
     static int getAllowedTypos(int wordLength) {
         assert wordLength >= 0 : "Word length cannot be negative";
@@ -83,10 +83,12 @@ public class NameFuzzyMatchesPredicate implements Predicate<Person> {
     }
 
     /**
-     * Returns true if {@code searchWord} is within its allowed number of typos of {@code nameWord}.
+     * Returns true if {@code searchWord} is within the allowed number of typos of {@code nameWord}.
+     * The shorter of the two words decides how many typos are allowed, so that a short name word
+     * such as {@code ng} must be typed exactly even when the search word is longer.
      */
     private static boolean isCloseMatch(String searchWord, String nameWord) {
-        int allowedTypos = getAllowedTypos(searchWord.length());
+        int allowedTypos = getAllowedTypos(Math.min(searchWord.length(), nameWord.length()));
         return StringUtil.typoDistance(searchWord, nameWord) <= allowedTypos;
     }
 
