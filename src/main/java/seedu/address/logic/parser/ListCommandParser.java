@@ -7,10 +7,11 @@ import seedu.address.logic.commands.ListArchivedCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.ListEmergencyCommand;
 import seedu.address.logic.commands.ListFavouriteCommand;
+import seedu.address.logic.commands.ListSortedCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
- * Parses arguments for listing active, archived, emergency or favourite contacts.
+ * Parses arguments for listing active, archived, emergency, favourite or name-sorted contacts.
  */
 public class ListCommandParser implements Parser<Command> {
 
@@ -39,6 +40,9 @@ public class ListCommandParser implements Parser<Command> {
         if (ListFavouriteCommand.FAVOURITE_KEYWORD.equals(trimmedArgs)) {
             return new ListFavouriteCommand();
         }
+        if (ListSortedCommand.SORTED_KEYWORD.equals(trimmedArgs)) {
+            return new ListSortedCommand();
+        }
 
         String firstArgument = trimmedArgs.split("\\s+", 2)[0];
         if (ListArchivedCommand.ARCHIVED_KEYWORD.equals(firstArgument)) {
@@ -49,6 +53,9 @@ public class ListCommandParser implements Parser<Command> {
         }
         if (ListFavouriteCommand.FAVOURITE_KEYWORD.equals(firstArgument)) {
             throw new ParseException(ListFavouriteCommand.MESSAGE_INVALID_FORMAT);
+        }
+        if (ListSortedCommand.SORTED_KEYWORD.equals(firstArgument)) {
+            throw new ParseException(ListSortedCommand.MESSAGE_INVALID_FORMAT);
         }
 
         throw new ParseException(ListCommand.MESSAGE_INVALID_FORMAT);

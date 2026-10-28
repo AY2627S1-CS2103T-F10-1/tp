@@ -243,6 +243,13 @@ separately so ordinary edits preserve them while constructing the replacement pe
 `Person#equals()` and `hashCode()` include the emergency details; `isSamePerson()` still compares names only.
 `JsonAdaptedEmergencyContact` stores the nested details, and older files without this field remain valid.
 
+### Sorting the contact list
+
+`list sorted` selects all active contacts and applies a comparator using each full name's natural string order.
+`ModelManager` exposes one live `SortedList` over its `FilteredList`, so the GUI and index-based commands see
+the same ordering. Sorting does not modify the backing address book or its saved order.
+`updateFilteredPersonList()` clears the comparator when another command resets the view.
+
 ### Filter by tag feature
 
 `find /tag TAG` shows only contacts with the given tag. `FindCommandParser` creates a `PersonHasTagPredicate` from the value after `/tag`, and `FindCommand` applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any non-empty value is accepted and a value that is not a valid tag simply matches nobody.
@@ -1051,6 +1058,19 @@ Use a disposable address book with just `Amy Bee`, created using
 
 For filtered-list indexing, add a second person, use `find /name` to display only that person, and run
 `emergency 1 /name Bob Choo /phone 91234567`. Only the displayed person receives the details.
+
+### Listing contacts sorted by name
+
+Use a disposable address book with active contacts `Zara Tan`, `Amy Bee` and `amy Bee` added in that order,
+plus an archived contact `Aaron Tan`.
+
+* Run `list sorted`: only `Amy Bee`, `Zara Tan` and `amy Bee` appear, in that order.
+* Run `list`: stored order returns, with `Zara Tan` first.
+* Run `list archived`, then `list sorted`: all active contacts appear sorted; `Aaron Tan` stays archived.
+* Run `list sorted extra`: the command is rejected with `Invalid command format. Usage: list sorted`.
+  The sorted view stays unchanged.
+* Run `delete 1`: `Amy Bee` is deleted, and the remaining contacts are reindexed.
+* Close and reopen the app: the remaining active contacts appear in their original stored order.
 
 ### Saving data
 

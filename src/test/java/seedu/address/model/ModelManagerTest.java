@@ -8,6 +8,8 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 
+import java.util.Comparator;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.GuiSettings;
@@ -17,6 +19,21 @@ import seedu.address.testutil.AddressBookBuilder;
 public class ModelManagerTest {
 
     private ModelManager modelManager = new ModelManager();
+
+    @Test
+    public void sortFilteredPersonList_nullComparator_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> modelManager.sortFilteredPersonList(null));
+    }
+
+    @Test
+    public void equals_differentDisplayOrder_returnsFalse() {
+        modelManager.addPerson(BENSON);
+        modelManager.addPerson(ALICE);
+        ModelManager copy = new ModelManager(modelManager.getAddressBook(), new UserPrefs());
+        modelManager.sortFilteredPersonList(Comparator.comparing(person -> person.getName().fullName));
+        assertFalse(modelManager.equals(copy));
+        assertEquals(modelManager.getAddressBook(), copy.getAddressBook());
+    }
 
     @Test
     public void constructor() {
