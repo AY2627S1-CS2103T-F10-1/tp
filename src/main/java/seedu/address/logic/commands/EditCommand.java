@@ -28,9 +28,9 @@ public class EditCommand extends Command {
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits the details of the person identified "
             + "by the index number used in the displayed person list. "
             + "Existing values will be overwritten by the input values; "
-            + "/tag replaces all tags, and an optional field such as /room or /tag on its own removes it.\n"
+            + "An optional field such as /room on its own removes it. Tags are changed with the toggle command.\n"
             + "Parameters: INDEX (must be a positive integer) "
-            + PersonField.values().stream().map(field -> field.getUsage(true)).collect(Collectors.joining(" "))
+            + PersonField.editableValues().stream().map(field -> field.getUsage(true)).collect(Collectors.joining(" "))
             + "\nExample: " + COMMAND_WORD + " 1 /phone 91234567 /room B-204";
 
     public static final String MESSAGE_EDIT_PERSON_SUCCESS = "Edited person: %1$s";

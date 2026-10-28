@@ -7,13 +7,13 @@ import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
  * Parses input arguments and creates a new EditCommand object.
- * Every {@link PersonField} can be edited, so a field added to the model is editable as soon as it is registered.
+ * Every field in {@link PersonField#editableValues()} can be edited. Tags are changed with {@code toggle} instead.
  */
 public class EditCommandParser implements Parser<EditCommand> {
-    private static final Prefix[] PREFIXES = PersonField.values().stream()
+    private static final Prefix[] PREFIXES = PersonField.editableValues().stream()
             .map(PersonField::getPrefix)
             .toArray(Prefix[]::new);
-    private static final Prefix[] SINGLE_VALUED_PREFIXES = PersonField.values().stream()
+    private static final Prefix[] SINGLE_VALUED_PREFIXES = PersonField.editableValues().stream()
             .filter(field -> !field.isRepeatable())
             .map(PersonField::getPrefix)
             .toArray(Prefix[]::new);
@@ -30,7 +30,7 @@ public class EditCommandParser implements Parser<EditCommand> {
         argMultimap.verifyNoDuplicatePrefixesFor(SINGLE_VALUED_PREFIXES);
 
         EditPersonDescriptor editPersonDescriptor = new EditPersonDescriptor();
-        for (PersonField<?> field : PersonField.values()) {
+        for (PersonField<?> field : PersonField.editableValues()) {
             editPersonDescriptor.setIfGiven(field, argMultimap);
         }
 
