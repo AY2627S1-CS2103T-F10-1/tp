@@ -12,7 +12,6 @@ import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.ToggleCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -54,8 +53,10 @@ public class ToggleCommandParser implements Parser<ToggleCommand> {
     /**
      * Parses each value into a tag, keeping the order in which they were given.
      * Unlike {@code add}, a tag given twice is reported as repeated, since the contact is not what has it twice.
+     * The tag limit is not checked here, as it applies to the contact's tags after the toggle, which only
+     * {@code ToggleCommand} can work out.
      *
-     * @throws ParseException if any tag is invalid or repeated, or there are more than {@link Person#MAX_TAGS} tags.
+     * @throws ParseException if any tag is invalid or repeated.
      */
     private static Set<Tag> parseTags(List<String> tagValues) throws ParseException {
         Set<Tag> tags = new LinkedHashSet<>();
@@ -64,9 +65,6 @@ public class ToggleCommandParser implements Parser<ToggleCommand> {
             if (!tags.add(tag)) {
                 throw new ParseException(String.format(MESSAGE_REPEATED_TAG, tag.tagName));
             }
-        }
-        if (tags.size() > Person.MAX_TAGS) {
-            throw new ParseException(Person.MESSAGE_TAG_LIMIT_REACHED);
         }
         return tags;
     }

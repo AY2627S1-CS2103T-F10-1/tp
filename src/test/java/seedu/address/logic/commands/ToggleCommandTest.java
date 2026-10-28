@@ -86,6 +86,25 @@ public class ToggleCommandTest {
     }
 
     @Test
+    public void execute_removeAllAndAddOneAtLimit_success() {
+        Person person = new PersonBuilder().withName("Zed").withTags("a", "b", "c", "d", "e").build();
+        model.addPerson(person);
+        Index index = Index.fromOneBased(model.getFilteredPersonList().size());
+
+        // six tags are given, but only one is left after the toggle
+        Person expected = new PersonBuilder(person).withTags("f").build();
+        assertToggleSuccess(index, person, expected, "Added: F. Removed: A, B, C, D, E.",
+                "a", "b", "c", "d", "e", "f");
+    }
+
+    @Test
+    public void execute_tooManyTagsAdded_failure() {
+        Index index = Index.fromOneBased(1);
+        assertCommandFailure(new ToggleCommand(index, tags("a", "b", "c", "d", "e", "f")), model,
+                Person.MESSAGE_TAG_LIMIT_REACHED);
+    }
+
+    @Test
     public void execute_invalidIndex_failure() {
         Index outOfBounds = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
         assertCommandFailure(new ToggleCommand(outOfBounds, tags("a")), model,

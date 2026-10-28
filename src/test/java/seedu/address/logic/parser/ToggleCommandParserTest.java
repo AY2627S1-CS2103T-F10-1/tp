@@ -11,7 +11,6 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.ToggleCommand;
-import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
 
 public class ToggleCommandParserTest {
@@ -64,8 +63,10 @@ public class ToggleCommandParserTest {
     }
 
     @Test
-    public void parse_tooManyTags_failure() {
-        assertParseFailure(parser, " 1 /tag a /tag b /tag c /tag d /tag e /tag f", Person.MESSAGE_TAG_LIMIT_REACHED);
+    public void parse_moreThanMaxTags_success() {
+        // the limit applies to the tags left after the toggle, so it is not checked when parsing
+        assertParseSuccess(parser, " 1 /tag a /tag b /tag c /tag d /tag e /tag f",
+                new ToggleCommand(INDEX_FIRST_PERSON, tags("a", "b", "c", "d", "e", "f")));
     }
 
     private static Set<Tag> tags(String... names) {

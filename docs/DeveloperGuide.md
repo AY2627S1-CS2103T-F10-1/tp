@@ -221,13 +221,13 @@ To add a new field, add it to `Person`, add a constant to `PersonField` and list
 1. Collapse whitespace, then reject any word starting with `/` other than `/tag` as an invalid format.
 2. Parse the text before the first keyword as the `INDEX`; an invalid index is reported as an invalid format.
 3. Require at least one `/tag`; otherwise report an invalid format.
-4. Parse each value with `ParserUtil#parseTag()`, as `add` does, so an empty or invalid tag is reported the same way. A tag given twice is reported as `Repeated tag: TAG. Each tag can only be given once.` rather than `add`'s `Contact already has this tag.`, which would wrongly suggest that the contact already has the tag. More than `Person.MAX_TAGS` tags in one command is rejected as in `add`.
+4. Parse each value with `ParserUtil#parseTag()`, as `add` does, so an empty or invalid tag is reported the same way. A tag given twice is reported as `Repeated tag: TAG. Each tag can only be given once.` rather than `add`'s `Contact already has this tag.`, which would wrongly suggest that the contact already has the tag. The tag limit is not checked here, because it applies to the tags left after the toggle.
 
 `ToggleCommand` holds the `Index` and a `LinkedHashSet<Tag>` of tags to toggle. In `execute()` it:
 
 1. Rejects an index outside `Model#getFilteredPersonList()` with `Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX`.
 2. Builds the new tag set: the contact's tags that are not being toggled, in their existing order, followed by the toggled tags the contact does not have, in the order typed. `Tag#equals()` ignores case and extra spaces, so `/tag FRIENDS` removes `Friends`.
-3. Rejects the command with `Person.MESSAGE_TAG_LIMIT_REACHED` if the new set has more than `Person.MAX_TAGS` tags. The limit applies to the result, so removing one tag and adding another is allowed at 5 tags. `emergency` is a normal tag and counts towards the limit.
+3. Rejects the command with `Person.MESSAGE_TAG_LIMIT_REACHED` if the new set has more than `Person.MAX_TAGS` tags. The limit applies to the result, so removing one tag and adding another is allowed at 5 tags, and so is removing all 5 and adding 1 (6 tags typed). `emergency` is a normal tag and counts towards the limit.
 4. Copies the contact's other values with `PersonFieldValues`, replaces the tags, and calls `Model#setPerson()`. Like `edit`, it then shows the full contact list again.
 
 The name does not change, so `toggle` never creates a duplicate contact and does not call `Model#hasPerson()`.
@@ -236,10 +236,13 @@ The name does not change, so `toggle` never creates a duplicate contact and does
 
 **Aspect: whether the tag limit is checked against the tags given or the resulting tags**
 
-* **Alternative 1 (current choice):** check the resulting tags in `execute()`, and the number of tags typed in the parser.
-  * Pros: a contact at the limit can still swap one tag for another, and the guarantee in `Person` is unchanged.
-  * Cons: the same limit is checked in two places, and a command with more than 5 tags is rejected even if most of them would be removals.
-* **Alternative 2:** check only the tags typed.
+* **Alternative 1 (current choice):** check only the resulting tags, in `execute()`.
+  * Pros: the limit is checked in one place, a contact at the limit can still swap tags, and the guarantee in `Person` is unchanged. A command that types many tags is still rejected, since six tags the contact lacks always leave it over the limit.
+  * Cons: a command with too many tags is reported when it runs, not when it is parsed.
+* **Alternative 2:** also reject more than `Person.MAX_TAGS` typed tags in the parser.
+  * Pros: obviously invalid commands are rejected early.
+  * Cons: the limit is checked in two places, and a valid command such as removing all 5 tags and adding 1 is rejected because it types 6.
+* **Alternative 3:** check only the tags typed.
   * Pros: simpler.
   * Cons: a contact could be pushed past the limit, which `Person`'s constructor then reports as an uncaught `IllegalArgumentException`.
 
