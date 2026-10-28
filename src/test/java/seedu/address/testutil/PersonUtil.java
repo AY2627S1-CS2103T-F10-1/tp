@@ -65,12 +65,6 @@ public class PersonUtil {
                 sb.append(PREFIX_PHONE_COMMAND).append(" ").append(phone.value).append(" "));
         descriptor.get(PersonField.ROOM).ifPresent(room ->
                 sb.append(PREFIX_ROOM_COMMAND).append(" ").append(room.value).append(" "));
-        descriptor.get(PersonField.TAGS).ifPresent(tags -> {
-            if (tags.isEmpty()) {
-                sb.append(PREFIX_TAG_COMMAND).append(" ");
-            }
-            tags.forEach(tag -> sb.append(PREFIX_TAG_COMMAND).append(" ").append(tag.tagName).append(" "));
-        });
         descriptor.get(PersonField.NOTE).ifPresent(note ->
                 sb.append(PREFIX_NOTE_COMMAND).append(" ").append(note.value).append(" "));
         return sb.toString();
