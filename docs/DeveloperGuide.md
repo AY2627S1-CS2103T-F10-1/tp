@@ -247,7 +247,7 @@ The name does not change, so `toggle` never creates a duplicate contact and does
 
 * **Alternative 1 (current choice):** remove it, so one command can both add and remove tags.
   * Pros: one short command covers both, and `toggle 1 /tag emergency` flips the emergency flag.
-  * Cons: running the same command twice undoes it, and the result message does not say which tags were added and which removed.
+  * Cons: running the same command twice undoes it. To make a mistake easy to notice, the result message lists the tags that were added and removed (`Added: C. Removed: A.`), using the form stored on the contact card.
 * **Alternative 2:** separate `tag` and `untag` commands.
   * Pros: each command always does what its name says.
   * Cons: two commands to learn, and a tag already present (or absent) becomes an error that needs its own message.
@@ -691,7 +691,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: Start with the sample data. Run `add Zed Lim /phone 9000 0000 /tag A /tag B`, then `list`.
 
    1. Test case: `toggle 1 /tag a /tag c` (where Zed Lim is contact 1; use their actual index)<br>
-      Expected: Zed Lim now has the tags `B` and `C`, in that order. The full list is shown again.
+      Expected: Zed Lim now has the tags `B` and `C`, in that order. The full list is shown again. The message ends with `Added: C. Removed: A.`
 
    1. Test case: `toggle 1 /tag emergency`, then `list emerg`<br>
       Expected: Zed Lim is listed. Running `toggle 1 /tag emergency` again removes the tag.
