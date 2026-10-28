@@ -1,7 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
-import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
+import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PERSONS;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -35,6 +35,8 @@ public class ToggleCommand extends Command {
             + "Example: " + COMMAND_WORD + " 1 /tag Resident /tag Floor 3";
 
     public static final String MESSAGE_TOGGLE_SUCCESS = "Toggled tags of person: %1$s\n%2$s";
+    public static final String MESSAGE_ARCHIVED_PERSON =
+            "Cannot toggle tags of an archived contact. Unarchive it first.";
     public static final String MESSAGE_ADDED = "Added: ";
     public static final String MESSAGE_REMOVED = "Removed: ";
 
@@ -63,6 +65,9 @@ public class ToggleCommand extends Command {
         }
 
         Person personToEdit = lastShownList.get(index.getZeroBased());
+        if (personToEdit.isArchived()) {
+            throw new CommandException(MESSAGE_ARCHIVED_PERSON);
+        }
         Set<Tag> currentTags = personToEdit.getTags();
         Set<Tag> toggledTags = toggle(currentTags, tagsToToggle);
         if (toggledTags.size() > Person.MAX_TAGS) {
@@ -71,10 +76,11 @@ public class ToggleCommand extends Command {
 
         PersonFieldValues values = PersonFieldValues.of(personToEdit);
         values.set(PersonField.TAGS, toggledTags);
-        Person editedPerson = values.toPerson(personToEdit.getEmail(), personToEdit.getAddress());
+        Person editedPerson = values.toPerson(personToEdit.getEmail(), personToEdit.getAddress(),
+                personToEdit.getEmergencyContact(), personToEdit.isFavourite());
 
         model.setPerson(personToEdit, editedPerson);
-        model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
+        model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS);
         // report the stored form of each tag, which is the form shown on the contact card
         List<Tag> removedTags = currentTags.stream().filter(tagsToToggle::contains).toList();
         List<Tag> addedTags = toggledTags.stream().filter(tag -> !currentTags.contains(tag)).toList();

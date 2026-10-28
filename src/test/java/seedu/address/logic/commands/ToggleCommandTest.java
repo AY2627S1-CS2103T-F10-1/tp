@@ -12,6 +12,7 @@ import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,10 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.EmergencyContact;
+import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Phone;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
@@ -123,6 +127,37 @@ public class ToggleCommandTest {
         Index index = Index.fromOneBased(1);
         assertCommandFailure(new ToggleCommand(index, tags("a", "b", "c", "d", "e", "f")), model,
                 Person.MESSAGE_TAG_LIMIT_REACHED);
+    }
+
+    @Test
+    public void execute_preservesFavouriteNoteAndEmergencyContact_success() throws Exception {
+        Person base = new PersonBuilder().withName("Zed").withTags("a").withNote("Prefers WhatsApp")
+                .withFavourite(true).build();
+        EmergencyContact emergencyContact = new EmergencyContact(new Name("Bob Choo"), new Phone("91234567"), "Dad");
+        Person person = new Person(base.getName(), base.getPhone(), base.getEmail(), base.getAddress(),
+                base.getTags(), base.getRoom(), base.getNote(), Optional.of(emergencyContact), false, true);
+        model.addPerson(person);
+        Index index = Index.fromOneBased(model.getFilteredPersonList().size());
+
+        new ToggleCommand(index, tags("b")).execute(model);
+
+        Person result = model.getFilteredPersonList().get(index.getZeroBased());
+        assertTrue(result.isFavourite());
+        assertFalse(result.isArchived());
+        assertEquals(Optional.of(emergencyContact), result.getEmergencyContact());
+        assertEquals("Prefers WhatsApp", result.getNote().value);
+    }
+
+    @Test
+    public void execute_archivedPerson_failure() {
+        Person base = new PersonBuilder().withName("Zed").withTags("a").build();
+        Person archived = new Person(base.getName(), base.getPhone(), base.getEmail(), base.getAddress(),
+                base.getTags(), base.getRoom(), base.getNote(), Optional.empty(), true, false);
+        model.addPerson(archived);
+        model.updateFilteredPersonList(Model.PREDICATE_SHOW_ALL_PERSONS);
+        Index index = Index.fromOneBased(model.getFilteredPersonList().size());
+
+        assertCommandFailure(new ToggleCommand(index, tags("b")), model, ToggleCommand.MESSAGE_ARCHIVED_PERSON);
     }
 
     @Test

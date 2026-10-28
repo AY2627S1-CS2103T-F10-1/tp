@@ -306,6 +306,7 @@ Format: `toggle INDEX /tag TAG [/tag TAG]…​`
 * Tags are matched the same way as in `add`, ignoring case and extra spaces.
 * A tag cannot be repeated within one command.
 * A contact can have at most 5 tags, including `emergency`. If the toggle would leave the contact with more, nothing is changed.
+* Archived contacts must be unarchived before toggling their tags. Favourite status, emergency details and the note are not changed.
 
 Examples:
 * `toggle 1 /tag emergency` marks the 1st contact as an emergency contact, or removes that if they already are one.
