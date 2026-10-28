@@ -6,6 +6,7 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 /**
  * Helper functions for handling strings.
@@ -14,6 +15,8 @@ public class StringUtil {
 
     private static final String WHITESPACE_RUN_REGEX = "\\s+";
     private static final String SINGLE_SPACE = " ";
+    /** Cost of one insertion, deletion or substitution when computing the Levenshtein distance. */
+    private static final int EDIT_COST = 1;
 
     /**
      * Returns true if the {@code sentence} contains the {@code word}.
@@ -50,6 +53,48 @@ public class StringUtil {
     public static String collapseWhitespace(String s) {
         requireNonNull(s);
         return s.trim().replaceAll(WHITESPACE_RUN_REGEX, SINGLE_SPACE);
+    }
+
+    /**
+     * Returns the Levenshtein distance between {@code first} and {@code second}: the minimum number of
+     * single-character insertions, deletions or substitutions needed to turn one into the other.
+     * The comparison is case-sensitive.
+     *
+     * @param first The first string; cannot be null.
+     * @param second The second string; cannot be null.
+     */
+    public static int levenshteinDistance(String first, String second) {
+        requireNonNull(first);
+        requireNonNull(second);
+
+        // Turning an empty prefix of first into each prefix of second takes one insertion per character
+        int[] previousRow = IntStream.rangeClosed(0, second.length()).toArray();
+
+        for (int i = 1; i <= first.length(); i++) {
+            int[] currentRow = new int[second.length() + 1];
+            currentRow[0] = i;
+            for (int j = 1; j <= second.length(); j++) {
+                boolean isSameChar = first.charAt(i - 1) == second.charAt(j - 1);
+                currentRow[j] = cheapestEdit(isSameChar, previousRow[j - 1], previousRow[j], currentRow[j - 1]);
+            }
+            previousRow = currentRow;
+        }
+
+        int distance = previousRow[second.length()];
+        assert distance >= 0 && distance <= Math.max(first.length(), second.length())
+                : "Levenshtein distance must be between 0 and the length of the longer string";
+        return distance;
+    }
+
+    /**
+     * Returns the cost of the cheapest edit for one cell of the Levenshtein table, given the costs of
+     * its diagonal, upper and left neighbors.
+     */
+    private static int cheapestEdit(boolean isSameChar, int diagonalCost, int aboveCost, int leftCost) {
+        int substitutionCost = isSameChar ? diagonalCost : diagonalCost + EDIT_COST;
+        int deletionCost = aboveCost + EDIT_COST;
+        int insertionCost = leftCost + EDIT_COST;
+        return Math.min(substitutionCost, Math.min(deletionCost, insertionCost));
     }
 
     /**

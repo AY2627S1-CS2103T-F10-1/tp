@@ -2,6 +2,7 @@ package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.testutil.Assert.assertThrows;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -26,8 +27,9 @@ import seedu.address.testutil.TypicalPersons;
  * {@link Person} cannot be left out of one of them.
  */
 public class PersonFieldTest {
-    /** Person fields that are not set from the command line. */
-    private static final Set<String> LEGACY_PERSON_FIELDS = Set.of("email", "address");
+    /** Person fields managed outside add/edit arguments. */
+    private static final Set<String> NON_EDITABLE_PERSON_FIELDS =
+            Set.of("email", "address", "archive", "emergencyContact", "isFavourite");
 
     @Test
     public void everyPersonFieldIsRegistered() {
@@ -36,7 +38,7 @@ public class PersonFieldTest {
         Set<String> personFields = Stream.of(Person.class.getDeclaredFields())
                 .filter(field -> !Modifier.isStatic(field.getModifiers()))
                 .map(Field::getName)
-                .filter(name -> !LEGACY_PERSON_FIELDS.contains(name))
+                .filter(name -> !NON_EDITABLE_PERSON_FIELDS.contains(name))
                 .collect(Collectors.toSet());
 
         assertEquals(personFields, registered,
@@ -85,6 +87,18 @@ public class PersonFieldTest {
         for (Person person : TypicalPersons.getTypicalPersons()) {
             assertEquals(person, PersonFieldValues.of(person).toPerson(person.getEmail(), person.getAddress()));
         }
+    }
+
+    @Test
+    public void parseFrom_nullArgMultimap_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> PersonField.NOTE.parseFrom(null, true));
+    }
+
+    @Test
+    public void toPerson_nullLegacyField_throwsNullPointerException() {
+        PersonFieldValues values = PersonFieldValues.of(TypicalPersons.ALICE);
+        assertThrows(NullPointerException.class, () -> values.toPerson(null, new Address("")));
+        assertThrows(NullPointerException.class, () -> values.toPerson(new Email(""), null));
     }
 
     private static <T> void setSample(PersonFieldValues values, PersonField<T> field) throws ParseException {

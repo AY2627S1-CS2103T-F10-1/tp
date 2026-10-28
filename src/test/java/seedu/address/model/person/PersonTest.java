@@ -2,10 +2,12 @@ package seedu.address.model.person;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_EMAIL_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_NOTE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -23,6 +25,103 @@ import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class PersonTest {
+
+    @Test
+    public void constructor_withoutFavouriteStatus_defaultsToFalse() {
+        assertFalse(new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
+                ALICE.getTags()).isFavourite());
+        assertFalse(new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
+                ALICE.getTags(), new Room("B-204")).isFavourite());
+        assertFalse(new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
+                ALICE.getTags(), new Room("B-204"), new Note(VALID_NOTE_BOB)).isFavourite());
+    }
+
+    @Test
+    public void withFavourite_changesStatus_preservesOtherDetails() {
+        Person original = new PersonBuilder(ALICE).withRoom("B-204").withNote(VALID_NOTE_BOB)
+                .withTags("Staff", "RA", "Block4").build();
+
+        Person favourite = original.withFavourite(true);
+
+        assertTrue(favourite.isFavourite());
+        assertFalse(original.isFavourite());
+        assertEquals(original.getName(), favourite.getName());
+        assertEquals(original.getPhone(), favourite.getPhone());
+        assertEquals(original.getEmail(), favourite.getEmail());
+        assertEquals(original.getAddress(), favourite.getAddress());
+        assertEquals(original.getRoom(), favourite.getRoom());
+        assertEquals(original.getNote(), favourite.getNote());
+        assertEquals(List.copyOf(original.getTags()), List.copyOf(favourite.getTags()));
+        assertEquals(original, favourite.withFavourite(false));
+        assertTrue(favourite.isFavourite());
+    }
+
+    @Test
+    public void withFavourite_sameStatus_returnsEqualPerson() {
+        assertEquals(ALICE, ALICE.withFavourite(false));
+        Person favourite = ALICE.withFavourite(true);
+        assertEquals(favourite, favourite.withFavourite(true));
+    }
+
+    @Test
+    public void withEmergencyContact_archivedPerson_preservesArchiveAndNote() {
+        Person original = new PersonBuilder(ALICE).withNote("Call after six").withFavourite(true).build()
+                .withArchive(true);
+        EmergencyContact contact = new EmergencyContact(new Name("Jane Tan"), new Phone("91234567"), "Sister");
+        Person updated = original.withEmergencyContact(contact);
+        assertTrue(updated.isArchived());
+        assertTrue(updated.isFavourite());
+        assertEquals(original.getNote(), updated.getNote());
+        assertEquals(contact, updated.getEmergencyContact().orElseThrow());
+    }
+
+    @Test
+    public void builderCopy_archivedPerson_preservesAllFields() {
+        Person original = new PersonBuilder(ALICE).withNote("Call after six").withFavourite(true).build()
+                .withEmergencyContact(new EmergencyContact(new Name("Jane Tan"), new Phone("91234567"), "Sister"))
+                .withArchive(true);
+        assertEquals(original, new PersonBuilder(original).build());
+    }
+
+    @Test
+    public void constructor_archiveOverloads_preserveRequestedState() {
+        Person withRoom = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(),
+                ALICE.getAddress(), ALICE.getTags(), new Room("B-204"), true);
+        Person withNote = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(),
+                ALICE.getAddress(), ALICE.getTags(), new Room("B-204"), new Note("Call after six"), true);
+        assertTrue(withRoom.isArchived());
+        assertTrue(withNote.isArchived());
+        assertTrue(withRoom.getEmergencyContact().isEmpty());
+        assertTrue(withNote.getEmergencyContact().isEmpty());
+        assertEquals(new Note("Call after six"), withNote.getNote());
+    }
+
+    @Test
+    public void archiveState_defaultsToFalse() {
+        assertFalse(ALICE.isArchived());
+        assertFalse(new PersonBuilder().withRoom("B-204").build().isArchived());
+    }
+
+    @Test
+    public void withArchive_preservesDetailsAndIdentity() {
+        Person original = new PersonBuilder(ALICE).withRoom("B-204").withNote("Call after six")
+                .withFavourite(true).build()
+                .withEmergencyContact(new EmergencyContact(new Name("Jane Tan"), new Phone("91234567"), "Sister"));
+        Person archived = original.withArchive(true);
+        assertTrue(archived.isArchived());
+        assertTrue(archived.isFavourite());
+        assertEquals(original.getNote(), archived.getNote());
+        assertEquals(original.getEmergencyContact(), archived.getEmergencyContact());
+        assertFalse(original.isArchived());
+        assertTrue(original.isSamePerson(archived));
+        assertTrue(archived.isSamePerson(original));
+        assertFalse(original.equals(archived));
+        assertEquals(original, archived.withArchive(false));
+        assertEquals(original.hashCode(), archived.withArchive(false).hashCode());
+        assertEquals(archived, original.withArchive(true));
+        assertEquals(archived.hashCode(), original.withArchive(true).hashCode());
+        assertEquals(List.copyOf(original.getTags()), List.copyOf(archived.getTags()));
+    }
 
     @Test
     public void asObservableList_modifyList_throwsUnsupportedOperationException() {
@@ -78,6 +177,9 @@ public class PersonTest {
     public void isSamePerson() {
         // same object -> returns true
         assertTrue(ALICE.isSamePerson(ALICE));
+
+        // favourite status does not change identity
+        assertTrue(ALICE.isSamePerson(ALICE.withFavourite(true)));
 
         // null -> returns false
         assertFalse(ALICE.isSamePerson(null));
@@ -142,6 +244,63 @@ public class PersonTest {
         // different room -> returns false
         editedAlice = new PersonBuilder(ALICE).withRoom("B-204").build();
         assertFalse(ALICE.equals(editedAlice));
+
+        // different note -> returns false
+        editedAlice = new PersonBuilder(ALICE).withNote(VALID_NOTE_BOB).build();
+        assertFalse(ALICE.equals(editedAlice));
+
+        // different favourite status -> returns false
+        assertFalse(ALICE.equals(ALICE.withFavourite(true)));
+        assertEquals(ALICE.withFavourite(true), new PersonBuilder(ALICE).withFavourite(true).build());
+    }
+
+    @Test
+    public void hashCode_differentFavouriteStatus_differs() {
+        Person favourite = ALICE.withFavourite(true);
+        Person copy = new PersonBuilder(favourite).build();
+        assertNotEquals(ALICE.hashCode(), favourite.hashCode());
+        assertTrue(copy.isFavourite());
+        assertEquals(favourite, copy);
+        assertEquals(favourite.hashCode(), copy.hashCode());
+    }
+
+    @Test
+    public void hashCode_differentNote_differs() {
+        Person aliceWithNote = new PersonBuilder(ALICE).withNote(VALID_NOTE_BOB).build();
+        assertNotEquals(ALICE.hashCode(), aliceWithNote.hashCode());
+        assertEquals(aliceWithNote.hashCode(), new PersonBuilder(aliceWithNote).build().hashCode());
+    }
+
+    @Test
+    public void withEmergencyContact_preservesOtherFieldsAndOriginalPerson() {
+        Person original = new PersonBuilder(ALICE).withRoom("B-204").withNote("Allergic to peanuts").build();
+        EmergencyContact contact = new EmergencyContact(new Name("Bob Choo"), new Phone("91234567"), "Brother");
+        Person updated = original.withEmergencyContact(contact);
+        assertTrue(original.getEmergencyContact().isEmpty());
+        assertTrue(original.isSamePerson(updated));
+        assertEquals(original.getNote(), updated.getNote());
+        assertEquals(original.getRoom(), updated.getRoom());
+        assertEquals(original.getPhone(), updated.getPhone());
+        assertEquals(original.getEmail(), updated.getEmail());
+        assertEquals(original.getAddress(), updated.getAddress());
+        assertEquals(original.getTags(), updated.getTags());
+        assertEquals(contact, updated.getEmergencyContact().orElseThrow());
+    }
+
+    @Test
+    public void equals_emergencyDetailsIncludedInEqualityAndHashCode() {
+        EmergencyContact contact = new EmergencyContact(new Name("Bob Choo"), new Phone("91234567"), "Brother");
+        Person updated = ALICE.withEmergencyContact(contact);
+        Person copy = new PersonBuilder(updated).build();
+        assertFalse(ALICE.equals(updated));
+        assertEquals(updated, copy);
+        assertEquals(updated.hashCode(), copy.hashCode());
+    }
+
+    @Test
+    public void toString_withEmergencyContact_includesEmergencyDetails() {
+        EmergencyContact contact = new EmergencyContact(new Name("Bob Choo"), new Phone("91234567"), "Brother");
+        assertTrue(ALICE.withEmergencyContact(contact).toString().contains("emergencyContact="));
     }
 
     private static Set<Tag> createTags(int count) {
@@ -160,5 +319,10 @@ public class PersonTest {
 
         Person aliceWithRoom = new PersonBuilder(ALICE).withRoom("B-204").build();
         assertTrue(aliceWithRoom.toString().contains("room=B-204"));
+
+        Person aliceWithNote = new PersonBuilder(ALICE).withNote(VALID_NOTE_BOB).build();
+        assertTrue(aliceWithNote.toString().contains("note=" + VALID_NOTE_BOB));
+
+        assertTrue(ALICE.withFavourite(true).toString().contains("isFavourite=true"));
     }
 }

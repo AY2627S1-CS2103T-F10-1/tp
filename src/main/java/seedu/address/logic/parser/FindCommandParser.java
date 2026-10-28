@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.person.NameEqualsPredicate;
+import seedu.address.model.person.NameFuzzyMatchesPredicate;
 import seedu.address.model.person.PersonHasTagPredicate;
 import seedu.address.model.person.PhoneEqualsPredicate;
 
@@ -46,7 +46,7 @@ public class FindCommandParser implements Parser<FindCommand> {
         }
 
         if (name.isPresent()) {
-            return new FindCommand(new NameEqualsPredicate(name.get()));
+            return new FindCommand(new NameFuzzyMatchesPredicate(name.get()));
         }
         if (phone.isPresent()) {
             return new FindCommand(new PhoneEqualsPredicate(phone.get()));

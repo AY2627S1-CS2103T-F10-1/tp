@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ROOM_COMMAND;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
@@ -15,7 +16,9 @@ import seedu.address.logic.Messages;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Note;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Phone;
 import seedu.address.model.person.Room;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
@@ -60,10 +63,7 @@ public class EditCommandParserTest {
     @Test
     public void parse_invalidValue_failure() {
         assertParseFailure(parser, " 1 /name James&", Name.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, " 1 /name", PersonField.MESSAGE_EMPTY_NAME);
-        assertParseFailure(parser, " 1 /phone 911a", PersonField.MESSAGE_INVALID_PHONE);
-        assertParseFailure(parser, " 1 /phone", PersonField.MESSAGE_EMPTY_PHONE);
-        assertParseFailure(parser, " 1 /room", Room.MESSAGE_EMPTY);
+        assertParseFailure(parser, " 1 /phone 911a", Phone.MESSAGE_INVALID_CHARACTERS);
         assertParseFailure(parser, " 1 /room B#1", Room.MESSAGE_INVALID_CHARACTERS);
         assertParseFailure(parser, " 1 /tag hubby*", Tag.MESSAGE_INVALID_CHARACTERS);
 
@@ -72,7 +72,7 @@ public class EditCommandParserTest {
         assertParseFailure(parser, " 1 /tag /tag friend", Tag.MESSAGE_EMPTY);
 
         // same rules as add
-        assertParseFailure(parser, " 1 /tag RA /tag ra", PersonField.MESSAGE_DUPLICATE_TAG);
+        assertParseFailure(parser, " 1 /tag RA /tag ra", Tag.MESSAGE_DUPLICATE);
         assertParseFailure(parser, " 1 /tag a /tag b /tag c /tag d /tag e /tag f", Person.MESSAGE_TAG_LIMIT_REACHED);
 
         // only the first invalid value is reported
@@ -123,8 +123,36 @@ public class EditCommandParserTest {
     }
 
     @Test
-    public void parse_resetTags_success() {
+    public void parse_emptyOptionalField_clearsField() {
         assertParseSuccess(parser, " 3 /tag", new EditCommand(INDEX_THIRD_PERSON,
                 new EditPersonDescriptorBuilder().withTags().build()));
+        assertParseSuccess(parser, " 3 /room", new EditCommand(INDEX_THIRD_PERSON,
+                new EditPersonDescriptorBuilder().withRoom("").build()));
+        assertParseSuccess(parser, " 3 /room /tag", new EditCommand(INDEX_THIRD_PERSON,
+                new EditPersonDescriptorBuilder().withRoom("").withTags().build()));
+        assertParseSuccess(parser, " 3 /note", new EditCommand(INDEX_THIRD_PERSON,
+                new EditPersonDescriptorBuilder().withNote("").build()));
+    }
+
+    @Test
+    public void parse_note_success() {
+        assertParseSuccess(parser, " 1 /note  Prefers   WhatsApp ", new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withNote("Prefers WhatsApp").build()));
+        assertParseSuccess(parser, " 1 /note Allergic to peanuts /phone 91234567", new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withPhone("91234567").withNote("Allergic to peanuts").build()));
+    }
+
+    @Test
+    public void parse_invalidNote_failure() {
+        assertParseFailure(parser, " 1 /note " + "a".repeat(Note.MAX_LENGTH + 1), Note.MESSAGE_TOO_LONG);
+        assertParseFailure(parser, " 1 /note call w/ parent", Note.MESSAGE_INVALID_CHARACTERS);
+        assertParseFailure(parser, " 1 /note a /note b",
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NOTE_COMMAND));
+    }
+
+    @Test
+    public void parse_emptyRequiredField_failure() {
+        assertParseFailure(parser, " 1 /name", Name.MESSAGE_EMPTY);
+        assertParseFailure(parser, " 1 /phone", Phone.MESSAGE_EMPTY);
     }
 }

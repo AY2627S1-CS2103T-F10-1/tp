@@ -159,6 +159,13 @@ public class AddCommandTest {
             requireNonNull(person);
             return this.person.isSamePerson(person);
         }
+
+        @Override
+        public ReadOnlyAddressBook getAddressBook() {
+            AddressBook book = new AddressBook();
+            book.addPerson(person);
+            return book;
+        }
     }
 
     /**

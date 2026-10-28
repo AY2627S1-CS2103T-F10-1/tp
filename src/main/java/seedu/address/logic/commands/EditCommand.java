@@ -1,7 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
-import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
+import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PERSONS;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,12 +28,13 @@ public class EditCommand extends Command {
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits the details of the person identified "
             + "by the index number used in the displayed person list. "
             + "Existing values will be overwritten by the input values; "
-            + "/tag replaces all tags, and /tag on its own removes them.\n"
+            + "/tag replaces all tags, and an optional field such as /room or /tag on its own removes it.\n"
             + "Parameters: INDEX (must be a positive integer) "
             + PersonField.values().stream().map(field -> field.getUsage(true)).collect(Collectors.joining(" "))
             + "\nExample: " + COMMAND_WORD + " 1 /phone 91234567 /room B-204";
 
     public static final String MESSAGE_EDIT_PERSON_SUCCESS = "Edited person: %1$s";
+    public static final String MESSAGE_ARCHIVED_PERSON = "Cannot edit an archived contact. Unarchive it first.";
     public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
     public static final String MESSAGE_DUPLICATE_PERSON = "This person already exists in the address book.";
 
@@ -62,6 +63,9 @@ public class EditCommand extends Command {
         }
 
         Person personToEdit = lastShownList.get(index.getZeroBased());
+        if (personToEdit.isArchived()) {
+            throw new CommandException(MESSAGE_ARCHIVED_PERSON);
+        }
         Person editedPerson = createEditedPerson(personToEdit, editPersonDescriptor);
 
         if (!personToEdit.isSamePerson(editedPerson) && model.hasPerson(editedPerson)) {
@@ -69,7 +73,7 @@ public class EditCommand extends Command {
         }
 
         model.setPerson(personToEdit, editedPerson);
-        model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
+        model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS);
         return new CommandResult(String.format(MESSAGE_EDIT_PERSON_SUCCESS, Messages.format(editedPerson)));
     }
 
@@ -82,7 +86,8 @@ public class EditCommand extends Command {
 
         PersonFieldValues editedValues = PersonFieldValues.of(personToEdit);
         editedValues.putAll(editPersonDescriptor.values);
-        return editedValues.toPerson(personToEdit.getEmail(), personToEdit.getAddress());
+        return editedValues.toPerson(personToEdit.getEmail(), personToEdit.getAddress(),
+                personToEdit.getEmergencyContact(), personToEdit.isFavourite());
     }
 
     @Override
@@ -142,7 +147,7 @@ public class EditCommand extends Command {
         }
 
         /**
-         * Sets {@code field} from {@code argMultimap} if it was given. A repeatable field given an empty
+         * Sets {@code field} from {@code argMultimap} if it was given. An optional field given an empty
          * value is cleared.
          *
          * @throws ParseException if the values given for {@code field} are invalid.

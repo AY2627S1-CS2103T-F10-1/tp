@@ -15,11 +15,14 @@ public class AddCommand extends Command {
     public static final String COMMAND_WORD = "add";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Adds a person to the address book. "
-            + "Parameters: NAME /phone PHONE [/room ROOM] [/tag TAG]...\n"
+            + "Parameters: NAME /phone PHONE [/room ROOM] [/tag TAG]... [/note NOTE]\n"
             + "Example: " + COMMAND_WORD + " Sarah Tan /phone 9123 4567 /room B-204 /tag Resident /tag Floor 3";
 
     public static final String MESSAGE_SUCCESS = "Contact %1$s added successfully.";
     public static final String MESSAGE_DUPLICATE_PERSON = "Contact already exists.";
+
+    public static final String MESSAGE_ARCHIVED_DUPLICATE =
+            "Contact already exists in the archive. Use list archived and unarchive INDEX to restore it.";
 
     private final Person toAdd;
 
@@ -36,6 +39,11 @@ public class AddCommand extends Command {
         requireNonNull(model);
 
         if (model.hasPerson(toAdd)) {
+            boolean archivedDuplicate = model.getAddressBook().getPersonList().stream()
+                    .anyMatch(person -> person.isArchived() && person.isSamePerson(toAdd));
+            if (archivedDuplicate) {
+                throw new CommandException(MESSAGE_ARCHIVED_DUPLICATE);
+            }
             throw new CommandException(MESSAGE_DUPLICATE_PERSON);
         }
 
