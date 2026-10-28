@@ -50,8 +50,8 @@ public class ToggleCommandTest {
         model.addPerson(person);
         Index index = Index.fromOneBased(model.getFilteredPersonList().size());
 
-        Person expected = new PersonBuilder(person).withTags("Floor 3", "Ra").build();
-        assertToggleSuccess(index, person, expected, "Added: Floor 3, Ra.", "floor  3", "RA");
+        Person expected = new PersonBuilder(person).withTags("Floor 3", "RA").build();
+        assertToggleSuccess(index, person, expected, "Added: Floor 3, RA.", "floor  3", "RA");
     }
 
     @Test
