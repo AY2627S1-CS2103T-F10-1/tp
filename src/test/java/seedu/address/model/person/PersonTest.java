@@ -40,6 +40,32 @@ public class PersonTest {
     }
 
     @Test
+    public void constructor_exactlyTagLimit_success() {
+        Set<Tag> tagsAtLimit = createTags(Person.MAX_TAGS);
+
+        Person person = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
+                tagsAtLimit);
+        assertEquals(Person.MAX_TAGS, person.getTags().size());
+        assertEquals(tagsAtLimit, person.getTags());
+
+        // the constructor that also takes a room has the same limit
+        Person personWithRoom = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(),
+                ALICE.getAddress(), tagsAtLimit, ALICE.getRoom());
+        assertEquals(Person.MAX_TAGS, personWithRoom.getTags().size());
+    }
+
+    @Test
+    public void constructor_oneOverTagLimit_throwsIllegalArgumentException() {
+        Set<Tag> tagsOverLimit = createTags(Person.MAX_TAGS + 1);
+
+        assertThrows(IllegalArgumentException.class, Person.MESSAGE_TAG_LIMIT_REACHED, () -> new Person(
+                ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(), tagsOverLimit));
+        assertThrows(IllegalArgumentException.class, Person.MESSAGE_TAG_LIMIT_REACHED, () -> new Person(
+                ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(), tagsOverLimit,
+                ALICE.getRoom()));
+    }
+
+    @Test
     public void constructor_tags_keepsGivenOrder() {
         List<Tag> tagsInGivenOrder = List.of(new Tag("Staff"), new Tag("RA"), new Tag("Block4"));
         Person person = new Person(ALICE.getName(), ALICE.getPhone(), ALICE.getEmail(), ALICE.getAddress(),
@@ -116,6 +142,14 @@ public class PersonTest {
         // different room -> returns false
         editedAlice = new PersonBuilder(ALICE).withRoom("B-204").build();
         assertFalse(ALICE.equals(editedAlice));
+    }
+
+    private static Set<Tag> createTags(int count) {
+        Set<Tag> tags = new LinkedHashSet<>();
+        for (int i = 1; i <= count; i++) {
+            tags.add(new Tag("Tag" + i));
+        }
+        return tags;
     }
 
     @Test

@@ -86,6 +86,27 @@ public class ToggleCommandTest {
     }
 
     @Test
+    public void execute_resultExactlyAtLimit_success() {
+        Person person = new PersonBuilder().withName("Zed").withTags("a", "b", "c").build();
+        model.addPerson(person);
+        Index index = Index.fromOneBased(model.getFilteredPersonList().size());
+
+        // 3 tags + 2 added = exactly Person.MAX_TAGS
+        Person expected = new PersonBuilder(person).withTags("a", "b", "c", "d", "e").build();
+        assertToggleSuccess(index, person, expected, "Added: D, E.", "d", "e");
+        assertEquals(Person.MAX_TAGS, model.getFilteredPersonList().get(index.getZeroBased()).getTags().size());
+
+        // one more tag would take the result over the limit, so it is rejected and the tags are unchanged
+        assertCommandFailure(new ToggleCommand(index, tags("f")), model, Person.MESSAGE_TAG_LIMIT_REACHED);
+        assertEquals(Person.MAX_TAGS, model.getFilteredPersonList().get(index.getZeroBased()).getTags().size());
+
+        // toggling a tag the contact already has still works at the limit
+        Person atLimit = model.getFilteredPersonList().get(index.getZeroBased());
+        Person expectedAfterRemoval = new PersonBuilder(atLimit).withTags("a", "b", "c", "d").build();
+        assertToggleSuccess(index, atLimit, expectedAfterRemoval, "Removed: E.", "e");
+    }
+
+    @Test
     public void execute_removeAllAndAddOneAtLimit_success() {
         Person person = new PersonBuilder().withName("Zed").withTags("a", "b", "c", "d", "e").build();
         model.addPerson(person);
