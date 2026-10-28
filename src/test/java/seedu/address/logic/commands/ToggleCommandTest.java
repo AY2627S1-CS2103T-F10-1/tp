@@ -41,7 +41,17 @@ public class ToggleCommandTest {
 
         // "a" is removed, "c" is added after the remaining tags
         Person expected = new PersonBuilder(person).withTags("b", "c").build();
-        assertToggleSuccess(index, person, expected, "a", "c");
+        assertToggleSuccess(index, person, expected, "Added: C. Removed: A.", "a", "c");
+    }
+
+    @Test
+    public void execute_onlyAdded_messageListsOnlyAdded() {
+        Person person = new PersonBuilder().withName("Zed").withTags().build();
+        model.addPerson(person);
+        Index index = Index.fromOneBased(model.getFilteredPersonList().size());
+
+        Person expected = new PersonBuilder(person).withTags("Floor 3", "Ra").build();
+        assertToggleSuccess(index, person, expected, "Added: Floor 3, Ra.", "floor  3", "RA");
     }
 
     @Test
@@ -51,7 +61,8 @@ public class ToggleCommandTest {
         Index index = Index.fromOneBased(model.getFilteredPersonList().size());
 
         Person expected = new PersonBuilder(person).withTags().build();
-        assertToggleSuccess(index, person, expected, "FRIENDS");
+        // the removed tag is reported as it is stored, not as it was typed
+        assertToggleSuccess(index, person, expected, "Removed: Friends.", "FRIENDS");
     }
 
     @Test
@@ -71,7 +82,7 @@ public class ToggleCommandTest {
 
         // one tag removed and one added keeps the person within the limit
         Person expected = new PersonBuilder(person).withTags("b", "c", "d", "e", "f").build();
-        assertToggleSuccess(index, person, expected, "a", "f");
+        assertToggleSuccess(index, person, expected, "Added: F. Removed: A.", "a", "f");
     }
 
     @Test
@@ -101,9 +112,11 @@ public class ToggleCommandTest {
         assertEquals(expected, command.toString());
     }
 
-    private void assertToggleSuccess(Index index, Person original, Person expected, String... tagNames) {
+    private void assertToggleSuccess(Index index, Person original, Person expected, String expectedChanges,
+                                     String... tagNames) {
         ToggleCommand command = new ToggleCommand(index, tags(tagNames));
-        String expectedMessage = String.format(ToggleCommand.MESSAGE_TOGGLE_SUCCESS, Messages.format(expected));
+        String expectedMessage = String.format(ToggleCommand.MESSAGE_TOGGLE_SUCCESS, Messages.format(expected),
+                expectedChanges);
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
         expectedModel.setPerson(original, expected);
         assertCommandSuccess(command, model, expectedMessage, expectedModel);

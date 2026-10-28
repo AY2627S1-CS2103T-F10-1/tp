@@ -3,9 +3,11 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
@@ -32,7 +34,9 @@ public class ToggleCommand extends Command {
             + "[" + PersonField.TAGS.getPrefix() + " TAG]...\n"
             + "Example: " + COMMAND_WORD + " 1 /tag Resident /tag Floor 3";
 
-    public static final String MESSAGE_TOGGLE_SUCCESS = "Toggled tags of person: %1$s";
+    public static final String MESSAGE_TOGGLE_SUCCESS = "Toggled tags of person: %1$s\n%2$s";
+    public static final String MESSAGE_ADDED = "Added: ";
+    public static final String MESSAGE_REMOVED = "Removed: ";
 
     private final Index index;
     private final Set<Tag> tagsToToggle;
@@ -59,7 +63,8 @@ public class ToggleCommand extends Command {
         }
 
         Person personToEdit = lastShownList.get(index.getZeroBased());
-        Set<Tag> toggledTags = toggle(personToEdit.getTags(), tagsToToggle);
+        Set<Tag> currentTags = personToEdit.getTags();
+        Set<Tag> toggledTags = toggle(currentTags, tagsToToggle);
         if (toggledTags.size() > Person.MAX_TAGS) {
             throw new CommandException(Person.MESSAGE_TAG_LIMIT_REACHED);
         }
@@ -70,7 +75,27 @@ public class ToggleCommand extends Command {
 
         model.setPerson(personToEdit, editedPerson);
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
-        return new CommandResult(String.format(MESSAGE_TOGGLE_SUCCESS, Messages.format(editedPerson)));
+        // report the stored form of each tag, which is the form shown on the contact card
+        List<Tag> removedTags = currentTags.stream().filter(tagsToToggle::contains).toList();
+        List<Tag> addedTags = toggledTags.stream().filter(tag -> !currentTags.contains(tag)).toList();
+        return new CommandResult(String.format(MESSAGE_TOGGLE_SUCCESS, Messages.format(editedPerson),
+                describeChanges(addedTags, removedTags)));
+    }
+
+    /** Returns a line such as {@code Added: A, B. Removed: C.}, leaving out whichever of the two is empty. */
+    private static String describeChanges(List<Tag> addedTags, List<Tag> removedTags) {
+        List<String> parts = new ArrayList<>();
+        if (!addedTags.isEmpty()) {
+            parts.add(MESSAGE_ADDED + joinTagNames(addedTags) + ".");
+        }
+        if (!removedTags.isEmpty()) {
+            parts.add(MESSAGE_REMOVED + joinTagNames(removedTags) + ".");
+        }
+        return String.join(" ", parts);
+    }
+
+    private static String joinTagNames(List<Tag> tags) {
+        return tags.stream().map(tag -> tag.tagName).collect(Collectors.joining(", "));
     }
 
     /**
