@@ -99,7 +99,7 @@ public class LogicManagerTest {
     public void execute_emergencyReplacement_savesNewDetailsAndKeepsGeneralEmergencyListSeparate() throws Exception {
         model.addPerson(new PersonBuilder(AMY).withNote("Allergic to peanuts").build());
         logic.execute("emergency 1 /name Bob Choo /phone 91234567 /relation Brother");
-        logic.execute("edit 1 /name Amy Tan /room B-204 /tag /note Call after 6pm");
+        logic.execute("edit 1 /name Amy Tan /room B-204 /note Call after 6pm");
         logic.execute("emergency 1 /name Alex Yeoh /phone 87654321");
 
         Person stored = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
