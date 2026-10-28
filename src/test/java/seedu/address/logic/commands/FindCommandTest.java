@@ -25,6 +25,7 @@ import seedu.address.model.person.NameFuzzyMatchesPredicate;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonHasTagPredicate;
 import seedu.address.model.person.PhoneEqualsPredicate;
+import seedu.address.model.person.RoomEqualsPredicate;
 import seedu.address.testutil.PersonBuilder;
 
 /**
@@ -33,6 +34,31 @@ import seedu.address.testutil.PersonBuilder;
 public class FindCommandTest {
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
     private Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+
+    @Test
+    public void execute_roomSearch_findsAllActiveMatchesFromArchivedView() {
+        Person first = new PersonBuilder(ALICE).withRoom("B-204").build();
+        Person second = new PersonBuilder(BENSON).withRoom("b-204").build();
+        Person archived = new PersonBuilder(DANIEL).withRoom("B-204").build().withArchive(true);
+        model.setPerson(ALICE, first);
+        model.setPerson(BENSON, second);
+        model.setPerson(DANIEL, archived);
+        List<Person> stored = List.copyOf(model.getAddressBook().getPersonList());
+        model.updateFilteredPersonList(Person::isArchived);
+
+        CommandResult result = new FindCommand(new RoomEqualsPredicate("b-204")).execute(model);
+
+        assertEquals(String.format(MESSAGE_PERSONS_LISTED_OVERVIEW, 2), result.getFeedbackToUser());
+        assertEquals(List.of(first, second), model.getFilteredPersonList());
+        assertEquals(stored, model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void execute_roomNotFound_showsEmptyList() {
+        CommandResult result = new FindCommand(new RoomEqualsPredicate("unknown")).execute(model);
+        assertEquals(MESSAGE_NO_PERSONS_FOUND, result.getFeedbackToUser());
+        assertTrue(model.getFilteredPersonList().isEmpty());
+    }
 
     @Test
     public void equals() {

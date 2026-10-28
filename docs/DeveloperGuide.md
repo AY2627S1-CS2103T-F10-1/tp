@@ -247,6 +247,12 @@ separately so ordinary edits preserve them while constructing the replacement pe
 
 `find /tag TAG` shows only contacts with the given tag. `FindCommandParser` creates a `PersonHasTagPredicate` from the value after `/tag`, and `FindCommand` applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any non-empty value is accepted and a value that is not a valid tag simply matches nobody.
 
+### Room search
+
+Room search is implemented separately by `RoomEqualsPredicate`, selected by `find /room ROOM`.
+It compares the complete stored room with the whitespace-normalized query, ignoring case.
+`FindCommand` applies its existing active-contact predicate, so archived contacts are excluded.
+
 ### Fuzzy name search
 
 `find /name NAME` lists contacts whose name is close to `NAME`, so an RA on duty can find a resident despite a typo or
@@ -1051,6 +1057,17 @@ Use a disposable address book with just `Amy Bee`, created using
 
 For filtered-list indexing, add a second person, use `find /name` to display only that person, and run
 `emergency 1 /name Bob Choo /phone 91234567`. Only the displayed person receives the details.
+
+### Searching by room number
+
+Start with two active contacts sharing room `B-204`, one contact in `B-205`, and one archived contact in `B-204`.
+
+* Run `find /room b-204`: only the two active contacts in `B-204` appear.
+* Run `list archived`, then `find /room B-204`: the same two active contacts appear.
+* Run `find /room B-20`: no contacts are found; matching is exact.
+* Run `find /room`, `find /room B-204 /tag Resident`, or `find /roomB-204`: a usage error is shown.
+* Run `find /room B-204 /room B-205`: a repeated-prefix error is shown.
+* Run `list`: all active contacts are still present; searching has changed no stored data.
 
 ### Saving data
 

@@ -158,12 +158,12 @@ This restores the active list after a search or archived view and does not chang
 
 Format: `list`
 
-* Only the `archived`, `emerg` and `fav` subcommands are supported after `list`. To show only contacts with a given tag, use [`find /tag`](#locating-persons-by-name-tag-or-phone-find).
+* Only the `archived`, `emerg` and `fav` subcommands are supported after `list`. To show only contacts with a given tag, use [`find /tag`](#locating-persons-by-name-tag-phone-or-room-find).
 
 * The command keyword is case-sensitive: use lowercase `list`. `LIST` and `LiSt` are rejected as unknown commands.
 * Leading and trailing spaces are ignored.
 * Use `list emerg` for emergency-tagged contacts or `list fav` for favourite contacts, as described below.
-  To search by any tag, use [`find /tag`](#locating-persons-by-name-tag-or-phone-find).
+  To search by any tag, use [`find /tag`](#locating-persons-by-name-tag-phone-or-room-find).
 * Unsupported arguments, such as `list abc` or the retired `list /filter Emergency`, are rejected with
   `Invalid command format. Usage: list`. The displayed list stays unchanged when the command is rejected.
 * When there are no active contacts, the list is empty and the result message is `No contacts found.`.
@@ -295,20 +295,21 @@ Format: `emergency INDEX /name NAME /phone PHONE [/relation RELATION]`
 
 Example: `emergency 1 /name Bob Choo /phone 9123 4567 /relation Brother`
 
-### Locating persons by name, tag or phone: `find`
+### Locating persons by name, tag, phone or room: `find`
 
-Finds active persons whose name is close to the given name, even when run from the archived view. Also finds who have the given tag or phone number.
+Finds active persons whose name is close to the given name, or who have the given tag, phone number or room.
+Searches active contacts even when run from the archived view.
 
-Format: `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`
+Format: `find /name NAME`, `find /tag TAG`, `find /phone NUMBER` or `find /room ROOM`
 
-* Exactly one of `/name`, `/tag` and `/phone` must be given, and nothing may be typed before it.
+* Exactly one of `/name`, `/tag`, `/phone` and `/room` must be given, and nothing may be typed before it.
 * Name search ignores capital letters and forgives small typos; for example, `find /name alx yeo` finds `Alex Yeoh`.
 * Tag search ignores case and extra spaces; for example, `find /tag Friends` matches the tag `friends`.
-* Spaces before and after `NAME`, `TAG` or `NUMBER` are ignored.
+* Spaces before and after `NAME`, `TAG`, `NUMBER` or `ROOM` are ignored.
 * If no person matches, the message `No contacts found` is shown and the list is empty. Otherwise, the number of persons listed is shown.
 * A prefix must be followed by a space, so `find /tagfriends` is not recognised as a tag search.
-* If the prefix is missing or not followed by a space (such as `/tagfriends`), multiple search prefixes are given, or `NAME`, `TAG` or `NUMBER` is empty, an invalid command format message is shown.
-* If `/name`, `/tag` or `/phone` is repeated, a message listing the repeated prefix is shown.
+* If the prefix is missing or not followed by a space (such as `/tagfriends`), multiple search prefixes are given, or `NAME`, `TAG`, `NUMBER` or `ROOM` is empty, an invalid command format message is shown.
+* If `/name`, `/tag`, `/phone` or `/room` is repeated, a message listing the repeated prefix is shown.
 
 Finding by name (`/name`):
 * You do not need the full name. Each word you type must be close to one of the words in the contact's name,
@@ -333,11 +334,19 @@ Finding by tag (`/tag`):
 * Any non-empty `TAG` is accepted. A value that is not a valid tag, or that no contact has, simply matches nobody.
 * A person is listed if any one of their tags is exactly `TAG`; for example, `find /tag friends` matches a person tagged `friends` and `owesMoney`, but not one tagged `friends2`.
 
+Finding by room (`/room`):
+* Matches the complete room number, ignoring case and extra whitespace: `find /room b-204` matches `B-204`.
+* Partial numbers do not match. `B-204`, `B204` and `B 204` are different room numbers.
+* Lists all active contacts sharing the room, including those hidden by a previous search.
+* Contacts without a room and archived contacts are excluded. Any non-empty search value is accepted;
+  an unknown room simply matches nobody.
+
 Examples:
 * `find /name Alex Yeoh` returns `Alex Yeoh`
 * `find /name alex` returns `Alex Yeoh`
 * `find /name Bernise` returns `Bernice Yu`, despite the typo
 * `find /tag friends` returns all persons who have the tag `friends`
+* `find /room B-204` returns all active persons whose room is `B-204`
 
 ### Archiving contacts: `archive`
 
@@ -392,7 +401,7 @@ Format: `delete INDEX` or `delete /name NAME`
 * The index refers to the index number shown in the displayed person list.
 * The index **must be a positive integer** 1, 2, 3, …​
 * Name deletion searches **all active contacts**, even when the displayed list is filtered.
-* `/name NAME` must be the contact's exact full name, with matching capital letters. Unlike [`find /name`](#locating-persons-by-name-tag-or-phone-find), typos and partial names are not accepted, so a typo cannot delete a different contact.
+* `/name NAME` must be the contact's exact full name, with matching capital letters. Unlike [`find /name`](#locating-persons-by-name-tag-phone-or-room-find), typos and partial names are not accepted, so a typo cannot delete a different contact.
 * If `/name` is missing or repeated, `NAME` is empty or there is text before `/name`, an invalid command format message is shown.
 * Exactly one match is deleted immediately. With no matches, nothing is deleted.
 * If more than one contact matches, nothing is deleted. The matching contacts are displayed with their indexes; continue with `delete INDEX`.
@@ -470,9 +479,8 @@ Action | Format, Examples
 **Clear** | `clear`
 **Delete** | `delete INDEX` or `delete /name NAME`<br> e.g., `delete 3`, `delete /name Alice Tan`
 **Edit (suspended)** | Temporarily unavailable. Displays `Edit not currently supported`.
-**Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /name jams`, `find /tag friends`
+**Find** | `find /name NAME`, `find /tag TAG`, `find /phone NUMBER` or `find /room ROOM`<br> e.g., `find /name James Jake`, `find /room B-204`
 **Edit** | `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​`<br> e.g., `edit 2 /phone 9123 4567`, `edit 1 /tag`
-**Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /tag friends`
 **List** | `list`
 **List emergency contacts** | `list emerg`
 **Mark favourite** | `fav INDEX`<br> e.g., `fav 2`
