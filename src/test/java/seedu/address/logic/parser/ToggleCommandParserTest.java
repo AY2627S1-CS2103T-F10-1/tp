@@ -58,7 +58,9 @@ public class ToggleCommandParserTest {
 
     @Test
     public void parse_duplicateTag_failure() {
-        assertParseFailure(parser, " 1 /tag friends /tag Friends", PersonField.MESSAGE_DUPLICATE_TAG);
+        String expected = String.format(ToggleCommandParser.MESSAGE_REPEATED_TAG, "Friends");
+        assertParseFailure(parser, " 1 /tag friends /tag Friends", expected);
+        assertParseFailure(parser, " 1 /tag Friends /tag  friends ", expected);
     }
 
     @Test

@@ -221,7 +221,7 @@ To add a new field, add it to `Person`, add a constant to `PersonField` and list
 1. Collapse whitespace, then reject any word starting with `/` other than `/tag` as an invalid format.
 2. Parse the text before the first keyword as the `INDEX`; an invalid index is reported as an invalid format.
 3. Require at least one `/tag`; otherwise report an invalid format.
-4. Parse the values with `PersonField.TAGS`, the same parser `add` and `edit` use for tags. So an empty or invalid tag, a tag given twice (`Contact already has this tag.`) and more than `Person.MAX_TAGS` tags in one command are rejected exactly as in `add`.
+4. Parse each value with `ParserUtil#parseTag()`, as `add` does, so an empty or invalid tag is reported the same way. A tag given twice is reported as `Repeated tag: TAG. Each tag can only be given once.` rather than `add`'s `Contact already has this tag.`, which would wrongly suggest that the contact already has the tag. More than `Person.MAX_TAGS` tags in one command is rejected as in `add`.
 
 `ToggleCommand` holds the `Index` and a `LinkedHashSet<Tag>` of tags to toggle. In `execute()` it:
 
@@ -702,7 +702,7 @@ testers are expected to do more *exploratory* testing.
 1. Invalid toggles
 
    1. Test case: `toggle 1 /tag A /tag a`<br>
-      Expected: No change. Error: `Contact already has this tag.`
+      Expected: No change. Error: `Repeated tag: A. Each tag can only be given once.`
 
    1. Test case: `toggle 1 /tag`<br>
       Expected: No change. Error: `Tag cannot be empty.`
