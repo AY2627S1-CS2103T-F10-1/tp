@@ -1,0 +1,44 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+title Archive a displayed active contact (successful path)
+participant ":LogicManager" as Logic LOGIC_COLOR
+participant "command:ArchiveCommand" as Command LOGIC_COLOR
+participant "model:Model" as Model MODEL_COLOR
+participant "target:Person" as Target MODEL_COLOR
+participant ":Storage" as Storage STORAGE_COLOR
+
+note over Logic, Command
+  AddressBookParser has parsed archive 1
+  using ArchiveCommandParser.
+end note
+Logic -> Command : execute(model)
+activate Command
+Command -> Model : getFilteredPersonList()
+Model --> Command : displayed
+note right of Command
+  Reject an out-of-range index.
+  Resolve target from displayed before replacement.
+end note
+Command -> Target : isArchived()
+Target --> Command : false
+Command -> Target : withArchive(true)
+Target --> Command : archived (new Person, same contact details)
+Command -> Model : setPerson(target, archived)
+note right of Model
+  Replaces target in AddressBook.
+  The observable filtered view updates;
+  its predicate is unchanged.
+end note
+Model --> Command
+Command --> Logic : CommandResult("Archived 1 contact.")
+deactivate Command
+Logic -> Model : getAddressBook()
+Model --> Logic : addressBook
+Logic -> Storage : saveAddressBook(addressBook)
+Storage --> Logic
+note over Logic, Storage
+  JsonAdaptedPerson stores the archive flag.
+  A save failure is reported as CommandException.
+end note
+@enduml
