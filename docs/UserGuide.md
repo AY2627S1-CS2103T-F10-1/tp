@@ -176,7 +176,7 @@ a previous search. Archived contacts are excluded.
 
 Format: `list sorted`
 
-* Names use case-sensitive string ordering: `Amy Bee`, `Zara Tan`, then `amy Bee`.
+* Names are sorted ignoring case, with case-sensitive ordering to break ties: `Amy Bee`, `amy Bee`, then `Zara Tan`.
 * Sorting changes the displayed order only. Stored order and contact details stay unchanged.
 * Index commands, such as `delete 1` and `archive 1`, act on the numbers in the sorted list.
 * Commands that reset the view, including `list`, `find`, `add` and `edit`, restore stored order.

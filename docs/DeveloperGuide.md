@@ -245,7 +245,7 @@ separately so ordinary edits preserve them while constructing the replacement pe
 
 ### Sorting the contact list
 
-`list sorted` selects all active contacts and applies a comparator using each full name's natural string order.
+`list sorted` selects all active contacts and compares full names ignoring case, with case-sensitive tie-breaking.
 `ModelManager` exposes one live `SortedList` over its `FilteredList`, so the GUI and index-based commands see
 the same ordering. Sorting does not modify the backing address book or its saved order.
 `updateFilteredPersonList()` clears the comparator when another command resets the view.
@@ -1064,7 +1064,7 @@ For filtered-list indexing, add a second person, use `find /name` to display onl
 Use a disposable address book with active contacts `Zara Tan`, `Amy Bee` and `amy Bee` added in that order,
 plus an archived contact `Aaron Tan`.
 
-* Run `list sorted`: only `Amy Bee`, `Zara Tan` and `amy Bee` appear, in that order.
+* Run `list sorted`: only `Amy Bee`, `amy Bee` and `Zara Tan` appear, in that order.
 * Run `list`: stored order returns, with `Zara Tan` first.
 * Run `list archived`, then `list sorted`: all active contacts appear sorted; `Aaron Tan` stays archived.
 * Run `list sorted extra`: the command is rejected with `Invalid command format. Usage: list sorted`.

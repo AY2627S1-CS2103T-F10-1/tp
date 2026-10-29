@@ -8,14 +8,16 @@ import java.util.Comparator;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
 
-/** Lists active contacts in ascending, case-sensitive lexicographical order by full name. */
+/** Lists active contacts by full name, ignoring case and breaking ties case-sensitively. */
 public class ListSortedCommand extends Command {
     public static final String SORTED_KEYWORD = "sorted";
     public static final String MESSAGE_USAGE = ListCommand.COMMAND_WORD + " " + SORTED_KEYWORD;
     public static final String MESSAGE_INVALID_FORMAT = "Invalid command format. Usage: " + MESSAGE_USAGE;
     public static final String MESSAGE_SUCCESS = "Listed active contacts sorted by name.";
 
-    private static final Comparator<Person> BY_NAME = Comparator.comparing(person -> person.getName().fullName);
+    private static final Comparator<Person> BY_NAME = Comparator
+            .comparing((Person person) -> person.getName().fullName, String.CASE_INSENSITIVE_ORDER)
+            .thenComparing(person -> person.getName().fullName);
 
     @Override
     public CommandResult execute(Model model) {

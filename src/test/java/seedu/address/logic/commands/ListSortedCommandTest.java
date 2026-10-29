@@ -43,7 +43,7 @@ public class ListSortedCommandTest {
         CommandResult result = new ListSortedCommand().execute(model);
 
         assertEquals(ListSortedCommand.MESSAGE_SUCCESS, result.getFeedbackToUser());
-        assertEquals(List.of(AMY, ZARA, LOWERCASE_AMY), displayed);
+        assertEquals(List.of(AMY, LOWERCASE_AMY, ZARA), displayed);
         assertSame(displayed, model.getFilteredPersonList());
         assertEquals(before, model.getAddressBook());
     }
@@ -60,7 +60,18 @@ public class ListSortedCommandTest {
     public void execute_repeatedCommand_keepsSameOrder() {
         new ListSortedCommand().execute(model);
         new ListSortedCommand().execute(model);
-        assertEquals(List.of(AMY, ZARA, LOWERCASE_AMY), model.getFilteredPersonList());
+        assertEquals(List.of(AMY, LOWERCASE_AMY, ZARA), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_caseInsensitiveTie_usesCaseSensitiveOrder() {
+        Model tieModel = new ModelManager();
+        tieModel.addPerson(LOWERCASE_AMY);
+        tieModel.addPerson(AMY);
+
+        new ListSortedCommand().execute(tieModel);
+
+        assertEquals(List.of(AMY, LOWERCASE_AMY), tieModel.getFilteredPersonList());
     }
 
     @Test
@@ -82,7 +93,7 @@ public class ListSortedCommandTest {
         new ListSortedCommand().execute(model);
         new DeleteCommand(INDEX_FIRST_PERSON).execute(model);
         assertEquals(List.of(ZARA, LOWERCASE_AMY, ARCHIVED), model.getAddressBook().getPersonList());
-        assertEquals(List.of(ZARA, LOWERCASE_AMY), model.getFilteredPersonList());
+        assertEquals(List.of(LOWERCASE_AMY, ZARA), model.getFilteredPersonList());
     }
 
     @Test
@@ -91,7 +102,7 @@ public class ListSortedCommandTest {
         new ArchiveCommand(INDEX_FIRST_PERSON).execute(model);
         assertEquals(List.of(ZARA, AMY.withArchive(true), LOWERCASE_AMY, ARCHIVED),
                 model.getAddressBook().getPersonList());
-        assertEquals(List.of(ZARA, LOWERCASE_AMY), model.getFilteredPersonList());
+        assertEquals(List.of(LOWERCASE_AMY, ZARA), model.getFilteredPersonList());
     }
 
     @Test
