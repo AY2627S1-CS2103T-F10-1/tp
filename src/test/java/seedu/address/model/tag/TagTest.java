@@ -48,10 +48,14 @@ public class TagTest {
         assertTrue(Tag.isValidTagName(VALID_TAG_AT_MAX_LENGTH)); // boundary: exactly at the limit
         assertTrue(Tag.isValidTagName(" " + VALID_TAG_AT_MAX_LENGTH + " ")); // surrounding spaces do not count
         assertTrue(Tag.isValidTagName("Café Vendor")); // accented letter
-        assertTrue(Tag.isValidTagName("Café")); // letter followed by a combining accent mark
+        assertTrue(Tag.isValidTagName("Cafe\u0301")); // letter followed by a combining accent mark
         assertTrue(Tag.isValidTagName("宿舍")); // non-Latin letters
         assertTrue(Tag.isValidTagName("விடுதி")); // letters with vowel signs
         assertTrue(Tag.isValidTagName("٣")); // non-ASCII digit
+
+        // non-ASCII letters at the length boundary
+        assertTrue(Tag.isValidTagName("宿".repeat(Tag.MAX_LENGTH)));
+        assertFalse(Tag.isValidTagName("宿".repeat(Tag.MAX_LENGTH + 1)));
     }
 
     @Test
@@ -66,6 +70,8 @@ public class TagTest {
         assertEquals("4th Floor", new Tag("4TH floor").tagName); // digits are left unchanged
         assertEquals("Élève", new Tag("éLÈVE").tagName); // accented letters
         assertEquals("宿舍", new Tag("宿舍").tagName); // letters without case are left unchanged
+        // Deseret letters lie outside the Basic Multilingual Plane, so each takes two chars
+        assertEquals("\uD801\uDC00\uD801\uDC2F", new Tag("\uD801\uDC28\uD801\uDC07").tagName);
     }
 
     @Test
