@@ -1,5 +1,7 @@
 package seedu.address.model.person;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.Locale;
 import java.util.function.Predicate;
 
@@ -12,12 +14,13 @@ public class RoomEqualsPredicate implements Predicate<Person> {
 
     /** Creates a normalized search value; unknown values simply match no room. */
     public RoomEqualsPredicate(String room) {
+        requireNonNull(room);
         this.room = StringUtil.collapseWhitespace(room).toLowerCase(Locale.ROOT);
     }
 
     @Override
     public boolean test(Person person) {
-        return person.getRoom().value.equalsIgnoreCase(room);
+        return person.getRoom().value.toLowerCase(Locale.ROOT).equals(room);
     }
 
     @Override
