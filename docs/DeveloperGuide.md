@@ -9,7 +9,13 @@ title: Developer Guide
 
 ## **Acknowledgements**
 
-* _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the originals.}_
+* RAcontact is adapted from [AddressBook-Level3 (AB3)](https://github.com/se-edu/addressbook-level3),
+  created by the [SE-EDU initiative](https://se-education.org). We reused and extended its application structure,
+  contact-management code and test utilities, and adapted its [User Guide](https://se-education.org/addressbook-level3/UserGuide.html),
+  [Developer Guide](https://se-education.org/addressbook-level3/DeveloperGuide.html) and UML diagrams for RAcontact.
+* Libraries used: [JavaFX](https://openjfx.io/) for the user interface,
+  [Jackson](https://github.com/FasterXML/jackson) for JSON storage, and
+  [JUnit 5](https://github.com/junit-team/junit5) for automated tests.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -528,6 +534,12 @@ using the existing observable contact list.
   For other contacts, both `visible` and `managed` are false, so no badge space is reserved.
   Replacing a model entry refreshes its list cell with a new card and the updated status.
 
+The following sequence diagram shows a successful `fav 1` execution, assuming the first displayed contact is active and is not already a favourite.
+
+<img src="images/FavExecutionSequenceDiagram.png" width="700" />
+
+`withFavourite(true)` creates a copy with the favourite flag enabled and all other details preserved. `setPerson()` replaces the original contact without resetting the current filter. The diagram focuses on command execution; parsing and saving are omitted.
+
 #### Design considerations
 
 * A dedicated flag keeps favourite status independent of category tags and their replacement semantics.
@@ -946,6 +958,21 @@ testers are expected to do more *exploratory* testing.
        Expected: The most recent window size and location are retained.
 
 1. _{ more test cases …​ }_
+
+### Recalling previous commands
+
+Start each test below in a newly launched app so that command history is empty. Click the command box before
+pressing keys, and use Up/Down without Shift, Ctrl, Alt or Command. These tests do not add, edit or delete contacts.
+For the user-facing explanation, see [Recalling previous commands in the UG](UserGuide.html#recalling-previous-commands).
+
+Test | Steps | Expected
+-----|-------|---------
+Empty history | Type `unfinished draft` without submitting it. Press Up, then Down. | The text stays unchanged and no command executes.
+Browsing and boundaries | Submit `list`, then `list fav`. Type `unfinished draft` without submitting it. Press Up three times, then Down three times. | Up shows `list fav`, `list`, then `list` again. Down shows `list fav`, restores `unfinished draft`, then leaves it unchanged. Browsing does not change the contact list or result message.
+Editing recalled text | Submit `list`, then `list fav`. Type `unfinished draft` and press Up. Replace the recalled text with `list sorted` without submitting it. Press Up, then Down twice. | The text becomes `list`, then the original `list fav`, then `unfinished draft`. Unsubmitted edits do not replace a stored command or the saved draft.
+Failed submissions and resubmission | Submit `list`, then `find /name`. Clear the command box and press Up. Replace the recalled text with `list fav` and press Enter. Press Up, then Down. | The incomplete search reports an error and can be recalled as `find /name`. Submitting the corrected command executes it and clears the field. Up recalls `list fav`; Down restores an empty field.
+Blank submission while browsing | Submit `list`, then `list fav`. Type `unfinished draft` and press Up twice. Replace the recalled text with three ordinary spaces and press Enter. Press Down twice. | The blank submission does not execute or enter history. Down shows `list fav`, then restores `unfinished draft`; the browsing position and draft were preserved.
+Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` and press Up, then Down. | The text stays unchanged because commands from the previous session are not retained.
 
 ### Deleting a person
 
