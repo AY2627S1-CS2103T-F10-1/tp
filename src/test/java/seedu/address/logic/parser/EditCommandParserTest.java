@@ -145,9 +145,20 @@ public class EditCommandParserTest {
     @Test
     public void parse_invalidNote_failure() {
         assertParseFailure(parser, " 1 /note " + "a".repeat(Note.MAX_LENGTH + 1), Note.MESSAGE_TOO_LONG);
-        assertParseFailure(parser, " 1 /note call w/ parent", Note.MESSAGE_INVALID_CHARACTERS);
         assertParseFailure(parser, " 1 /note a /note b",
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NOTE_COMMAND));
+    }
+
+    @Test
+    public void parse_noteWithWordStartingWithSlash_failure() {
+        assertParseFailure(parser, " 1 /note see /docs", Note.MESSAGE_INVALID_CHARACTERS);
+        assertParseFailure(parser, " 1 /note ends with /", Note.MESSAGE_INVALID_CHARACTERS);
+    }
+
+    @Test
+    public void parse_noteWithSlashInsideWord_success() {
+        assertParseSuccess(parser, " 1 /note call w/ parent 24/7", new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withNote("call w/ parent 24/7").build()));
     }
 
     @Test

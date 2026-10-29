@@ -128,7 +128,10 @@ Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
 * Room is optional for any contact, regardless of tags. It can contain up to 20 characters:
   letters, digits, spaces and hyphens.
 * Note is optional free text, such as an allergy or how the contact prefers to be reached. It can contain
-  up to 200 characters of any kind except `/`, which marks the start of a field.
+  up to 200 characters of any kind. `/` is allowed inside a word (e.g., `24/7`, `and/or`, `w/`, links), but a word
+  cannot start with `/`, because that marks the start of a field. If a word in the note is a field name such as
+  `/room` or `/tag`, the rest of the note is taken as that field: `/note talk to /room officer` gives the note
+  `talk to` and the room `officer`.
 * Enter the name first. `/phone`, `/room`, `/tag` and `/note` can then be given in any order.
   `/phone`, `/room` and `/note` cannot be repeated.
 * Repeat `/tag` once per tag, up to five tags. Spaces inside a tag are allowed, so `/tag Resident Fellow` is one tag.
@@ -457,7 +460,7 @@ Each contact's `isFavourite` property is a JSON boolean, `true` or `false`. If t
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
-A contact with more than 5 distinct tags also makes the data file invalid.<br>
+A contact with more than 5 distinct tags also makes the data file invalid, as does a note longer than 200 characters or with a word starting with `/` (e.g., `see /docs`; a link such as `https://nus.edu.sg` is fine). See [`add`](#adding-a-contact-add) for the rules of each field.<br>
 Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
