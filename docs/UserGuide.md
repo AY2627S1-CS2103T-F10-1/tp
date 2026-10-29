@@ -298,6 +298,23 @@ Format: `emergency INDEX /name NAME /phone PHONE [/relation RELATION]`
 
 Example: `emergency 1 /name Bob Choo /phone 9123 4567 /relation Brother`
 
+### Toggling tags: `toggle`
+
+Adds the tags a contact does not have, and removes the tags a contact already has.
+
+Format: `toggle INDEX /tag TAG [/tag TAG]…​`
+
+* `INDEX` is the number shown beside the contact in the current list, and must be a positive integer.
+* At least one `/tag` must be given. Repeat `/tag` once per tag.
+* Tags are matched the same way as in `add`, ignoring case and extra spaces.
+* A tag cannot be repeated within one command.
+* A contact can have at most 5 tags, including `emergency`. If the toggle would leave the contact with more, nothing is changed.
+* Archived contacts must be unarchived before toggling their tags. Favourite status, emergency details and the note are not changed.
+
+Examples:
+* `toggle 1 /tag emergency` marks the 1st contact as an emergency contact, or removes that if they already are one.
+* `toggle 2 /tag Resident /tag Floor 3` toggles two tags of the 2nd contact at once.
+
 ### Locating persons by name, tag, phone or room: `find`
 
 Finds active persons whose name is close to the given name, or who have the given tag, phone number or room.
@@ -506,6 +523,8 @@ Action | Format, Examples
 **Edit (suspended)** | Temporarily unavailable. Displays `Edit not currently supported`.
 **Find** | `find /name NAME`, `find /tag TAG`, `find /phone NUMBER` or `find /room ROOM`<br> e.g., `find /name alx yeo`, `find /tag friends`, `find /phone 87438807`, `find /room B-204`
 **Edit** | `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​`<br> e.g., `edit 2 /phone 9123 4567`, `edit 1 /tag`
+**Toggle** | `toggle INDEX /tag TAG [/tag TAG]…​`<br> e.g., `toggle 1 /tag emergency`
+**Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /tag friends`
 **List** | `list`
 **List emergency contacts** | `list emerg`
 **Mark favourite** | `fav INDEX`<br> e.g., `fav 2`

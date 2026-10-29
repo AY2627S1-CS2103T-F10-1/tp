@@ -173,7 +173,7 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
 
 * **Alternative 1 (current choice):** as part of `add`, with one `/tag` keyword per tag.
   * Pros: every command starts with a command word, and a new contact can be fully set up in one command.
-  * Cons: tags cannot yet be added to an existing contact without replacing all of its tags with `edit`.
+  * Cons: tags on an existing contact need a separate command, which is `toggle` (see [Toggle tags feature](#toggle-tags-feature)).
 * **Alternative 2:** a separate command, typed as `CONTACT_NAME /tag TAG`, with no command word.
   * Pros: tags can be added to an existing contact.
   * Cons: it is the only command without a command word, so `AddressBookParser` needs a special case to recognize it, and it adds only one tag per command.
@@ -242,6 +242,51 @@ Emergency details are kept outside the add/edit field registry. `PersonFieldValu
 separately so ordinary edits preserve them while constructing the replacement person once.
 `Person#equals()` and `hashCode()` include the emergency details; `isSamePerson()` still compares names only.
 `JsonAdaptedEmergencyContact` stores the nested details, and older files without this field remain valid.
+
+### Toggle tags feature
+
+`toggle INDEX /tag TAG [/tag TAG]…` adds each given tag the contact does not have and removes each one it has.
+
+#### Implementation
+
+`AddressBookParser` routes `toggle` to `ToggleCommandParser`, which works in the same steps as `EditCommandParser`:
+
+1. Collapse whitespace, then reject any word starting with `/` other than `/tag` as an invalid format.
+2. Parse the text before the first keyword as the `INDEX`; an invalid index is reported as an invalid format.
+3. Require at least one `/tag`; otherwise report an invalid format.
+4. Parse each value with `ParserUtil#parseTag()`, as `add` does, so an empty or invalid tag is reported the same way. A tag given twice is reported as `Repeated tag: TAG. Each tag can only be given once.` rather than `add`'s `Contact already has this tag.`, which would wrongly suggest that the contact already has the tag. The tag limit is not checked here, because it applies to the tags left after the toggle.
+
+`ToggleCommand` holds the `Index` and a `LinkedHashSet<Tag>` of tags to toggle. In `execute()` it:
+
+1. Rejects an index outside `Model#getFilteredPersonList()` with `Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX`, and an archived contact with `ToggleCommand.MESSAGE_ARCHIVED_PERSON`, as `edit` does.
+2. Builds the new tag set: the contact's tags that are not being toggled, in their existing order, followed by the toggled tags the contact does not have, in the order typed. `Tag#equals()` ignores case and extra spaces, so `/tag FRIENDS` removes `Friends`.
+3. Rejects the command with `Person.MESSAGE_TAG_LIMIT_REACHED` if the new set has more than `Person.MAX_TAGS` tags. The limit applies to the result, so removing one tag and adding another is allowed at 5 tags, and so is removing all 5 and adding 1 (6 tags typed). `emergency` is a normal tag and counts towards the limit.
+4. Copies the contact's other values with `PersonFieldValues`, replaces the tags, and calls `Model#setPerson()`. The contact's emergency details and favourite status are passed to `PersonFieldValues#toPerson()` so they are kept, as in `edit`. Like `edit`, it then shows the active contact list again.
+
+The name does not change, so `toggle` never creates a duplicate contact and does not call `Model#hasPerson()`.
+
+#### Design considerations
+
+**Aspect: whether the tag limit is checked against the tags given or the resulting tags**
+
+* **Alternative 1 (current choice):** check only the resulting tags, in `execute()`.
+  * Pros: the limit is checked in one place, a contact at the limit can still swap tags, and the guarantee in `Person` is unchanged. A command that types many tags is still rejected, since six tags the contact lacks always leave it over the limit.
+  * Cons: a command with too many tags is reported when it runs, not when it is parsed.
+* **Alternative 2:** also reject more than `Person.MAX_TAGS` typed tags in the parser.
+  * Pros: obviously invalid commands are rejected early.
+  * Cons: the limit is checked in two places, and a valid command such as removing all 5 tags and adding 1 is rejected because it types 6.
+* **Alternative 3:** check only the tags typed.
+  * Pros: simpler.
+  * Cons: a contact could be pushed past the limit, which `Person`'s constructor then reports as an uncaught `IllegalArgumentException`.
+
+**Aspect: what a tag that is already present means**
+
+* **Alternative 1 (current choice):** remove it, so one command can both add and remove tags.
+  * Pros: one short command covers both, and `toggle 1 /tag emergency` flips the emergency flag.
+  * Cons: running the same command twice undoes it. To make a mistake easy to notice, the result message lists the tags that were added and removed (`Added: C. Removed: A.`), using the form stored on the contact card.
+* **Alternative 2:** separate `tag` and `untag` commands.
+  * Pros: each command always does what its name says.
+  * Cons: two commands to learn, and a tag already present (or absent) becomes an error that needs its own message.
 
 ### Filter by tag feature
 
@@ -635,6 +680,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *` | user searching for a contact | have my search ignore capitalisation | do not have to remember how the name was typed in |
 | `* *` | user | record an email address against a contact | can reach them through a more formal channel if needed |
 | `* *` | user whose contact details have changed | edit a single field of an existing contact | do not have to retype the whole entry to fix one thing |
+| `* *` | user whose residents' situations change | add or remove tags on an existing contact without retyping its other tags | can keep tags such as `emergency` up to date quickly |
 | `* *` | user | be warned when I add a contact whose name is already in use | do not end up with duplicate entries for one person |
 | `* *` | user searching for a contact | search by room number | can identify a resident when all I know is where the problem is |
 | `* *` | user | undo my last command | can recover from a deletion or edit I did not intend |
@@ -903,6 +949,32 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `Alex Yeoh /tag RA`<br>
       Expected: No change. Error: `Unknown command.`
+
+### Toggling tags
+
+1. Toggling tags on a contact
+
+   1. Prerequisites: Start with the sample data. Run `add Zed Lim /phone 9000 0000 /tag A /tag B`, then `list`.
+
+   1. Test case: `toggle 1 /tag a /tag c` (where Zed Lim is contact 1; use their actual index)<br>
+      Expected: Zed Lim now has the tags `B` and `C`, in that order. The full list is shown again. The message ends with `Added: C. Removed: A.`
+
+   1. Test case: `toggle 1 /tag emergency`, then `list emerg`<br>
+      Expected: Zed Lim is listed. Running `toggle 1 /tag emergency` again removes the tag.
+
+   1. Test case: `toggle 1 /tag T1 /tag T2 /tag T3 /tag T4`<br>
+      Expected: No change. Error: `Tag limit reached (max 5)`, since Zed Lim would have more than 5 tags.
+
+1. Invalid toggles
+
+   1. Test case: `toggle 1 /tag A /tag a`<br>
+      Expected: No change. Error: `Repeated tag: A. Each tag can only be given once.`
+
+   1. Test case: `toggle 1 /tag`<br>
+      Expected: No change. Error: `Tag cannot be empty.`
+
+   1. Other incorrect commands to try: `toggle`, `toggle 1`, `toggle /tag A`, `toggle 0 /tag A`, `toggle 1 /phone 9123 4567`, `toggle 9999 /tag A`<br>
+      Expected: No change. The status message shows the matching error.
 
 ### Filtering by tag
 
