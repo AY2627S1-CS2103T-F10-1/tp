@@ -20,6 +20,14 @@ public class PhoneEqualsPredicateTest {
     }
 
     @Test
+    public void test_unicodeSpaces_matchesNormalizedPhone() {
+        Person person = new PersonBuilder().withPhone("9123 4567").build();
+        for (String space : new String[]{"\u00a0", "\u2003", "\u202f"}) {
+            assertTrue(new PhoneEqualsPredicate(space + "9123" + space + "4567" + space).test(person));
+        }
+    }
+
+    @Test
     public void equals() {
         PhoneEqualsPredicate predicate = new PhoneEqualsPredicate("9123 4567");
         assertTrue(predicate.equals(predicate));

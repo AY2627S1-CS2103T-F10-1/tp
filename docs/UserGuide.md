@@ -291,6 +291,7 @@ Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/note NOTE]`
 * Each field follows the same rules as in `add`, so `/name`, `/phone`, `/room` and `/note` cannot be repeated.
 * `edit` does not change tags, and `/tag` is rejected as an invalid command format. Use [`toggle`](#toggling-tags-toggle) to add or remove tags on an existing contact.
 * The contact's tags and favourite status are preserved.
+* On success, the full active contact list is shown again in stored order. Search again before using an index from the previous results.
 * An optional field given with nothing after it is removed: `/room` on its own removes the room, and
   `/note` on its own removes the note. `/name` and `/phone` are required, so they cannot be removed.
 
@@ -334,6 +335,7 @@ Format: `toggle INDEX /tag TAG [/tag TAG]…​`
 * A tag cannot be repeated within one command.
 * A contact can have at most 5 tags, including `emergency`. If the toggle would leave the contact with more, nothing is changed.
 * Archived contacts must be unarchived before toggling their tags. Favourite status, emergency details and the note are not changed.
+* On success, the full active contact list is shown again in stored order. Search again before using an index from the previous results.
 
 Examples:
 * `toggle 1 /tag emergency` marks the 1st contact as an emergency contact, or removes that if they already are one.
@@ -468,6 +470,7 @@ Format: `delete INDEX` or `delete /name NAME`
 * The index **must be a positive integer** 1, 2, 3, …​
 * Name deletion searches **all active contacts**, even when the displayed list is filtered.
 * `/name NAME` must be the contact's exact full name, with matching capital letters. Unlike [`find /name`](#locating-persons-by-name-tag-phone-or-room-find), typos and partial names are not accepted, so a typo cannot delete a different contact.
+* Leading and trailing whitespace is ignored, and extra whitespace between name words is collapsed, including Unicode spaces copied from other apps.
 * If `/name` is missing or repeated, `NAME` is empty or there is text before `/name`, an invalid command format message is shown.
 * Exactly one match is deleted immediately. With no matches, nothing is deleted.
 * If more than one contact matches, nothing is deleted. The matching contacts are displayed with their indexes; continue with `delete INDEX`.

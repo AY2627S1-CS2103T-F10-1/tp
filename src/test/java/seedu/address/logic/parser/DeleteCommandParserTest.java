@@ -33,6 +33,16 @@ public class DeleteCommandParserTest {
         }
     }
     @Test
+    public void parse_nameWhitespace_normalizedBeforeMatching() {
+        for (String space : new String[]{"   ", "\u00a0", "\u2003", "\u202f"}) {
+            assertParseSuccess(parser, "/name " + space + "Alice" + space + "Tan" + space,
+                    new DeleteCommand(new NameEqualsPredicate("Alice Tan")));
+            assertParseFailure(parser, "/name " + space,
+                    String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteCommand.MESSAGE_USAGE));
+        }
+    }
+
+    @Test
     public void parse_nameArgs_returnsNameDeleteCommand() {
         assertParseSuccess(parser, "/name Alice", new DeleteCommand(new NameEqualsPredicate("Alice")));
 
