@@ -2,6 +2,7 @@ package seedu.address.model.person;
 
 import java.util.function.Predicate;
 
+import seedu.address.commons.util.StringUtil;
 import seedu.address.commons.util.ToStringBuilder;
 
 /**
@@ -11,7 +12,7 @@ public class PhoneEqualsPredicate implements Predicate<Person> {
     private final String phone;
 
     public PhoneEqualsPredicate(String phone) {
-        this.phone = phone.trim().replaceAll("\\s+", " ");
+        this.phone = StringUtil.collapseWhitespace(phone);
     }
 
     @Override
