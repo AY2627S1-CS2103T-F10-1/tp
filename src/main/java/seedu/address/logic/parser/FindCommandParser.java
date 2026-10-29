@@ -43,8 +43,9 @@ public class FindCommandParser implements Parser<FindCommand> {
         Optional<String> phone = argMultimap.getValue(PREFIX_PHONE_COMMAND);
         Optional<String> room = argMultimap.getValue(PREFIX_ROOM_COMMAND);
         boolean hasExactlyOnePrefix = Stream.of(name, tag, phone, room).filter(Optional::isPresent).count() == 1;
-        if (!argMultimap.getPreamble().isEmpty() || !hasExactlyOnePrefix
-                || name.orElse(tag.orElse(phone.orElse(room.orElse("")))).isEmpty()) {
+        boolean isSearchValueEmpty = Stream.of(name, tag, phone, room)
+                .flatMap(Optional::stream).findFirst().orElse("").isEmpty();
+        if (!argMultimap.getPreamble().isEmpty() || !hasExactlyOnePrefix || isSearchValueEmpty) {
             throw new ParseException(
                     String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE));
         }
