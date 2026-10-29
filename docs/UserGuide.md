@@ -460,6 +460,7 @@ Format: `delete INDEX` or `delete /name NAME`
 * The index **must be a positive integer** 1, 2, 3, …​
 * Name deletion searches **all active contacts**, even when the displayed list is filtered.
 * `/name NAME` must be the contact's exact full name, with matching capital letters. Unlike [`find /name`](#locating-persons-by-name-tag-phone-or-room-find), typos and partial names are not accepted, so a typo cannot delete a different contact.
+* Leading and trailing whitespace is ignored, and extra whitespace between name words is collapsed, including Unicode spaces copied from other apps.
 * If `/name` is missing or repeated, `NAME` is empty or there is text before `/name`, an invalid command format message is shown.
 * Exactly one match is deleted immediately. With no matches, nothing is deleted.
 * If more than one contact matches, nothing is deleted. The matching contacts are displayed with their indexes; continue with `delete INDEX`.

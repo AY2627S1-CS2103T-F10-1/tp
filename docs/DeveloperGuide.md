@@ -323,6 +323,7 @@ It compares the complete stored room with the whitespace-normalized query, ignor
 `find /name NAME` lists contacts whose name is close to `NAME`, so an RA on duty can find a resident despite a typo or
 only half-remembering their name. Fuzzy matching applies only to `find /name`; `delete /name` still uses the exact,
 case-sensitive `NameEqualsPredicate`, so a typo cannot delete a different contact.
+`DeleteCommandParser` collapses extra whitespace in the name with `StringUtil#collapseWhitespace()` before matching.
 
 #### Implementation
 
