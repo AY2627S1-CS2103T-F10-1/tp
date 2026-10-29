@@ -165,6 +165,10 @@ Tags are added to a contact when it is created, with `add NAME /phone PHONE [/ro
 
 For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. So `/tag` with no value is reported as an empty tag, and `/tag RA, Staff` as invalid characters. `AddCommandParser` collects the tags into a `LinkedHashSet`, rejects a tag already given (`Contact already has this tag.`), and then rejects more than `Person.MAX_TAGS` tags.
 
+The activity diagram below shows the order in which these checks run for an `add` command.
+
+<img src="images/TagValidationActivityDiagram.png" width="800" />
+
 `Tag.VALIDATION_REGEX` uses `\p{L}`, `\p{M}` and `\p{N}` rather than `\p{Alnum}`, which in Java only matches ASCII, so letters and digits in any language are accepted. `\p{M}` allows accent marks, for letters typed as a base letter followed by a combining mark.
 
 `Tag` compares tag names ignoring case and stores them in title case: the first letter of each word in upper case and the rest in lower case. As `JsonAdaptedTag` also builds a `Tag`, tags in an edited data file are normalized the same way when loaded. `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were typed. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
