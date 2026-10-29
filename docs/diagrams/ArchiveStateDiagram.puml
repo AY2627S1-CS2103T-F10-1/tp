@@ -1,0 +1,20 @@
+@startuml
+hide empty description
+title Stored archive state of a contact
+state "Active\narchive = false" as Active
+state "Archived\narchive = true" as Archived
+[*] --> Active : create a new contact
+Active --> Archived : archive INDEX or archive /tag TAG\nwithArchive(true), then setPerson
+Archived --> Active : unarchive INDEX or unarchive /tag TAG\nwithArchive(false), then setPerson
+note right of Active
+  list and find show active contacts.
+end note
+note right of Archived
+  list archived shows archived contacts.
+end note
+note bottom of Archived
+  Both states remain in the same AddressBook.
+  Listing changes only the view predicate.
+  JSON persists the archive flag; loading restores it.
+end note
+@enduml
