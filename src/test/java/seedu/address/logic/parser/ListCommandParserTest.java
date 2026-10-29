@@ -13,10 +13,31 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.ListEmergencyCommand;
 import seedu.address.logic.commands.ListFavouriteCommand;
+import seedu.address.logic.commands.ListSortedCommand;
 
 public class ListCommandParserTest {
 
     private final ListCommandParser parser = new ListCommandParser();
+
+    @Test
+    public void parse_sortedKeyword_returnsListSortedCommand() {
+        for (String args : List.of("sorted", "  sorted  ", "\tsorted\t")) {
+            assertParseSuccess(parser, args, new ListSortedCommand());
+        }
+    }
+
+    @Test
+    public void parse_sortedKeywordWithExtraArguments_throwsParseException() {
+        for (String args : List.of("sorted 1", "sorted fav", "sorted archived", "sorted /name Amy")) {
+            assertParseFailure(parser, args, ListSortedCommand.MESSAGE_INVALID_FORMAT);
+        }
+    }
+
+    @Test
+    public void parse_sortedKeywordWithWrongCase_throwsParseException() {
+        assertParseFailure(parser, "Sorted", ListCommand.MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "SORTED", ListCommand.MESSAGE_INVALID_FORMAT);
+    }
 
     @Test
     public void parse_null_throwsNullPointerException() {

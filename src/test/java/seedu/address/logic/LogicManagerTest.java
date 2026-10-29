@@ -21,6 +21,7 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.ListEmergencyCommand;
 import seedu.address.logic.commands.ListFavouriteCommand;
+import seedu.address.logic.commands.ListSortedCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
@@ -69,6 +70,32 @@ public class LogicManagerTest {
     public void execute_validCommand_success() throws Exception {
         String listCommand = ListCommand.COMMAND_WORD;
         assertCommandSuccess(listCommand, ListCommand.MESSAGE_EMPTY, model);
+    }
+
+    @Test
+    public void execute_listSorted_displaysSortedNamesButSavesOriginalOrder() throws Exception {
+        Person zara = new PersonBuilder().withName("Zara Tan").build();
+        model.addPerson(zara);
+        model.addPerson(AMY);
+        CommandResult result = logic.execute("list sorted");
+        assertEquals(ListSortedCommand.MESSAGE_SUCCESS, result.getFeedbackToUser());
+        assertEquals(List.of(AMY, zara), logic.getFilteredPersonList());
+        ReadOnlyAddressBook saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
+                .readAddressBook().orElseThrow();
+        assertEquals(List.of(zara, AMY), saved.getPersonList());
+        assertEquals(List.of(zara, AMY), new ModelManager(saved, new UserPrefs()).getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_listSortedWithExtraArguments_keepsSortedView() throws Exception {
+        Person zara = new PersonBuilder().withName("Zara Tan").build();
+        model.addPerson(zara);
+        model.addPerson(AMY);
+        logic.execute("list sorted");
+
+        assertThrows(ParseException.class, ListSortedCommand.MESSAGE_INVALID_FORMAT, () ->
+                logic.execute("list sorted extra"));
+        assertEquals(List.of(AMY, zara), logic.getFilteredPersonList());
     }
 
     @Test

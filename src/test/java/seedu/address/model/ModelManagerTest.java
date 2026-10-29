@@ -31,6 +31,17 @@ public class ModelManagerTest {
     private ModelManager modelManager = new ModelManager();
 
     @Test
+    public void equals_differentDisplayOrder_returnsFalse() {
+        modelManager.addPerson(BENSON);
+        modelManager.addPerson(ALICE);
+        ModelManager copy = new ModelManager(modelManager.getAddressBook(), new UserPrefs());
+        modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS,
+                Comparator.comparing(person -> person.getName().fullName));
+        assertFalse(modelManager.equals(copy));
+        assertEquals(modelManager.getAddressBook(), copy.getAddressBook());
+    }
+
+    @Test
     public void constructor() {
         assertEquals(new UserPrefs(), modelManager.getUserPrefs());
         assertEquals(new GuiSettings(), modelManager.getGuiSettings());

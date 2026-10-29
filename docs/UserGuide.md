@@ -67,7 +67,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 * Parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
 
-* Extraneous parameters for `help`, `exit`, and `clear` are ignored. The `list`, `list emerg`, `list archived`, `list fav`,
+* Extraneous parameters for `help`, `exit`, and `clear` are ignored. The `list`, `list emerg`, `list archived`, `list fav`, `list sorted`,
   `fav INDEX` and `unfav INDEX` commands reject extra parameters.<br>
   For example, `help 123` is interpreted as `help`.
 
@@ -161,7 +161,7 @@ This restores the active list after a search or archived view and does not chang
 
 Format: `list`
 
-* Only the `archived`, `emerg` and `fav` subcommands are supported after `list`. To show only contacts with a given tag, use [`find /tag`](#locating-persons-by-name-tag-phone-or-room-find).
+* Only the `archived`, `emerg`, `fav` and `sorted` subcommands are supported after `list`. To show only contacts with a given tag, use [`find /tag`](#locating-persons-by-name-tag-phone-or-room-find).
 
 * The command keyword is case-sensitive: use lowercase `list`. `LIST` and `LiSt` are rejected as unknown commands.
 * Leading and trailing spaces are ignored.
@@ -171,6 +171,20 @@ Format: `list`
   `Invalid command format. Usage: list`. The displayed list stays unchanged when the command is rejected.
 * When there are no active contacts, the list is empty and the result message is `No contacts found.`.
 * Otherwise, the result message is `Listed all persons.`.
+
+### Listing contacts sorted by name: `list sorted`
+
+Shows all active contacts in ascending lexicographical order by their full names, including contacts hidden by
+a previous search. Archived contacts are excluded.
+
+Format: `list sorted`
+
+* Names are sorted ignoring case, with case-sensitive ordering to break ties: `Amy Bee`, `amy Bee`, then `Zara Tan`.
+* Sorting changes the displayed order only. Stored order and contact details stay unchanged.
+* Index commands, such as `delete 1` and `archive 1`, act on the numbers in the sorted list.
+* Commands that reset the view, including `list`, `find`, `add` and `edit`, restore stored order.
+* Sorting is not saved between app sessions. Extra arguments and uppercase `SORTED` are rejected.
+* Success: `Listed active contacts sorted by name.` If no active contacts exist: `No contacts found.`
 
 ### Listing emergency contacts: `list emerg`
 
@@ -526,6 +540,7 @@ Action | Format, Examples
 **Toggle** | `toggle INDEX /tag TAG [/tag TAG]…​`<br> e.g., `toggle 1 /tag emergency`
 **Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /tag friends`
 **List** | `list`
+**List sorted by name** | `list sorted`
 **List emergency contacts** | `list emerg`
 **Mark favourite** | `fav INDEX`<br> e.g., `fav 2`
 **Remove favourite status** | `unfav INDEX`<br> e.g., `unfav 1`
