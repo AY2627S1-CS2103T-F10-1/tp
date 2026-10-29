@@ -252,6 +252,28 @@ After the command returns, `LogicManager` saves the address book through the exi
   also changes the displayed list.
 * **Restrict name matching to active contacts:** excludes archived contacts from ordinary name deletion.
   Index deletion remains available for a contact explicitly displayed in the archive view.
+Archiving keeps a contact in the same address book and changes its `archive` flag instead of deleting it.
+The state diagram below shows the transitions between active and archived contacts. `list` and `find`
+show active contacts, while `list archived` selects archived contacts. The archive flag is saved in JSON
+and restored when the data is loaded.
+
+<img src="images/ArchiveStateDiagram.png" alt="Active and archived contact states" width="650" />
+
+For `archive INDEX`, `ArchiveCommand` resolves the target from the currently displayed list, checks its
+archive state, and creates a copy using `withArchive(true)`. `Model#setPerson` replaces the original while
+preserving the current filter, so the displayed list updates automatically. The sequence diagram shows
+the successful path after parsing, including the subsequent save by `LogicManager`. `UnarchiveCommand`
+follows the same approach with `withArchive(false)` to restore an archived contact.
+
+<img src="images/ArchiveSequenceDiagram.png" alt="Sequence for archiving a displayed contact" width="900" />
+
+For `archive /tag TAG`, the command searches all active contacts in the address book, independently of
+the current view. It snapshots the matching contacts and creates their replacements before updating the
+model, avoiding iteration over a changing filtered list. The activity diagram shows validation, the
+no-matches path, and bulk replacement. `unarchive /tag TAG` uses the same flow with archived contacts
+and clears their archive flag instead.
+
+<img src="images/ArchiveByTagActivityDiagram.png" alt="Activity flow for archiving contacts by tag" width="650" />
 
 ### Tag feature
 
