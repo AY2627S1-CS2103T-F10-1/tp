@@ -255,26 +255,42 @@ case-sensitive `NameEqualsPredicate`, so a typo cannot delete a different contac
 
 #### Implementation
 
-Given `find /name alx yeo`:
+The sequence diagram below shows how `find /name alx yeo` is executed.
 
-1. `FindCommandParser` creates a `NameFuzzyMatchesPredicate` from the value after `/name`.
-2. The constructor collapses extra whitespace, converts the text to lowercase and splits it into the search words
-   `alx` and `yeo`. Blank text is rejected, although the parser already prevents this.
-3. `FindCommand` applies the predicate with `Model#updateFilteredPersonList()`.
+![Interactions for the `find /name alx yeo` Command](images/FindNameSequenceDiagram.png)
+
+1. `FindCommandParser` creates a `NameFuzzyMatchesPredicate` `p` from the value after `/name`, gets its ranking
+   comparator `c` with `NameFuzzyMatchesPredicate#getRankingComparator()`, and creates a `FindCommand` with both.
+   `/tag` and `/phone` searches create a `FindCommand` without a comparator, so their results keep their usual order.
+2. The predicate's constructor collapses whitespace (including Unicode spaces such as U+00A0), converts the text
+   to lowercase and splits it into the search words `alx` and `yeo`. Blank text is rejected, although the parser
+   already prevents this.
+3. `FindCommand` calls `Model#updateFilteredPersonList(predicate, comparator)`. `ModelManager` shows its
+   `FilteredList` through a `SortedList`, so the list on screen and the list that `edit INDEX` and `delete INDEX`
+   read stay the same. The one-argument `updateFilteredPersonList(predicate)` used by other commands resets the
+   comparator, restoring the address book order.
 4. For each contact, `NameFuzzyMatchesPredicate#test()` normalizes the name the same way and checks that **every**
-   search word is close to **some** name word. Two words are close when their Levenshtein distance
-   (`StringUtil#levenshteinDistance()`), the minimum number of single-character insertions, deletions or substitutions
-   between them, is at most the number of typos allowed for the search word:
+   search word matches **some** name word. A search word matches a name word if it:
+   * is the same word,
+   * is the start of the name word, typed exactly and at least 3 letters long, or
+   * is within the allowed number of typos. Typos are counted by `StringUtil#typoDistance()`, the minimum number of
+     single-character insertions, deletions, substitutions or swaps of two adjacent characters between the words
+     (the optimal string alignment distance). The **shorter** of the two words decides the typos allowed, so a
+     1–2 letter name word such as `ng` is only matched exactly:
 
-   | Search word length | Typos allowed |
-   |--------------------|---------------|
-   | 1–2                | 0             |
-   | 3–5                | 1             |
-   | 6–9                | 2             |
-   | 10 or more         | 3             |
+     | Length of the shorter word | Typos allowed |
+     |----------------------------|---------------|
+     | 1–2                        | 0             |
+     | 3–5                        | 1             |
+     | 6–9                        | 2             |
+     | 10 or more                 | 3             |
 
-   The tiers are kept in the private `TypoTolerance` enum, which `NameFuzzyMatchesPredicate#getAllowedTypos()` reads.
+     The tiers are kept in the private `TypoTolerance` enum, which `NameFuzzyMatchesPredicate#getAllowedTypos()` reads.
 5. `alx` is 1 typo from `alex` and `yeo` is 1 typo from `yeoh`, so `Alex Yeoh` is listed.
+6. The `SortedList` orders the matches with `c`. Each search word costs 0 for a whole word, 1 for the start of a
+   word, and 1 plus its typos otherwise, using its cheapest name word; a contact's cost is the sum over the search
+   words. Cheaper contacts are listed first, and `SortedList`'s stable sort keeps contacts of equal cost in their
+   address book order. `test()` and the comparator share the same cost calculation, so they cannot disagree.
 
 #### Design considerations
 
@@ -290,25 +306,57 @@ Given `find /name alx yeo`:
 
 **Aspect: how many typos are allowed**
 
-* **Alternative 1 (current choice):** more typos for longer words.
-  * Pros: long, hard-to-spell names tolerate several typos, while 1–2 letter words cannot match every contact.
+* **Alternative 1 (current choice):** more typos for longer words, decided by the shorter of the two words.
+  * Pros: long, hard-to-spell names tolerate several typos, while 1–2 letter words, on either side, cannot match
+    unrelated names (`find /name Ong` does not list `Ng Kai`).
   * Cons: the tiers are a judgement call that may need tuning from user feedback.
-* **Alternative 2:** a fixed number of typos for every word.
+* **Alternative 2:** tiers decided by the search word only.
+  * Cons: a 3-letter search word matches any 2-letter name word 1 typo away, so short surnames such as `Ng` and
+    `Li` are loosely matched although the UG says they must be typed exactly.
+* **Alternative 3:** a fixed number of typos for every word.
   * Pros: simpler to explain.
   * Cons: short words match too many names, or long words tolerate too few typos.
 
-**Aspect: where the distance is computed**
+**Aspect: how typos are counted**
 
-* **Alternative 1 (current choice):** our own `StringUtil#levenshteinDistance()`.
-  * Pros: no new dependency, and it is short and fully unit-tested.
-* **Alternative 2:** Apache Commons Text's `LevenshteinDistance`.
+* **Alternative 1 (current choice):** our own `StringUtil#typoDistance()`, the optimal string alignment distance.
+  * Pros: two swapped letters, a very common typing slip, count as 1 typo (`Yoeh` finds `Yeoh`). No new dependency,
+    and it is short and fully unit-tested.
+  * Cons: a swapped pair cannot be edited again, so `ca` is 3 typos from `abc` rather than 2. This rarely matters for
+    names.
+* **Alternative 2:** the Levenshtein distance.
+  * Cons: a swap counts as 2 typos, so it is only forgiven in words of 6 or more letters.
+* **Alternative 3:** Apache Commons Text's distance classes.
   * Cons: it adds a library for one method.
+
+**Aspect: partial words**
+
+* **Alternative 1 (current choice):** a search word of at least 3 letters also matches the start of a name word,
+  typed exactly.
+  * Pros: an RA who half-remembers a long name can type its start (`Bala` finds `Roy Balakrishnan`).
+  * Cons: a typo in the start of a word is not forgiven (`Blaa` does not find `Balakrishnan`).
+* **Alternative 2:** allow typos in the start of a word too.
+  * Cons: a 3-letter start with 1 typo matches a large share of all names.
+
+**Aspect: order of results**
+
+* **Alternative 1 (current choice):** rank the results by match cost through a `SortedList` in `ModelManager`.
+  * Pros: the closest match is listed first, so `edit 1` after `find /name Lim` changes `Lim Jun Jie`, not a
+    contact listed first only because it was added earlier. The stored data keeps its order.
+  * Cons: `Model` gains an overload of `updateFilteredPersonList()`.
+* **Alternative 2:** sort the `AddressBook` itself.
+  * Cons: a search would reorder the saved data file, and `list` would no longer show contacts in the order added.
+* **Alternative 3:** keep the address book order.
+  * Cons: a near match can be listed above the exact match, so an RA acting on the first result may change the
+    wrong contact.
 
 **Aspect: scalability**
 
 Each search compares every search word with every word of every contact's name, so its cost grows linearly with the
 number of contacts (and with the square of the word length). A hall has at most a few hundred residents plus staff,
 vendors and emergency services, so a search takes milliseconds, which fits the expected needs of the target user.
+Ranking recomputes a contact's match cost in each comparison, adding a factor of `log n` for `n` matches, which is
+negligible at this size.
 
 If the number of contacts became very large (for example, tens of thousands or more), a different approach to fuzzy
 search would have to be supported, such as:
@@ -897,6 +945,25 @@ testers are expected to do more *exploratory* testing.
 1. Test case: `find /name Li`<br>
    Expected: Only `David Li` is shown. `find /name Ly` shows an empty list and `No contacts found`, because
    2-letter words must be typed exactly.
+
+1. Test case: `find /name Yoeh`, then `find /name Aelx`<br>
+   Expected: Only `Alex Yeoh` is shown each time; two swapped letters count as 1 typo.
+
+1. Test case: `find /name Bala`<br>
+   Expected: Only `Roy Balakrishnan` is shown; the exact start of a name word is enough.
+   `find /name Ba` and `find /name Blaa` show an empty list, because a start must be at least 3 letters and typed exactly.
+
+1. Test case: `find /name Alex Yeoh`, with a non-breaking space (U+00A0) between the words, as when pasting from a
+   chat app<br>
+   Expected: Only `Alex Yeoh` is shown.
+
+1. Test case: `add Lin Xiao /phone 91110005`, `add Limah Tan /phone 91110006`, `add Lim Jun Jie /phone 91110004`,
+   `add Ng Kai /phone 91110007`, then `find /name Lim`<br>
+   Expected: `Lim Jun Jie`, `Limah Tan` and `Lin Xiao` are listed in that order (whole word, start of word, typo).
+   Then `edit 1 /room C-101` changes `Lim Jun Jie`, and `list` shows all contacts in their original order again.
+
+1. Test case: `find /name Ong` (with `Ng Kai` from the previous test case)<br>
+   Expected: An empty list, because the 2-letter name word `Ng` must be typed exactly.
 
 1. Test case: `find /name Alex Tan`<br>
    Expected: An empty list. The status message shows `No contacts found`, because no word in any name is close to `Tan`.

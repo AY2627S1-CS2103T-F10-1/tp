@@ -1,11 +1,14 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
 import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PERSONS;
 
+import java.util.Comparator;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
@@ -17,8 +20,9 @@ import seedu.address.model.person.Person;
 
 /**
  * Finds and lists all persons in the address book whose name closely matches the given name,
- * or who have the given tag or phone number. Name matching ignores case and tolerates small typos;
- * tag matching ignores case and extra spaces; phone matching ignores extra spaces.
+ * or who have the given tag or phone number. Name matching ignores case and tolerates small typos,
+ * and lists the closest matches first; tag matching ignores case and extra spaces; phone matching
+ * ignores extra spaces.
  */
 public class FindCommand extends Command {
 
@@ -37,20 +41,39 @@ public class FindCommand extends Command {
     private static final Logger logger = LogsCenter.getLogger(FindCommand.class);
 
     private final Predicate<Person> predicate;
+    private final Optional<Comparator<Person>> ranking;
 
     /**
-     * Creates a FindCommand that lists the persons matching {@code predicate}.
+     * Creates a FindCommand that lists the persons matching {@code predicate}, in their order in the address book.
      */
     public FindCommand(Predicate<Person> predicate) {
         requireNonNull(predicate);
         this.predicate = predicate;
+        this.ranking = Optional.empty();
+    }
+
+    /**
+     * Creates a FindCommand that lists the persons matching {@code predicate}, in the order given by
+     * {@code ranking}, so that the closest match is listed first.
+     */
+    public FindCommand(Predicate<Person> predicate, Comparator<Person> ranking) {
+        requireAllNonNull(predicate, ranking);
+        this.predicate = predicate;
+        this.ranking = Optional.of(ranking);
     }
 
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS.and(predicate));
+        Predicate<Person> activeMatches = PREDICATE_SHOW_ACTIVE_PERSONS.and(predicate);
+        if (ranking.isPresent()) {
+            model.updateFilteredPersonList(activeMatches, ranking.get());
+        } else {
+            model.updateFilteredPersonList(activeMatches);
+        }
         int count = model.getFilteredPersonList().size();
+        assert count <= model.getAddressBook().getPersonList().size()
+                : "Search cannot list more persons than the address book has";
         logger.fine("Find listed " + count + " person(s) matching " + predicate);
         if (count == 0) {
             return new CommandResult(Messages.MESSAGE_NO_PERSONS_FOUND);
@@ -69,13 +92,15 @@ public class FindCommand extends Command {
             return false;
         }
 
-        return predicate.equals(otherFindCommand.predicate);
+        return predicate.equals(otherFindCommand.predicate)
+                && ranking.equals(otherFindCommand.ranking);
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this)
                 .add("predicate", predicate)
+                .add("ranking", ranking)
                 .toString();
     }
 }

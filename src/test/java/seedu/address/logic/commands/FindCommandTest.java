@@ -14,7 +14,10 @@ import static seedu.address.testutil.TypicalPersons.ELLE;
 import static seedu.address.testutil.TypicalPersons.FIONA;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
@@ -57,11 +60,25 @@ public class FindCommandTest {
 
         // different person -> returns false
         assertFalse(findFirstCommand.equals(findSecondCommand));
+
+        // same predicate and ranking -> returns true
+        FindCommand rankedFirstCommand = new FindCommand(firstPredicate, firstPredicate.getRankingComparator());
+        assertTrue(rankedFirstCommand.equals(
+                new FindCommand(firstPredicate, firstPredicate.getRankingComparator())));
+
+        // same predicate, ranked and unranked -> returns false
+        assertFalse(rankedFirstCommand.equals(findFirstCommand));
+
+        // same predicate, different ranking -> returns false
+        assertFalse(rankedFirstCommand.equals(new FindCommand(firstPredicate, secondPredicate.getRankingComparator())));
     }
 
     @Test
-    public void constructor_nullPredicate_throwsNullPointerException() {
+    public void constructor_nullArguments_throwsNullPointerException() {
+        NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate("Alice");
         assertThrows(NullPointerException.class, () -> new FindCommand(null));
+        assertThrows(NullPointerException.class, () -> new FindCommand(null, predicate.getRankingComparator()));
+        assertThrows(NullPointerException.class, () -> new FindCommand(predicate, null));
     }
 
     @Test
@@ -73,6 +90,31 @@ public class FindCommandTest {
     public void execute_partialName_similarNamesFound() {
         // "Meyer" is one typo away from "Meier", so Elle Meyer is listed too
         assertNameSearchFinds("Meier", BENSON, DANIEL, ELLE);
+    }
+
+    @Test
+    public void execute_exactAndTypoMatches_exactMatchListedFirst() {
+        // Elle Meyer matches exactly; the Meiers are 1 typo away and keep their order
+        assertNameSearchFinds("Meyer", ELLE, BENSON, DANIEL);
+    }
+
+    @Test
+    public void execute_prefixAndTypoMatches_prefixListedBeforeTypo() {
+        Person limJunJie = new PersonBuilder().withName("Lim Jun Jie").withPhone("91110004").build();
+        Person linXiao = new PersonBuilder().withName("Lin Xiao").withPhone("91110005").build();
+        Person limahTan = new PersonBuilder().withName("Limah Tan").withPhone("91110006").build();
+        for (Person person : List.of(linXiao, limahTan, limJunJie)) {
+            model.addPerson(person);
+            expectedModel.addPerson(person);
+        }
+        assertNameSearchFinds("Lim", limJunJie, limahTan, linXiao);
+    }
+
+    @Test
+    public void execute_listAfterRankedFind_originalOrderRestored() {
+        assertNameSearchFinds("Meyer", ELLE, BENSON, DANIEL);
+        new ListCommand().execute(model);
+        assertEquals(getTypicalAddressBook().getPersonList(), model.getFilteredPersonList());
     }
 
     @Test
@@ -91,7 +133,7 @@ public class FindCommandTest {
     }
 
     /**
-     * Asserts that searching by {@code searchText} lists exactly {@code expectedPersons}, in order,
+     * Asserts that a ranked search by {@code searchText} lists exactly {@code expectedPersons}, in order,
      * with the matching status message.
      */
     private void assertNameSearchFinds(String searchText, Person... expectedPersons) {
@@ -100,8 +142,9 @@ public class FindCommandTest {
                 ? MESSAGE_NO_PERSONS_FOUND
                 : String.format(MESSAGE_PERSONS_LISTED_OVERVIEW, expectedPersons.length);
         NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate(searchText);
-        expectedModel.updateFilteredPersonList(predicate);
-        assertCommandSuccess(new FindCommand(predicate), model, expectedMessage, expectedModel);
+        Comparator<Person> ranking = predicate.getRankingComparator();
+        expectedModel.updateFilteredPersonList(predicate, ranking);
+        assertCommandSuccess(new FindCommand(predicate, ranking), model, expectedMessage, expectedModel);
         assertEquals(List.of(expectedPersons), model.getFilteredPersonList());
     }
 
@@ -127,9 +170,18 @@ public class FindCommandTest {
     @Test
     public void toStringMethod() {
         NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate("Alice Bob");
-        FindCommand findCommand = new FindCommand(predicate);
-        String expected = FindCommand.class.getCanonicalName() + "{predicate=" + predicate + "}";
-        assertEquals(expected, findCommand.toString());
+        assertEquals(getExpectedString(predicate, Optional.empty()), new FindCommand(predicate).toString());
+
+        Comparator<Person> ranking = predicate.getRankingComparator();
+        assertEquals(getExpectedString(predicate, Optional.of(ranking)),
+                new FindCommand(predicate, ranking).toString());
+    }
+
+    /**
+     * Returns the expected {@code toString()} of a {@code FindCommand} with {@code predicate} and {@code ranking}.
+     */
+    private static String getExpectedString(Predicate<Person> predicate, Optional<Comparator<Person>> ranking) {
+        return FindCommand.class.getCanonicalName() + "{predicate=" + predicate + ", ranking=" + ranking + "}";
     }
     @Test
     public void execute_phoneSearch_findsAllMatchesDespitePreviousFilter() {
