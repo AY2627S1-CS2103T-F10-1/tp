@@ -2,6 +2,8 @@ package seedu.address.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_GREEK_UPPER_CASE;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_LENGTHENED_TO_MAX_LENGTH;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.HOON;
@@ -40,6 +42,21 @@ public class JsonAddressBookStorageTest {
         JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("archive.json"));
         storage.saveAddressBook(original);
         assertEquals(original, new AddressBook(storage.readAddressBook().orElseThrow()));
+    }
+
+    @Test
+    public void saveAndReload_tagsChangedByTitleCase_preservesTags() throws Exception {
+        Person person = new PersonBuilder(ALICE)
+                .withTags(VALID_TAG_LENGTHENED_TO_MAX_LENGTH, VALID_TAG_GREEK_UPPER_CASE).build();
+        AddressBook original = new AddressBook();
+        original.addPerson(person);
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("unicodeTags.json"));
+
+        storage.saveAddressBook(original);
+        ReadOnlyAddressBook loaded = storage.readAddressBook().orElseThrow();
+
+        assertEquals(original, new AddressBook(loaded));
+        assertEquals(List.copyOf(person.getTags()), List.copyOf(loaded.getPersonList().getFirst().getTags()));
     }
 
     @Test

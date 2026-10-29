@@ -165,7 +165,19 @@ Tags are added to a contact when it is created, with `add NAME /phone PHONE [/ro
 
 For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. So `/tag` with no value is reported as an empty tag, and `/tag RA, Staff` as invalid characters. `AddCommandParser` collects the tags into a `LinkedHashSet`, rejects a tag already given (`Contact already has this tag.`), and then rejects more than `Person.MAX_TAGS` tags.
 
-`Tag` compares tag names ignoring case and stores them with the first letter of each word capitalized. `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were typed. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
+The activity diagram below shows the order in which these checks run for an `add` command.
+
+<img src="images/TagValidationActivityDiagram.png" width="800" />
+
+`Tag.VALIDATION_REGEX` uses `\p{L}`, `\p{M}` and `\p{N}` rather than `\p{Alnum}`, which in Java only matches ASCII, so letters and digits in any language are accepted. `\p{M}` allows accent marks, for letters typed as a base letter followed by a combining mark.
+
+`Tag` compares tag names ignoring case and stores them in title case: the first letter of each word in upper case and the rest in lower case. As `JsonAdaptedTag` also builds a `Tag`, tags in an edited data file are normalized the same way when loaded.
+
+Two Unicode details keep the stored form consistent with loading and comparing:
+
+* Each word is lowercased as a whole before its first letter is title-cased. Some letters lowercase differently depending on their neighbors: the Greek `Σ` becomes `ς` at the end of a word and `σ` elsewhere. Lowercasing letters one at a time would store `ΟΣ` as `Οσ`, while `Tag#toComparisonKey()` lowercases the whole name to `ος`, so `find /tag ΟΣ` would match nothing and `/tag ΟΣ /tag ος` would be two different tags.
+* `Tag#isValidTagName()` also checks the length of the title-case form, because a few letters, such as `İ`, become two characters in lower case. Otherwise a tag within the limit as typed could be saved longer than `Tag.MAX_LENGTH` and make the data file fail to load. `ParserUtil#parseTag()` reports such a tag as too long.
+ `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were typed. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
 
 #### Design considerations
 
@@ -186,6 +198,15 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
 * **Alternative 2:** commas, as in `/tag RA, Floor 3`.
   * Pros: it is short to type, and commas cannot appear in a tag name.
   * Cons: stray commas (`/tag RA,,Staff`, `/tag RA,`) create empty tags that need their own error handling.
+
+**Aspect: how the same tag typed in different cases is displayed**
+
+* **Alternative 1 (current choice):** title case, as in `Ra` for `RA`, `ra` or `rA`.
+  * Pros: the same tag always looks the same on every contact card, so one category never looks like several when scanning the list.
+  * Cons: acronyms lose their capitals, so `RA` is displayed as `Ra`.
+* **Alternative 2:** reuse the spelling of the same tag already in the address book.
+  * Pros: acronyms such as `RA` keep their capitals.
+  * Cons: the display depends on which contact was tagged first, the case of a tag cannot be changed while another contact uses it, and `Model` must look up existing tags whenever a contact is added or edited.
 
 **Aspect: how a data file with more than 5 tags on a contact is handled**
 
@@ -946,7 +967,16 @@ testers are expected to do more *exploratory* testing.
       Expected: Sarah Tan is added with the tags `Resident Fellow` and `Floor 3`, in that order.
 
    1. Test case: `add Daniel Lim /tag ra /room B-204 /tag  STAFF  /phone 8123 4567`<br>
-      Expected: Daniel Lim is added with room `B-204` and the tags `Ra` and `STAFF`.
+      Expected: Daniel Lim is added with room `B-204` and the tags `Ra` and `Staff`.
+
+   1. Test case: `add Tan Wei Ming /phone 81000032 /tag RESIDENT`, then `add Lim Jun Jie /phone 81000033 /tag resident`<br>
+      Expected: Both contacts are added, and both cards show the tag as `Resident`.
+
+   1. Test case: `add Ann Lee /phone 81000025 /tag Café Vendor /tag 宿舍`<br>
+      Expected: Ann Lee is added with the tags `Café Vendor` and `宿舍`.
+
+   1. Test case: `add Eleni Pappas /phone 81000026 /tag ΟΣ`, then `find /tag ΟΣ` and `find /tag ος`<br>
+      Expected: Eleni Pappas is added with the tag `Ος`, and both searches list her.
 
    1. Test case: `add Ben Ong /phone 9876 5432 /tag T1 /tag T2 /tag T3 /tag T4 /tag T5`<br>
       Expected: Ben Ong is added with 5 tags.
@@ -962,7 +992,13 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `add Ben Ong /phone 9876 5432 /tag RA /tag`<br>
       Expected: No contact is added. Error: `Tag cannot be empty.`
 
-   1. Other incorrect commands to try: `add Ben Ong /phone 9876 5432 /tag RA, Staff`, `add Ben Ong /phone 9876 5432 /tag RA/Staff`, `add Ben Ong /phone 9876 5432 /tag` followed by 51 letters<br>
+   1. Test case: `add Ben Ong /phone 9876 5432 /tag ΟΣ /tag ος`<br>
+      Expected: No contact is added. Error: `Contact already has this tag.`
+
+   1. Test case: `add Ben Ong /phone 9876 5432 /tag A` followed by 25 copies of `İ` (26 characters as typed, 51 in title case)<br>
+      Expected: No contact is added. Error: `Tag too long, please shorten it and try again.`
+
+   1. Other incorrect commands to try: `add Ben Ong /phone 9876 5432 /tag RA, Staff`, `add Ben Ong /phone 9876 5432 /tag RA/Staff`, `add Ben Ong /phone 9876 5432 /tag Café!`, `add Ben Ong /phone 9876 5432 /tag` followed by 51 letters<br>
       Expected: No contact is added. The status message shows the matching error.
 
 1. Typing the old tag command

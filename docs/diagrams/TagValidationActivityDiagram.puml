@@ -1,0 +1,42 @@
+@startuml
+skin rose
+skinparam ActivityFontSize 15
+skinparam ArrowFontSize 12
+start
+:User enters add command
+with /tag values;
+
+repeat :Take the next /tag value;
+    :Collapse extra whitespace;
+    if () then ([empty])
+        :Show "Tag cannot be empty.";
+        stop
+    elseif () then ([longer than 50 characters])
+        :Show "Tag too long, please
+        shorten it and try again.";
+        stop
+    elseif () then ([has characters other than
+    letters, digits, spaces or hyphens])
+        :Show "Tag contains
+        invalid characters.";
+        stop
+    elseif () then ([same as an earlier tag,
+    ignoring case and spacing])
+        :Show "Contact already
+        has this tag.";
+        stop
+    else ([else])
+        :Create Tag in title case;
+    endif
+repeat while () is ([more /tag values])
+->[else];
+
+if () then ([more than 5 tags])
+    :Show "Tag limit reached (max 5)";
+    stop
+else ([else])
+    :Add contact with the tags
+    in the order typed;
+endif
+stop
+@enduml

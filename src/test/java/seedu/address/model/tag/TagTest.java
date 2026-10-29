@@ -4,8 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.logic.commands.CommandTestUtil.INVALID_TAG_LENGTHENED_PAST_MAX_LENGTH;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_TAG_TOO_LONG;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_AT_MAX_LENGTH;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_GREEK_LOWER_CASE;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_GREEK_UPPER_CASE;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_LENGTHENED_TO_MAX_LENGTH;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import org.junit.jupiter.api.Test;
@@ -34,6 +38,8 @@ public class TagTest {
         assertFalse(Tag.isValidTagName("Resident/Fellow")); // command delimiter
         assertFalse(Tag.isValidTagName("hubby*")); // other symbols
         assertFalse(Tag.isValidTagName("Block_4")); // underscore
+        assertFalse(Tag.isValidTagName("Café!")); // non-ASCII letter with a symbol
+        assertFalse(Tag.isValidTagName("🚨")); // emoji is not a letter
         assertFalse(Tag.isValidTagName(INVALID_TAG_TOO_LONG)); // boundary: one character too long
 
         // valid tag names
@@ -45,16 +51,69 @@ public class TagTest {
         assertTrue(Tag.isValidTagName("  Resident    Fellow  ")); // extra spaces are collapsed
         assertTrue(Tag.isValidTagName(VALID_TAG_AT_MAX_LENGTH)); // boundary: exactly at the limit
         assertTrue(Tag.isValidTagName(" " + VALID_TAG_AT_MAX_LENGTH + " ")); // surrounding spaces do not count
+        assertTrue(Tag.isValidTagName("Café Vendor")); // accented letter
+        assertTrue(Tag.isValidTagName("Cafe\u0301")); // letter followed by a combining accent mark
+        assertTrue(Tag.isValidTagName("宿舍")); // non-Latin letters
+        assertTrue(Tag.isValidTagName("விடுதி")); // letters with vowel signs
+        assertTrue(Tag.isValidTagName("٣")); // non-ASCII digit
+
+        // non-ASCII letters at the length boundary
+        assertTrue(Tag.isValidTagName("宿".repeat(Tag.MAX_LENGTH)));
+        assertFalse(Tag.isValidTagName("宿".repeat(Tag.MAX_LENGTH + 1)));
+
+        // letters that become longer in title case, at the length boundary
+        assertTrue(Tag.isValidTagName(VALID_TAG_LENGTHENED_TO_MAX_LENGTH));
+        assertFalse(Tag.isValidTagName(INVALID_TAG_LENGTHENED_PAST_MAX_LENGTH));
     }
 
     @Test
-    public void constructor_validTagName_normalizesDisplayName() {
-        assertEquals("RA", new Tag("RA").tagName); // acronym kept as typed
+    public void hasValidCharacters() {
+        assertThrows(NullPointerException.class, () -> Tag.hasValidCharacters(null));
+
+        assertTrue(Tag.hasValidCharacters("  Resident   Fellow ")); // extra spaces are collapsed
+        assertTrue(Tag.hasValidCharacters(INVALID_TAG_TOO_LONG)); // length is not checked
+        assertTrue(Tag.hasValidCharacters(INVALID_TAG_LENGTHENED_PAST_MAX_LENGTH));
+
+        assertFalse(Tag.hasValidCharacters("")); // empty string
+        assertFalse(Tag.hasValidCharacters("RA/Staff")); // command delimiter
+    }
+
+    @Test
+    public void constructor_lengthenedToMaxLength_savedNameIsValid() {
+        String tagName = new Tag(VALID_TAG_LENGTHENED_TO_MAX_LENGTH).tagName;
+        assertEquals(Tag.MAX_LENGTH, tagName.length());
+        assertTrue(Tag.isValidTagName(tagName)); // a saved tag can be loaded again
+        assertEquals(tagName, new Tag(tagName).tagName); // and is unchanged when loaded
+    }
+
+    @Test
+    public void constructor_lengthenedPastMaxLength_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> new Tag(INVALID_TAG_LENGTHENED_PAST_MAX_LENGTH));
+    }
+
+    @Test
+    public void constructor_validTagName_displaysInTitleCase() {
+        assertEquals("Ra", new Tag("RA").tagName);
         assertEquals("Ra", new Tag("ra").tagName);
+        assertEquals("Ra", new Tag("rA").tagName);
         assertEquals("Resident Fellow", new Tag("resident fellow").tagName);
+        assertEquals("Resident Fellow", new Tag("RESIDENT FELLOW").tagName);
         assertEquals("Resident Fellow", new Tag("  resident    Fellow ").tagName);
-        assertEquals("Block4-a", new Tag("block4-a").tagName);
-        assertEquals("4th Floor", new Tag("4th floor").tagName); // digits are left unchanged
+        assertEquals("Block4-a", new Tag("BLOCK4-A").tagName); // only the start of a word is capitalized
+        assertEquals("4th Floor", new Tag("4TH floor").tagName); // digits are left unchanged
+        assertEquals("Élève", new Tag("éLÈVE").tagName); // accented letters
+        assertEquals("宿舍", new Tag("宿舍").tagName); // letters without case are left unchanged
+        // a sigma ending the word is a final sigma however it was typed
+        assertEquals("Ος", new Tag(VALID_TAG_GREEK_UPPER_CASE).tagName);
+        assertEquals("Ος", new Tag(VALID_TAG_GREEK_LOWER_CASE).tagName);
+        // Deseret letters lie outside the Basic Multilingual Plane, so each takes two chars
+        assertEquals("\uD801\uDC00\uD801\uDC2F", new Tag("\uD801\uDC28\uD801\uDC07").tagName);
+    }
+
+    @Test
+    public void constructor_sameNameInDifferentCase_sameDisplayName() {
+        assertEquals(new Tag("RESIDENT").tagName, new Tag("resident").tagName);
+        assertEquals(new Tag("Resident").tagName, new Tag("rEsIdEnT").tagName);
     }
 
     @Test
@@ -76,6 +135,7 @@ public class TagTest {
         // different case or spacing -> returns true
         assertTrue(tag.equals(new Tag("RESIDENT fellow")));
         assertTrue(tag.equals(new Tag(" Resident   Fellow ")));
+        assertTrue(new Tag(VALID_TAG_GREEK_UPPER_CASE).equals(new Tag(VALID_TAG_GREEK_LOWER_CASE)));
 
         // different value -> returns false
         assertFalse(tag.equals(new Tag("Resident")));
@@ -89,6 +149,8 @@ public class TagTest {
 
         assertTrue(tag.matchesName("Resident Fellow"));
         assertTrue(tag.matchesName("  resident   FELLOW ")); // different case and spacing
+        assertTrue(new Tag(VALID_TAG_GREEK_UPPER_CASE).matchesName(VALID_TAG_GREEK_UPPER_CASE));
+        assertTrue(new Tag(VALID_TAG_GREEK_UPPER_CASE).matchesName(VALID_TAG_GREEK_LOWER_CASE));
 
         assertFalse(tag.matchesName("Resident")); // partial name
         assertFalse(tag.matchesName("")); // empty string
