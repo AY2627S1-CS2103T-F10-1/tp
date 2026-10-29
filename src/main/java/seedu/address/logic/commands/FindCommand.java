@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ROOM_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
 import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PERSONS;
 
@@ -20,9 +21,9 @@ import seedu.address.model.person.Person;
 
 /**
  * Finds and lists all persons in the address book whose name closely matches the given name,
- * or who have the given tag or phone number. Name matching ignores case and tolerates small typos,
- * and lists the closest matches first; tag matching ignores case and extra spaces; phone matching
- * ignores extra spaces.
+ * or who have the given tag, phone number or room. Name matching ignores case and tolerates small typos,
+ * and lists the closest matches first; tag and room matching ignore case and extra spaces;
+ * phone matching ignores extra spaces.
  */
 public class FindCommand extends Command {
 
@@ -31,12 +32,14 @@ public class FindCommand extends Command {
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds all persons whose name closely matches "
             + "the specified name (ignoring case and small typos), who have the specified tag (ignoring case), "
             + "or whose phone number is the specified number (ignoring extra spaces), "
+            + "or whose room is the specified room (ignoring case and extra spaces), "
             + "and displays them as a list with index numbers.\n"
             + "Parameters: " + PREFIX_NAME_COMMAND + " NAME or " + PREFIX_TAG_COMMAND + " TAG or "
-            + PREFIX_PHONE_COMMAND + " NUMBER\n"
+            + PREFIX_PHONE_COMMAND + " NUMBER or " + PREFIX_ROOM_COMMAND + " ROOM\n"
             + "Examples: " + COMMAND_WORD + " " + PREFIX_NAME_COMMAND + " Sarah Tan, "
             + COMMAND_WORD + " " + PREFIX_TAG_COMMAND + " friends, "
-            + COMMAND_WORD + " " + PREFIX_PHONE_COMMAND + " 91234567";
+            + COMMAND_WORD + " " + PREFIX_PHONE_COMMAND + " 91234567, "
+            + COMMAND_WORD + " " + PREFIX_ROOM_COMMAND + " B-204";
 
     private static final Logger logger = LogsCenter.getLogger(FindCommand.class);
 
