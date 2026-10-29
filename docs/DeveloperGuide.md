@@ -165,7 +165,7 @@ Tags are added to a contact when it is created, with `add NAME /phone PHONE [/ro
 
 For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. So `/tag` with no value is reported as an empty tag, and `/tag RA, Staff` as invalid characters. `AddCommandParser` collects the tags into a `LinkedHashSet`, rejects a tag already given (`Contact already has this tag.`), and then rejects more than `Person.MAX_TAGS` tags.
 
-`Tag` compares tag names ignoring case and stores them with the first letter of each word capitalized. `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were typed. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
+`Tag` compares tag names ignoring case and stores them in title case: the first letter of each word in upper case and the rest in lower case. As `JsonAdaptedTag` also builds a `Tag`, tags in an edited data file are normalized the same way when loaded. `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were typed. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
 
 #### Design considerations
 
@@ -186,6 +186,15 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
 * **Alternative 2:** commas, as in `/tag RA, Floor 3`.
   * Pros: it is short to type, and commas cannot appear in a tag name.
   * Cons: stray commas (`/tag RA,,Staff`, `/tag RA,`) create empty tags that need their own error handling.
+
+**Aspect: how the same tag typed in different cases is displayed**
+
+* **Alternative 1 (current choice):** title case, as in `Ra` for `RA`, `ra` or `rA`.
+  * Pros: the same tag always looks the same on every contact card, so one category never looks like several when scanning the list.
+  * Cons: acronyms lose their capitals, so `RA` is displayed as `Ra`.
+* **Alternative 2:** reuse the spelling of the same tag already in the address book.
+  * Pros: acronyms such as `RA` keep their capitals.
+  * Cons: the display depends on which contact was tagged first, the case of a tag cannot be changed while another contact uses it, and `Model` must look up existing tags whenever a contact is added or edited.
 
 **Aspect: how a data file with more than 5 tags on a contact is handled**
 
@@ -874,7 +883,10 @@ testers are expected to do more *exploratory* testing.
       Expected: Sarah Tan is added with the tags `Resident Fellow` and `Floor 3`, in that order.
 
    1. Test case: `add Daniel Lim /tag ra /room B-204 /tag  STAFF  /phone 8123 4567`<br>
-      Expected: Daniel Lim is added with room `B-204` and the tags `Ra` and `STAFF`.
+      Expected: Daniel Lim is added with room `B-204` and the tags `Ra` and `Staff`.
+
+   1. Test case: `add Tan Wei Ming /phone 81000032 /tag RESIDENT`, then `add Lim Jun Jie /phone 81000033 /tag resident`<br>
+      Expected: Both contacts are added, and both cards show the tag as `Resident`.
 
    1. Test case: `add Ben Ong /phone 9876 5432 /tag T1 /tag T2 /tag T3 /tag T4 /tag T5`<br>
       Expected: Ben Ong is added with 5 tags.

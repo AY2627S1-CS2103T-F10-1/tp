@@ -136,7 +136,9 @@ Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
   `/phone`, `/room` and `/note` cannot be repeated.
 * Repeat `/tag` once per tag, up to five tags. Spaces inside a tag are allowed, so `/tag Resident Fellow` is one tag.
 * Tags may contain letters, digits, spaces and hyphens (`-`), up to 50 characters. They are not case-sensitive,
-  and are displayed with the first letter of each word capitalized.
+  and are displayed with the first letter of each word capitalized and the rest in lower case,
+  so `RA`, `ra` and `Ra` all appear as `Ra`.
+  Tags in an edited data file are displayed the same way.
 * Duplicate tags, including tags differing only in case or extra spaces (e.g., `/tag RA /tag ra`), are rejected.
 * Leading and trailing spaces are trimmed, and extra whitespace is collapsed into one space.
 * Supplying `/room`, `/tag` or `/note` without a value is rejected.

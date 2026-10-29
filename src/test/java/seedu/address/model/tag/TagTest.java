@@ -48,13 +48,21 @@ public class TagTest {
     }
 
     @Test
-    public void constructor_validTagName_normalizesDisplayName() {
-        assertEquals("RA", new Tag("RA").tagName); // acronym kept as typed
+    public void constructor_validTagName_displaysInTitleCase() {
+        assertEquals("Ra", new Tag("RA").tagName);
         assertEquals("Ra", new Tag("ra").tagName);
+        assertEquals("Ra", new Tag("rA").tagName);
         assertEquals("Resident Fellow", new Tag("resident fellow").tagName);
+        assertEquals("Resident Fellow", new Tag("RESIDENT FELLOW").tagName);
         assertEquals("Resident Fellow", new Tag("  resident    Fellow ").tagName);
-        assertEquals("Block4-a", new Tag("block4-a").tagName);
-        assertEquals("4th Floor", new Tag("4th floor").tagName); // digits are left unchanged
+        assertEquals("Block4-a", new Tag("BLOCK4-A").tagName); // only the start of a word is capitalized
+        assertEquals("4th Floor", new Tag("4TH floor").tagName); // digits are left unchanged
+    }
+
+    @Test
+    public void constructor_sameNameInDifferentCase_sameDisplayName() {
+        assertEquals(new Tag("RESIDENT").tagName, new Tag("resident").tagName);
+        assertEquals(new Tag("Resident").tagName, new Tag("rEsIdEnT").tagName);
     }
 
     @Test

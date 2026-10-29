@@ -11,8 +11,8 @@ import seedu.address.commons.util.StringUtil;
 
 /**
  * Represents a Tag in the address book.
- * Tags are compared case-insensitively and are displayed with the first letter of each word capitalized,
- * so the same category looks identical no matter how it was typed.
+ * Tags are compared case-insensitively and are displayed in title case (the first letter of each word in
+ * upper case and the rest in lower case), so the same category looks identical no matter how it was typed.
  * Guarantees: immutable; name is valid as declared in {@link #isValidTagName(String)}
  */
 public class Tag {
@@ -35,14 +35,14 @@ public class Tag {
 
     /**
      * Constructs a {@code Tag}.
-     * Extra whitespace in {@code tagName} is collapsed and the first letter of each word is capitalized.
+     * Extra whitespace in {@code tagName} is collapsed and each word is put in title case.
      *
      * @param tagName A valid tag name.
      */
     public Tag(String tagName) {
         requireNonNull(tagName);
         checkArgument(isValidTagName(tagName), MESSAGE_CONSTRAINTS);
-        this.tagName = capitalizeWords(StringUtil.collapseWhitespace(tagName));
+        this.tagName = toTitleCase(StringUtil.collapseWhitespace(tagName));
     }
 
     /**
@@ -54,13 +54,25 @@ public class Tag {
     }
 
     /**
-     * Returns {@code words} with the first letter of each word in upper case and the rest left as typed,
-     * so acronyms such as "RA" are preserved.
+     * Returns {@code words} with the first letter of each word in upper case and the rest in lower case,
+     * so that names differing only in case, such as "RA" and "ra", are displayed the same way.
      */
-    private static String capitalizeWords(String words) {
+    private static String toTitleCase(String words) {
         return Arrays.stream(words.split(WORD_SEPARATOR))
-                .map(word -> word.substring(0, 1).toUpperCase(Locale.ROOT) + word.substring(1))
+                .map(Tag::toTitleCaseWord)
                 .collect(Collectors.joining(WORD_SEPARATOR));
+    }
+
+    /**
+     * Returns {@code word} with its first character in title case and the rest in lower case.
+     * The first character is handled as a code point so that letters outside the Basic Multilingual Plane
+     * are not split.
+     */
+    private static String toTitleCaseWord(String word) {
+        assert !word.isEmpty() : "words of a valid tag name are never empty";
+        int firstCodePoint = word.codePointAt(0);
+        String rest = word.substring(Character.charCount(firstCodePoint));
+        return Character.toString(Character.toTitleCase(firstCodePoint)) + rest.toLowerCase(Locale.ROOT);
     }
 
     /**
