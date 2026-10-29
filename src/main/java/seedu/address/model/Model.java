@@ -74,6 +74,10 @@ public interface Model {
      */
     void updateFilteredPersonList(Predicate<Person> predicate);
 
-    /** Sorts the displayed contacts without changing their stored order; comparator cannot be null. */
+    /**
+     * Sorts the displayed contacts by {@code comparator} without changing their stored order.
+     *
+     * @throws NullPointerException if {@code comparator} is null.
+     */
     void sortFilteredPersonList(Comparator<Person> comparator);
 }
