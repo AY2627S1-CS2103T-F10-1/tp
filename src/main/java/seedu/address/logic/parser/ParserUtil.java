@@ -46,7 +46,7 @@ public class ParserUtil {
             Room.MESSAGE_EMPTY, Room.MESSAGE_TOO_LONG, Room.MESSAGE_INVALID_CHARACTERS);
     private static final TextRules NOTE_RULES = new TextRules(Note.MAX_LENGTH, Note::isValidNote,
             Note.MESSAGE_EMPTY, Note.MESSAGE_TOO_LONG, Note.MESSAGE_INVALID_CHARACTERS);
-    private static final TextRules TAG_RULES = new TextRules(Tag.MAX_LENGTH, Tag::isValidTagName,
+    private static final TextRules TAG_RULES = new TextRules(Tag.MAX_LENGTH, Tag::hasValidCharacters,
             Tag.MESSAGE_EMPTY, Tag.MESSAGE_TOO_LONG, Tag.MESSAGE_INVALID_CHARACTERS);
 
     /** Normalizes and tokenizes fields following an index, rejecting unknown prefixes and invalid indices. */
@@ -205,6 +205,11 @@ public class ParserUtil {
         requireNonNull(tag);
         String normalizedTag = StringUtil.collapseWhitespace(tag);
         checkText(normalizedTag, TAG_RULES);
+        // The typed name is short enough and has valid characters, so it can only fail here by growing past
+        // the length limit when put in title case.
+        if (!Tag.isValidTagName(normalizedTag)) {
+            throw new ParseException(Tag.MESSAGE_TOO_LONG);
+        }
         return new Tag(normalizedTag);
     }
 

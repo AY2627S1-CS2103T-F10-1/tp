@@ -3,8 +3,10 @@ package seedu.address.logic.parser;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.commands.CommandTestUtil.INVALID_TAG_LENGTHENED_PAST_MAX_LENGTH;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_TAG_TOO_LONG;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_AT_MAX_LENGTH;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_LENGTHENED_TO_MAX_LENGTH;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ROOM_COMMAND;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
@@ -279,6 +281,18 @@ public class ParserUtilTest {
     @Test
     public void parseTag_tooLong_throwsParseException() {
         assertThrows(ParseException.class, Tag.MESSAGE_TOO_LONG, () -> ParserUtil.parseTag(INVALID_TAG_TOO_LONG));
+    }
+
+    @Test
+    public void parseTag_lengthenedPastMaxLength_throwsParseException() {
+        assertThrows(ParseException.class, Tag.MESSAGE_TOO_LONG, () ->
+                ParserUtil.parseTag(INVALID_TAG_LENGTHENED_PAST_MAX_LENGTH));
+    }
+
+    @Test
+    public void parseTag_lengthenedToMaxLength_returnsTag() throws Exception {
+        assertEquals(new Tag(VALID_TAG_LENGTHENED_TO_MAX_LENGTH),
+                ParserUtil.parseTag(VALID_TAG_LENGTHENED_TO_MAX_LENGTH));
     }
 
     @Test

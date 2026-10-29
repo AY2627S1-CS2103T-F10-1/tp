@@ -139,6 +139,8 @@ Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
   up to 50 characters. They are not case-sensitive, and are displayed with the first letter of each word
   capitalized and the rest in lower case, so `RA`, `ra` and `Ra` all appear as `Ra`.
   Tags in an edited data file are displayed the same way.
+  The 50-character limit applies to the tag as displayed; a few letters, such as the Turkish `İ`, take two
+  characters in lower case.
 * Duplicate tags, including tags differing only in case or extra spaces (e.g., `/tag RA /tag ra`), are rejected.
 * Leading and trailing spaces are trimmed, and extra whitespace is collapsed into one space.
 * Supplying `/room`, `/tag` or `/note` without a value is rejected.

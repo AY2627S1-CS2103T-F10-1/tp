@@ -51,10 +51,22 @@ public class Tag {
 
     /**
      * Returns true if a given string is a valid tag name once extra whitespace is collapsed.
+     * The length limit applies both to the name as typed and to its title-case form, since a few letters,
+     * such as "İ", become longer in lower case and the title-case form is what gets saved.
      */
     public static boolean isValidTagName(String test) {
         String normalizedTest = StringUtil.collapseWhitespace(test);
-        return normalizedTest.length() <= MAX_LENGTH && normalizedTest.matches(VALIDATION_REGEX);
+        boolean isTypedNameWithinLimit = normalizedTest.length() <= MAX_LENGTH;
+        return isTypedNameWithinLimit && hasValidCharacters(normalizedTest)
+                && toTitleCase(normalizedTest).length() <= MAX_LENGTH;
+    }
+
+    /**
+     * Returns true if a given string, once extra whitespace is collapsed, consists only of characters allowed
+     * in a tag name, regardless of its length.
+     */
+    public static boolean hasValidCharacters(String test) {
+        return StringUtil.collapseWhitespace(test).matches(VALIDATION_REGEX);
     }
 
     /**
@@ -69,14 +81,18 @@ public class Tag {
 
     /**
      * Returns {@code word} with its first character in title case and the rest in lower case.
+     * The whole word is lowercased before its first character is title-cased, because some letters, such as
+     * the Greek final sigma, lowercase differently depending on the letters around them. This keeps the
+     * result consistent with {@link #toComparisonKey(String)}, which lowercases whole names.
      * The first character is handled as a code point so that letters outside the Basic Multilingual Plane
      * are not split.
      */
     private static String toTitleCaseWord(String word) {
         assert !word.isEmpty() : "words of a valid tag name are never empty";
-        int firstCodePoint = word.codePointAt(0);
-        String rest = word.substring(Character.charCount(firstCodePoint));
-        return Character.toString(Character.toTitleCase(firstCodePoint)) + rest.toLowerCase(Locale.ROOT);
+        String lowerCaseWord = word.toLowerCase(Locale.ROOT);
+        int firstCodePoint = lowerCaseWord.codePointAt(0);
+        String rest = lowerCaseWord.substring(Character.charCount(firstCodePoint));
+        return Character.toString(Character.toTitleCase(firstCodePoint)) + rest;
     }
 
     /**

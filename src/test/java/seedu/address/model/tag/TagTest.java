@@ -4,8 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.logic.commands.CommandTestUtil.INVALID_TAG_LENGTHENED_PAST_MAX_LENGTH;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_TAG_TOO_LONG;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_AT_MAX_LENGTH;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_GREEK_LOWER_CASE;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_GREEK_UPPER_CASE;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_LENGTHENED_TO_MAX_LENGTH;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import org.junit.jupiter.api.Test;
@@ -56,6 +60,35 @@ public class TagTest {
         // non-ASCII letters at the length boundary
         assertTrue(Tag.isValidTagName("宿".repeat(Tag.MAX_LENGTH)));
         assertFalse(Tag.isValidTagName("宿".repeat(Tag.MAX_LENGTH + 1)));
+
+        // letters that become longer in title case, at the length boundary
+        assertTrue(Tag.isValidTagName(VALID_TAG_LENGTHENED_TO_MAX_LENGTH));
+        assertFalse(Tag.isValidTagName(INVALID_TAG_LENGTHENED_PAST_MAX_LENGTH));
+    }
+
+    @Test
+    public void hasValidCharacters() {
+        assertThrows(NullPointerException.class, () -> Tag.hasValidCharacters(null));
+
+        assertTrue(Tag.hasValidCharacters("  Resident   Fellow ")); // extra spaces are collapsed
+        assertTrue(Tag.hasValidCharacters(INVALID_TAG_TOO_LONG)); // length is not checked
+        assertTrue(Tag.hasValidCharacters(INVALID_TAG_LENGTHENED_PAST_MAX_LENGTH));
+
+        assertFalse(Tag.hasValidCharacters("")); // empty string
+        assertFalse(Tag.hasValidCharacters("RA/Staff")); // command delimiter
+    }
+
+    @Test
+    public void constructor_lengthenedToMaxLength_savedNameIsValid() {
+        String tagName = new Tag(VALID_TAG_LENGTHENED_TO_MAX_LENGTH).tagName;
+        assertEquals(Tag.MAX_LENGTH, tagName.length());
+        assertTrue(Tag.isValidTagName(tagName)); // a saved tag can be loaded again
+        assertEquals(tagName, new Tag(tagName).tagName); // and is unchanged when loaded
+    }
+
+    @Test
+    public void constructor_lengthenedPastMaxLength_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> new Tag(INVALID_TAG_LENGTHENED_PAST_MAX_LENGTH));
     }
 
     @Test
@@ -70,6 +103,9 @@ public class TagTest {
         assertEquals("4th Floor", new Tag("4TH floor").tagName); // digits are left unchanged
         assertEquals("Élève", new Tag("éLÈVE").tagName); // accented letters
         assertEquals("宿舍", new Tag("宿舍").tagName); // letters without case are left unchanged
+        // a sigma ending the word is a final sigma however it was typed
+        assertEquals("Ος", new Tag(VALID_TAG_GREEK_UPPER_CASE).tagName);
+        assertEquals("Ος", new Tag(VALID_TAG_GREEK_LOWER_CASE).tagName);
         // Deseret letters lie outside the Basic Multilingual Plane, so each takes two chars
         assertEquals("\uD801\uDC00\uD801\uDC2F", new Tag("\uD801\uDC28\uD801\uDC07").tagName);
     }
@@ -99,6 +135,7 @@ public class TagTest {
         // different case or spacing -> returns true
         assertTrue(tag.equals(new Tag("RESIDENT fellow")));
         assertTrue(tag.equals(new Tag(" Resident   Fellow ")));
+        assertTrue(new Tag(VALID_TAG_GREEK_UPPER_CASE).equals(new Tag(VALID_TAG_GREEK_LOWER_CASE)));
 
         // different value -> returns false
         assertFalse(tag.equals(new Tag("Resident")));
@@ -112,6 +149,8 @@ public class TagTest {
 
         assertTrue(tag.matchesName("Resident Fellow"));
         assertTrue(tag.matchesName("  resident   FELLOW ")); // different case and spacing
+        assertTrue(new Tag(VALID_TAG_GREEK_UPPER_CASE).matchesName(VALID_TAG_GREEK_UPPER_CASE));
+        assertTrue(new Tag(VALID_TAG_GREEK_UPPER_CASE).matchesName(VALID_TAG_GREEK_LOWER_CASE));
 
         assertFalse(tag.matchesName("Resident")); // partial name
         assertFalse(tag.matchesName("")); // empty string

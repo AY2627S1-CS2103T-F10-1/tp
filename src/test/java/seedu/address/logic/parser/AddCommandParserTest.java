@@ -1,6 +1,9 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.commands.CommandTestUtil.INVALID_TAG_LENGTHENED_PAST_MAX_LENGTH;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_GREEK_LOWER_CASE;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_GREEK_UPPER_CASE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ROOM_COMMAND;
@@ -211,6 +214,8 @@ public class AddCommandParserTest {
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag RA /tag ra", Tag.MESSAGE_DUPLICATE);
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag Resident Fellow /tag resident  fellow",
                 Tag.MESSAGE_DUPLICATE);
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag " + VALID_TAG_GREEK_UPPER_CASE
+                + " /tag " + VALID_TAG_GREEK_LOWER_CASE, Tag.MESSAGE_DUPLICATE);
     }
 
     @Test
@@ -241,6 +246,8 @@ public class AddCommandParserTest {
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag RA, Staff", Tag.MESSAGE_INVALID_CHARACTERS);
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag RA /tag St@ff", Tag.MESSAGE_INVALID_CHARACTERS);
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag " + "a".repeat(Tag.MAX_LENGTH + 1),
+                Tag.MESSAGE_TOO_LONG);
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag " + INVALID_TAG_LENGTHENED_PAST_MAX_LENGTH,
                 Tag.MESSAGE_TOO_LONG);
     }
 

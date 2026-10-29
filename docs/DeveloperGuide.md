@@ -171,7 +171,13 @@ The activity diagram below shows the order in which these checks run for an `add
 
 `Tag.VALIDATION_REGEX` uses `\p{L}`, `\p{M}` and `\p{N}` rather than `\p{Alnum}`, which in Java only matches ASCII, so letters and digits in any language are accepted. `\p{M}` allows accent marks, for letters typed as a base letter followed by a combining mark.
 
-`Tag` compares tag names ignoring case and stores them in title case: the first letter of each word in upper case and the rest in lower case. As `JsonAdaptedTag` also builds a `Tag`, tags in an edited data file are normalized the same way when loaded. `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were typed. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
+`Tag` compares tag names ignoring case and stores them in title case: the first letter of each word in upper case and the rest in lower case. As `JsonAdaptedTag` also builds a `Tag`, tags in an edited data file are normalized the same way when loaded.
+
+Two Unicode details keep the stored form consistent with loading and comparing:
+
+* Each word is lowercased as a whole before its first letter is title-cased. Some letters lowercase differently depending on their neighbors: the Greek `Σ` becomes `ς` at the end of a word and `σ` elsewhere. Lowercasing letters one at a time would store `ΟΣ` as `Οσ`, while `Tag#toComparisonKey()` lowercases the whole name to `ος`, so `find /tag ΟΣ` would match nothing and `/tag ΟΣ /tag ος` would be two different tags.
+* `Tag#isValidTagName()` also checks the length of the title-case form, because a few letters, such as `İ`, become two characters in lower case. Otherwise a tag within the limit as typed could be saved longer than `Tag.MAX_LENGTH` and make the data file fail to load. `ParserUtil#parseTag()` reports such a tag as too long.
+ `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were typed. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
 
 #### Design considerations
 
@@ -897,6 +903,9 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `add Ann Lee /phone 81000025 /tag Café Vendor /tag 宿舍`<br>
       Expected: Ann Lee is added with the tags `Café Vendor` and `宿舍`.
 
+   1. Test case: `add Eleni Pappas /phone 81000026 /tag ΟΣ`, then `find /tag ΟΣ` and `find /tag ος`<br>
+      Expected: Eleni Pappas is added with the tag `Ος`, and both searches list her.
+
    1. Test case: `add Ben Ong /phone 9876 5432 /tag T1 /tag T2 /tag T3 /tag T4 /tag T5`<br>
       Expected: Ben Ong is added with 5 tags.
 
@@ -910,6 +919,12 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `add Ben Ong /phone 9876 5432 /tag RA /tag`<br>
       Expected: No contact is added. Error: `Tag cannot be empty.`
+
+   1. Test case: `add Ben Ong /phone 9876 5432 /tag ΟΣ /tag ος`<br>
+      Expected: No contact is added. Error: `Contact already has this tag.`
+
+   1. Test case: `add Ben Ong /phone 9876 5432 /tag A` followed by 25 copies of `İ` (26 characters as typed, 51 in title case)<br>
+      Expected: No contact is added. Error: `Tag too long, please shorten it and try again.`
 
    1. Other incorrect commands to try: `add Ben Ong /phone 9876 5432 /tag RA, Staff`, `add Ben Ong /phone 9876 5432 /tag RA/Staff`, `add Ben Ong /phone 9876 5432 /tag Café!`, `add Ben Ong /phone 9876 5432 /tag` followed by 51 letters<br>
       Expected: No contact is added. The status message shows the matching error.
