@@ -6,6 +6,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import seedu.address.commons.util.ToStringBuilder;
@@ -31,6 +32,9 @@ public class Person {
     private final Room room;
     private final boolean archive;
     private final Set<Tag> tags = new LinkedHashSet<>();
+    private final Note note;
+    private final Optional<EmergencyContact> emergencyContact;
+    private final boolean isFavourite;
 
     /**
      * Every field must be present and not null, and there must be at most {@link #MAX_TAGS} tags.
@@ -47,7 +51,36 @@ public class Person {
 
     /** Creates a contact with the specified archive state. */
     public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, boolean archive) {
-        requireAllNonNull(name, phone, email, address, tags, room);
+        this(name, phone, email, address, tags, room, new Note(""), Optional.empty(), archive);
+    }
+
+    /** Creates a contact with an optional room number and note. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note) {
+        this(name, phone, email, address, tags, room, note, Optional.empty(), false);
+    }
+
+    /** Creates an active contact with a room, note and optional emergency details. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note,
+            Optional<EmergencyContact> emergencyContact) {
+        this(name, phone, email, address, tags, room, note, emergencyContact, false);
+    }
+
+    /** Creates a contact with both note and archive state. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note,
+            boolean archive) {
+        this(name, phone, email, address, tags, room, note, Optional.empty(), archive);
+    }
+
+    /** Creates a contact with all details and the specified archive state. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note,
+            Optional<EmergencyContact> emergencyContact, boolean archive) {
+        this(name, phone, email, address, tags, room, note, emergencyContact, archive, false);
+    }
+
+    /** Creates a contact with all details, archive state and favourite status. */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags, Room room, Note note,
+            Optional<EmergencyContact> emergencyContact, boolean archive, boolean isFavourite) {
+        requireAllNonNull(name, phone, email, address, tags, room, note, emergencyContact);
         checkArgument(tags.size() <= MAX_TAGS, MESSAGE_TAG_LIMIT_REACHED);
         this.name = name;
         this.phone = phone;
@@ -56,6 +89,9 @@ public class Person {
         this.room = room;
         this.archive = archive;
         this.tags.addAll(tags);
+        this.note = note;
+        this.emergencyContact = emergencyContact;
+        this.isFavourite = isFavourite;
     }
 
     public boolean isArchived() {
@@ -64,7 +100,7 @@ public class Person {
 
     /** Returns a copy with the specified archive state, preserving all contact details. */
     public Person withArchive(boolean archive) {
-        return new Person(name, phone, email, address, tags, room, archive);
+        return new Person(name, phone, email, address, tags, room, note, emergencyContact, archive, isFavourite);
     }
 
     public Name getName() {
@@ -85,6 +121,28 @@ public class Person {
 
     public Address getAddress() {
         return address;
+    }
+
+    public Note getNote() {
+        return note;
+    }
+
+    public boolean isFavourite() {
+        return isFavourite;
+    }
+
+    /** Returns a copy with the given favourite status, preserving every other field. */
+    public Person withFavourite(boolean isFavourite) {
+        return new Person(name, phone, email, address, tags, room, note, emergencyContact, archive, isFavourite);
+    }
+
+    public Optional<EmergencyContact> getEmergencyContact() {
+        return emergencyContact;
+    }
+
+    /** Returns a copy with new emergency details, preserving every other field. */
+    public Person withEmergencyContact(EmergencyContact contact) {
+        return new Person(name, phone, email, address, tags, room, note, Optional.of(contact), archive, isFavourite);
     }
 
     /**
@@ -129,13 +187,16 @@ public class Person {
                 && address.equals(otherPerson.address)
                 && room.equals(otherPerson.room)
                 && archive == otherPerson.archive
-                && tags.equals(otherPerson.tags);
+                && tags.equals(otherPerson.tags)
+                && note.equals(otherPerson.note)
+                && emergencyContact.equals(otherPerson.emergencyContact)
+                && isFavourite == otherPerson.isFavourite;
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, tags, room, archive);
+        return Objects.hash(name, phone, email, address, tags, room, note, emergencyContact, archive, isFavourite);
     }
 
     @Override
@@ -148,6 +209,13 @@ public class Person {
                 .add("tags", tags);
         if (!room.value.isEmpty()) {
             builder.add("room", room);
+        }
+        if (!note.value.isEmpty()) {
+            builder.add("note", note);
+        }
+        emergencyContact.ifPresent(contact -> builder.add("emergencyContact", contact));
+        if (isFavourite) {
+            builder.add("isFavourite", isFavourite);
         }
         return builder.toString();
     }

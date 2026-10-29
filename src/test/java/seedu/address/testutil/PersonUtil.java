@@ -4,6 +4,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ROOM_COMMAND;
@@ -23,16 +24,19 @@ import seedu.address.model.person.Person;
 public class PersonUtil {
 
     /**
-     * Returns an add command string for adding the {@code person}, including their room and tags if they have any.
+     * Returns an add command string for adding the {@code person}, including their room, tags and note
+     * if they have any.
      */
     public static String getAddCommand(Person person) {
         String command = AddCommand.COMMAND_WORD + " " + person.getName().fullName
                 + " " + PREFIX_PHONE_COMMAND + " " + person.getPhone().value;
         String roomValue = person.getRoom().value;
         String room = roomValue.isEmpty() ? "" : " " + PREFIX_ROOM_COMMAND + " " + roomValue;
+        String noteValue = person.getNote().value;
+        String note = noteValue.isEmpty() ? "" : " " + PREFIX_NOTE_COMMAND + " " + noteValue;
         return command + room + person.getTags().stream()
                 .map(tag -> " " + PREFIX_TAG_COMMAND + " " + tag.tagName)
-                .collect(Collectors.joining());
+                .collect(Collectors.joining()) + note;
     }
 
     /**
@@ -61,12 +65,8 @@ public class PersonUtil {
                 sb.append(PREFIX_PHONE_COMMAND).append(" ").append(phone.value).append(" "));
         descriptor.get(PersonField.ROOM).ifPresent(room ->
                 sb.append(PREFIX_ROOM_COMMAND).append(" ").append(room.value).append(" "));
-        descriptor.get(PersonField.TAGS).ifPresent(tags -> {
-            if (tags.isEmpty()) {
-                sb.append(PREFIX_TAG_COMMAND).append(" ");
-            }
-            tags.forEach(tag -> sb.append(PREFIX_TAG_COMMAND).append(" ").append(tag.tagName).append(" "));
-        });
+        descriptor.get(PersonField.NOTE).ifPresent(note ->
+                sb.append(PREFIX_NOTE_COMMAND).append(" ").append(note.value).append(" "));
         return sb.toString();
     }
 }

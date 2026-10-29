@@ -2,6 +2,7 @@ package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.testutil.Assert.assertThrows;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -26,8 +27,9 @@ import seedu.address.testutil.TypicalPersons;
  * {@link Person} cannot be left out of one of them.
  */
 public class PersonFieldTest {
-    /** Person fields that are not set through add/edit arguments. */
-    private static final Set<String> NON_EDITABLE_PERSON_FIELDS = Set.of("email", "address", "archive");
+    /** Person fields managed outside add/edit arguments. */
+    private static final Set<String> NON_EDITABLE_PERSON_FIELDS =
+            Set.of("email", "address", "archive", "emergencyContact", "isFavourite");
 
     @Test
     public void everyPersonFieldIsRegistered() {
@@ -64,8 +66,8 @@ public class PersonFieldTest {
     }
 
     @Test
-    public void editAcceptsEveryField() throws Exception {
-        for (PersonField<?> field : PersonField.values()) {
+    public void editAcceptsEveryEditableField() throws Exception {
+        for (PersonField<?> field : PersonField.editableValues()) {
             EditCommand command = new EditCommandParser().parse(" 1 " + field.getPrefix() + " "
                     + PersonFieldSamples.getText(field));
             assertTrue(command.toString().contains(field.getName() + "="),
@@ -74,10 +76,17 @@ public class PersonFieldTest {
     }
 
     @Test
-    public void editMessageUsageMentionsEveryField() {
-        for (PersonField<?> field : PersonField.values()) {
+    public void editMessageUsageMentionsEveryEditableField() {
+        for (PersonField<?> field : PersonField.editableValues()) {
             assertTrue(EditCommand.MESSAGE_USAGE.contains(field.getPrefix().getPrefix()));
         }
+    }
+
+    @Test
+    public void onlyTagsAreNotEditable() {
+        // tags are changed with toggle, so they are the only field that edit does not accept
+        assertEquals(PersonField.values().stream().filter(field -> field != PersonField.TAGS).toList(),
+                PersonField.editableValues());
     }
 
     @Test
@@ -85,6 +94,18 @@ public class PersonFieldTest {
         for (Person person : TypicalPersons.getTypicalPersons()) {
             assertEquals(person, PersonFieldValues.of(person).toPerson(person.getEmail(), person.getAddress()));
         }
+    }
+
+    @Test
+    public void parseFrom_nullArgMultimap_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> PersonField.NOTE.parseFrom(null, true));
+    }
+
+    @Test
+    public void toPerson_nullLegacyField_throwsNullPointerException() {
+        PersonFieldValues values = PersonFieldValues.of(TypicalPersons.ALICE);
+        assertThrows(NullPointerException.class, () -> values.toPerson(null, new Address("")));
+        assertThrows(NullPointerException.class, () -> values.toPerson(new Email(""), null));
     }
 
     private static <T> void setSample(PersonFieldValues values, PersonField<T> field) throws ParseException {

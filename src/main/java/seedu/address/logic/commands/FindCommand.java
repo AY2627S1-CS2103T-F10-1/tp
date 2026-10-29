@@ -1,47 +1,83 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ROOM_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
 import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PERSONS;
 
+import java.util.Comparator;
+import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
 
 /**
- * Finds and lists all persons in the address book whose full name is exactly equal to the given name,
- * or who have the given tag or phone number. Phone matching ignores extra spaces.
- * Name matching is case sensitive; tag matching ignores case and extra spaces.
+ * Finds and lists all persons in the address book whose name closely matches the given name,
+ * or who have the given tag, phone number or room. Name matching ignores case and tolerates small typos,
+ * and lists the closest matches first; tag and room matching ignore case and extra spaces;
+ * phone matching ignores extra spaces.
  */
 public class FindCommand extends Command {
 
     public static final String COMMAND_WORD = "find";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds all persons whose full name is exactly "
-            + "the specified name (case-sensitive), tag (ignoring case), or phone number (ignoring extra spaces), "
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds all persons whose name closely matches "
+            + "the specified name (ignoring case and small typos), who have the specified tag (ignoring case), "
+            + "or whose phone number is the specified number (ignoring extra spaces), "
+            + "or whose room is the specified room (ignoring case and extra spaces), "
             + "and displays them as a list with index numbers.\n"
             + "Parameters: " + PREFIX_NAME_COMMAND + " NAME or " + PREFIX_TAG_COMMAND + " TAG or "
-            + PREFIX_PHONE_COMMAND + " NUMBER\n"
+            + PREFIX_PHONE_COMMAND + " NUMBER or " + PREFIX_ROOM_COMMAND + " ROOM\n"
             + "Examples: " + COMMAND_WORD + " " + PREFIX_NAME_COMMAND + " Sarah Tan, "
             + COMMAND_WORD + " " + PREFIX_TAG_COMMAND + " friends, "
-            + COMMAND_WORD + " " + PREFIX_PHONE_COMMAND + " 91234567";
+            + COMMAND_WORD + " " + PREFIX_PHONE_COMMAND + " 91234567, "
+            + COMMAND_WORD + " " + PREFIX_ROOM_COMMAND + " B-204";
+
+    private static final Logger logger = LogsCenter.getLogger(FindCommand.class);
 
     private final Predicate<Person> predicate;
+    private final Optional<Comparator<Person>> ranking;
 
+    /**
+     * Creates a FindCommand that lists the persons matching {@code predicate}, in their order in the address book.
+     */
     public FindCommand(Predicate<Person> predicate) {
+        requireNonNull(predicate);
         this.predicate = predicate;
+        this.ranking = Optional.empty();
+    }
+
+    /**
+     * Creates a FindCommand that lists the persons matching {@code predicate}, in the order given by
+     * {@code ranking}, so that the closest match is listed first.
+     */
+    public FindCommand(Predicate<Person> predicate, Comparator<Person> ranking) {
+        requireAllNonNull(predicate, ranking);
+        this.predicate = predicate;
+        this.ranking = Optional.of(ranking);
     }
 
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS.and(predicate));
+        Predicate<Person> activeMatches = PREDICATE_SHOW_ACTIVE_PERSONS.and(predicate);
+        if (ranking.isPresent()) {
+            model.updateFilteredPersonList(activeMatches, ranking.get());
+        } else {
+            model.updateFilteredPersonList(activeMatches);
+        }
         int count = model.getFilteredPersonList().size();
+        assert count <= model.getAddressBook().getPersonList().size()
+                : "Search cannot list more persons than the address book has";
+        logger.fine("Find listed " + count + " person(s) matching " + predicate);
         if (count == 0) {
             return new CommandResult(Messages.MESSAGE_NO_PERSONS_FOUND);
         }
@@ -59,13 +95,15 @@ public class FindCommand extends Command {
             return false;
         }
 
-        return predicate.equals(otherFindCommand.predicate);
+        return predicate.equals(otherFindCommand.predicate)
+                && ranking.equals(otherFindCommand.ranking);
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this)
                 .add("predicate", predicate)
+                .add("ranking", ranking)
                 .toString();
     }
 }

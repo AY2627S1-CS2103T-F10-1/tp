@@ -1,11 +1,14 @@
 package seedu.address.testutil;
 
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.EmergencyContact;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Note;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Room;
@@ -22,6 +25,7 @@ public class PersonBuilder {
     public static final String DEFAULT_EMAIL = "amy@gmail.com";
     public static final String DEFAULT_ADDRESS = "123, Jurong West Ave 6, #08-111";
     public static final String DEFAULT_ROOM = "";
+    public static final String DEFAULT_NOTE = "";
 
     private Name name;
     private Phone phone;
@@ -29,6 +33,10 @@ public class PersonBuilder {
     private Address address;
     private Set<Tag> tags;
     private Room room;
+    private Note note;
+    private boolean isFavourite;
+    private boolean archive;
+    private Optional<EmergencyContact> emergencyContact = Optional.empty();
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -40,6 +48,8 @@ public class PersonBuilder {
         address = new Address(DEFAULT_ADDRESS);
         tags = new LinkedHashSet<>();
         room = new Room(DEFAULT_ROOM);
+        note = new Note(DEFAULT_NOTE);
+        isFavourite = false;
     }
 
     /**
@@ -52,6 +62,10 @@ public class PersonBuilder {
         address = personToCopy.getAddress();
         tags = new LinkedHashSet<>(personToCopy.getTags());
         room = personToCopy.getRoom();
+        note = personToCopy.getNote();
+        isFavourite = personToCopy.isFavourite();
+        archive = personToCopy.isArchived();
+        emergencyContact = personToCopy.getEmergencyContact();
     }
 
     /**
@@ -102,8 +116,26 @@ public class PersonBuilder {
         return this;
     }
 
+    /**
+     * Sets the {@code Note} of the {@code Person} that we are building.
+     */
+    public PersonBuilder withNote(String note) {
+        this.note = new Note(note);
+        return this;
+    }
+
+    /**
+     * Sets the favourite status of the {@code Person} that we are building.
+     */
+    public PersonBuilder withFavourite(boolean isFavourite) {
+        this.isFavourite = isFavourite;
+        return this;
+    }
+
+    /** Builds a contact retaining all editable fields and separately managed statuses. */
     public Person build() {
-        return new Person(name, phone, email, address, tags, room);
+        return new Person(name, phone, email, address, tags, room, note, emergencyContact, archive,
+                isFavourite);
     }
 
 }

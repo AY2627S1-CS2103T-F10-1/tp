@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_TAG_TOO_LONG;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_GREEK_LOWER_CASE;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_GREEK_UPPER_CASE;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_RESIDENT_FELLOW;
 import static seedu.address.testutil.Assert.assertThrows;
 
@@ -30,6 +32,11 @@ public class PersonHasTagPredicateTest {
 
         // extra whitespace
         assertTrue(new PersonHasTagPredicate("  resident    FELLOW ").test(RESIDENT_FELLOW_PERSON));
+
+        // a sigma ending the word, typed in either case
+        Person greekTagPerson = new PersonBuilder().withTags(VALID_TAG_GREEK_UPPER_CASE).build();
+        assertTrue(new PersonHasTagPredicate(VALID_TAG_GREEK_UPPER_CASE).test(greekTagPerson));
+        assertTrue(new PersonHasTagPredicate(VALID_TAG_GREEK_LOWER_CASE).test(greekTagPerson));
     }
 
     @Test
