@@ -281,6 +281,7 @@ Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/note NOTE]`
 * Each field follows the same rules as in `add`, so `/name`, `/phone`, `/room` and `/note` cannot be repeated.
 * `edit` does not change tags, and `/tag` is rejected as an invalid command format. Use [`toggle`](#toggling-tags-toggle) to add or remove tags on an existing contact.
 * The contact's tags and favourite status are preserved.
+* On success, the full active contact list is shown again in stored order. Search again before using an index from the previous results.
 * An optional field given with nothing after it is removed: `/room` on its own removes the room, and
   `/note` on its own removes the note. `/name` and `/phone` are required, so they cannot be removed.
 
@@ -324,6 +325,7 @@ Format: `toggle INDEX /tag TAG [/tag TAG]…​`
 * A tag cannot be repeated within one command.
 * A contact can have at most 5 tags, including `emergency`. If the toggle would leave the contact with more, nothing is changed.
 * Archived contacts must be unarchived before toggling their tags. Favourite status, emergency details and the note are not changed.
+* On success, the full active contact list is shown again in stored order. Search again before using an index from the previous results.
 
 Examples:
 * `toggle 1 /tag emergency` marks the 1st contact as an emergency contact, or removes that if they already are one.

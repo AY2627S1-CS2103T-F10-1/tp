@@ -974,13 +974,16 @@ testers are expected to do more *exploratory* testing.
 
 1. Toggling tags on a contact
 
-   1. Prerequisites: Start with the sample data. Run `add Zed Lim /phone 9000 0000 /tag A /tag B`, then `list`.
+   1. Prerequisites: Start with an empty, disposable address book. Run `add Zed Lim /phone 9000 0000 /tag A /tag B`, then `list`. Zed must be the only contact, so their displayed index stays 1 throughout these tests.
 
-   1. Test case: `toggle 1 /tag a /tag c` (where Zed Lim is contact 1; use their actual index)<br>
+   1. Test case: `toggle 1 /tag a /tag c`<br>
       Expected: Zed Lim now has the tags `B` and `C`, in that order. The full list is shown again. The message ends with `Added: C. Removed: A.`
 
    1. Test case: `toggle 1 /tag emergency`, then `list emerg`<br>
-      Expected: Zed Lim is listed. Running `toggle 1 /tag emergency` again removes the tag.
+      Expected: Zed Lim is listed with the tags `B`, `C` and `Emergency`.
+
+   1. Test case: `toggle 1 /tag emergency`<br>
+      Expected: Zed Lim has only `B` and `C` again. The active list is shown even though the previous view was `list emerg`.
 
    1. Test case: `toggle 1 /tag T1 /tag T2 /tag T3 /tag T4`<br>
       Expected: No change. Error: `Tag limit reached (max 5)`, since Zed Lim would have more than 5 tags.
