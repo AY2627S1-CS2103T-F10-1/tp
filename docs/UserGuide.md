@@ -55,17 +55,17 @@ RAcontact is a **desktop application for managing contacts, optimized for use th
 
 **:information_source: Notes about the command format:**<br>
 
-* Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
-  For example, in `add n/NAME`, replace `NAME` with a value such as `John Doe`.
+* Words in `UPPER_CASE` are parameters to be supplied by the user.<br>
+  For example, in `add NAME /phone PHONE`, replace `NAME` with `John Doe` and `PHONE` with `98765432`.
 
 * Items in square brackets are optional.<br>
-  For example, `n/NAME [t/TAG]` can be used as `n/John Doe t/friend` or as `n/John Doe`.
+  For example, `add NAME /phone PHONE [/room ROOM]` can be used as `add John Doe /phone 98765432` or `add John Doe /phone 98765432 /room B-204`.
 
-* Items followed by `…`​ can appear zero or more times.<br>
-  For example, `[t/TAG]…​` may be omitted, or written as `t/friend` or `t/friend t/family`.
+* Items followed by `…` can appear zero or more times.<br>
+  For example, `[/tag TAG]…` may be omitted, or supplied as `/tag Friend` or `/tag Friend /tag Family`.
 
-* Parameters can be in any order.<br>
-  For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
+* For `add`, the name must come first. The prefixed fields after it can appear in any order.<br>
+  For example, `add John Doe /phone 98765432 /room B-204` and `add John Doe /room B-204 /phone 98765432` are both accepted.
 
 * Extraneous parameters for `help`, `exit`, and `clear` are ignored. The `list`, `list emerg`, `list archived`, `list fav`, `list sorted`,
   `fav INDEX` and `unfav INDEX` commands reject extra parameters.<br>
