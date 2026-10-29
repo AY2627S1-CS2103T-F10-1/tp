@@ -3,7 +3,13 @@ layout: page
 title: User Guide
 ---
 
-RAcontact is a **desktop application for managing contacts, optimized for use through a Command Line Interface (CLI)** while retaining the benefits of a Graphical User Interface (GUI). If you type quickly, RAcontact can help you manage contacts faster than traditional GUI applications.
+RAcontact is a **desktop contact management application for Residential Assistants (RAs) at NUS hostels**.
+It brings contacts for residents, fellow RAs, hall staff, vendors and emergency services together in one place,
+so you can find the right person or a resident's details during a duty shift without searching through chats and documents.
+
+RAcontact is **optimized for fast typists through a Command Line Interface (CLI)**, with a Graphical User Interface (GUI)
+for viewing contacts. You can search by name, phone, room or tag, keep favourites and record a resident's emergency contact.
+The app stores and retrieves contact information; it does not make calls, send messages or manage duty rosters.
 
 * Table of Contents
 {:toc}
