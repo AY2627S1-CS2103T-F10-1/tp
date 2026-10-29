@@ -1,0 +1,22 @@
+@startuml
+title Find contacts by phone
+start
+:FindCommandParser tokenizes selectors;
+if (Exactly one non-empty /phone selector,\nno other selector, repetition or preamble?) then (yes)
+  :Create PhoneEqualsPredicate;
+  :Trim query and collapse repeated\nwhitespace to one space;
+  :Create FindCommand(predicate);
+else (no)
+  :Throw ParseException;
+  stop
+endif
+:FindCommand sets the model filter to\nactive AND exact phone string match;
+:Read size of filtered person list;
+if (No matches?) then (yes)
+  :Return no-results CommandResult;
+else (no)
+  :Return match-count CommandResult;
+endif
+:LogicManager saves unchanged contact data;
+stop
+@enduml

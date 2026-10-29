@@ -125,7 +125,6 @@ How the parsing works:
 
 <img src="images/ModelClassDiagram.png" width="450" />
 
-
 The `Model` component,
 
 * stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
@@ -138,7 +137,6 @@ The `Model` component,
 <img src="images/BetterModelClassDiagram.png" width="450" />
 
 </div>
-
 
 ### Storage component
 
@@ -165,28 +163,74 @@ This section describes some noteworthy details on how certain features are imple
 
 #### Implementation
 
-Archiving keeps a contact in the same address book and changes its `archive` flag instead of deleting it.
-The state diagram below shows the transitions between active and archived contacts. `list` and `find`
-show active contacts, while `list archived` selects archived contacts. The archive flag is saved in JSON
-and restored when the data is loaded.
+`ArchiveCommandParser` and `UnarchiveCommandParser` accept either a displayed index or one non-empty
+`/tag` selector. They reject repeated tag prefixes, a preamble before a tag selector, and unknown prefixes.
+`AddressBookParser` routes `list` through `ListCommandParser`, which creates `ListArchivedCommand`
+for `list archived`.
+
+`Person` stores an immutable `archive` boolean. Both active and archived contacts remain in the same
+address book. `withArchive(true)` or `withArchive(false)` creates a copy preserving the other details,
+and `Model#setPerson` replaces the original. New contacts start active.
 
 <img src="images/ArchiveStateDiagram.png" alt="Active and archived contact states" width="650" />
 
-For `archive INDEX`, `ArchiveCommand` resolves the target from the currently displayed list, checks its
-archive state, and creates a copy using `withArchive(true)`. `Model#setPerson` replaces the original while
-preserving the current filter, so the displayed list updates automatically. The sequence diagram shows
-the successful path after parsing, including the subsequent save by `LogicManager`. `UnarchiveCommand`
-follows the same approach with `withArchive(false)` to restore an archived contact.
+For index-based commands, the target is resolved from `getFilteredPersonList()` before replacement.
+An out-of-range index throws `CommandException`; a contact already in the requested state produces a
+no-change result. The current filter is preserved, so a replaced contact disappears from a view it no
+longer matches. The following sequence shows successful archiving after parsing.
 
-<img src="images/ArchiveSequenceDiagram.png" alt="Sequence for archiving a displayed contact" width="900" />
+<img src="images/ArchiveSequenceDiagram.png" alt="Archiving by displayed index" width="900" />
 
-For `archive /tag TAG`, the command searches all active contacts in the address book, independently of
-the current view. It snapshots the matching contacts and creates their replacements before updating the
-model, avoiding iteration over a changing filtered list. The activity diagram shows validation, the
-no-matches path, and bulk replacement. `unarchive /tag TAG` uses the same flow with archived contacts
-and clears their archive flag instead.
+Tag-based commands use `PersonHasTagPredicate` to search the whole address book, ignoring case and
+extra whitespace in tag names. Archive selects active matches; unarchive selects archived matches.
+Targets and replacements are collected before updating the model. An empty selection returns a
+no-matches result; otherwise the result reports the number changed.
 
-<img src="images/ArchiveByTagActivityDiagram.png" alt="Activity flow for archiving contacts by tag" width="650" />
+<img src="images/ArchiveByTagActivityDiagram.png" alt="Bulk archive by tag" width="650" />
+
+`ModelManager` initially shows active contacts. `ListArchivedCommand` sets the predicate to
+`Person::isArchived`, while `list` restores the active-contact predicate. Listing changes visibility,
+not the stored archive state. After a command returns, `LogicManager` saves the address book through
+`Storage`. `JsonAdaptedPerson` serializes and restores the `archive` field; a missing field defaults to
+`false` for older files. Save failures are reported as `CommandException` without rolling back the
+in-memory change.
+
+#### Design considerations
+
+* **Flag in the existing model rather than a separate archive:** retains contact details and uses the
+  existing storage pipeline, but commands must explicitly select active or archived contacts.
+* **Copy and replace rather than mutate a contact:** preserves the immutable archive state and lets the
+  observable list update its filtered view.
+* **Snapshot bulk targets before replacement:** avoids iterating over a view that changes as contacts
+  are archived, at the cost of temporary lists proportional to the number of matches.
+
+### Delete by name
+
+#### Implementation
+
+`DeleteCommandParser` retains signed integer input as an index attempt, so invalid or overflowing indices
+are rejected rather than interpreted as names. Other input must contain a single non-empty `/name`
+selector without preamble text. The parser constructs `DeleteCommand` with `NameEqualsPredicate`, which
+compares the supplied name with the stored full name exactly and case-sensitively; it does not collapse
+internal whitespace.
+
+<img src="images/DeleteByNameActivityDiagram.png" alt="Delete by name match-count decisions" width="650" />
+
+The command first replaces the displayed filter with the active-contact predicate combined with the name
+predicate. With exactly one match, it delegates to the index-based `DeleteCommand` at displayed index 1,
+which resolves the `Person` and calls `Model#deletePerson`. With zero or multiple matches, it returns an
+explanatory result without deleting contacts. The filtered view remains in place in all three cases.
+After the command returns, `LogicManager` saves the address book through the existing storage pipeline.
+
+#### Design considerations
+
+* **Delete only an unambiguous exact match:** avoids deleting a similarly named person through fuzzy
+  matching or deleting several people at once, but requires the user to enter the full name and casing.
+* **Filter before delegating to index deletion:** reuses target resolution and deletion logic and exposes
+  ambiguous matches for a subsequent `delete INDEX`. The trade-off is that an unsuccessful name deletion
+  also changes the displayed list.
+* **Restrict name matching to active contacts:** excludes archived contacts from ordinary name deletion.
+  Index deletion remains available for a contact explicitly displayed in the archive view.
 
 ### Tag feature
 
@@ -365,6 +409,31 @@ The name does not change, so `toggle` never creates a duplicate contact and does
 ### Filter by tag feature
 
 `find /tag TAG` shows only contacts with the given tag. `FindCommandParser` creates a `PersonHasTagPredicate` from the value after `/tag`, and `FindCommand` applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any non-empty value is accepted and a value that is not a valid tag simply matches nobody.
+
+### Find by phone
+
+#### Implementation
+
+`FindCommandParser` tokenizes `/name`, `/tag`, `/phone` and `/room`, requires exactly one non-empty selector,
+and rejects repeated selectors and preamble text. For `/phone`, it creates a `FindCommand` containing
+a `PhoneEqualsPredicate`. The predicate trims the query and collapses runs matched by Java's `\s+`
+to one ordinary space, then compares it with `Person#getPhone().value` using exact string equality.
+This does not remove internal spaces: `91234567` and `9123 4567` are different search values in this version.
+
+<img src="images/FindByPhoneActivityDiagram.png" alt="Find by phone parsing and filtering" width="650" />
+
+`FindCommand` combines the phone predicate with `PREDICATE_SHOW_ACTIVE_PERSONS` and replaces the current
+filter through `Model#updateFilteredPersonList`. This searches all active contacts, including those hidden
+by an earlier search. It returns either the match count or the no-results message. No contact data changes;
+the normal `LogicManager` save still runs after the command returns.
+
+#### Design considerations
+
+* **Reuse the predicate-based find command:** keeps filtering and result messages shared with other
+  searches, while phone-specific matching remains in one predicate.
+* **Exact matching rather than partial matching:** gives predictable whole-number results, but depends
+  on the stored formatting. Digit-only normalization would support different spacing conventions;
+  it is not implemented in this version.
 
 ### Room search
 
@@ -700,11 +769,6 @@ The following activity diagram summarizes what happens when a user executes a ne
 
 _{more aspects and alternatives to be added}_
 
-### \[Proposed\] Data archiving
-
-_{Explain here how the data archiving feature will be implemented}_
-
-
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Documentation, logging, testing, dev-ops**
@@ -731,7 +795,6 @@ _{Explain here how the data archiving feature will be implemented}_
 * is reasonably comfortable using CLI apps
 
 **Value proposition**: Residential assistants keep track of contacts for residents, hall staff, vendors, and emergency services, currently scattered across chats and documents. This app brings them together in one organised place, optimised for typing so the right person or resident's details can be retrieved in seconds during an emergency.
-
 
 ### User stories
 
