@@ -2,8 +2,13 @@ package seedu.address.model.person;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -80,6 +85,9 @@ public class NameFuzzyMatchesPredicateTest {
         // different case and extra whitespace
         assertMatches("  alex   YEOH ", "Alex Yeoh");
 
+        // non-breaking space between words, as in text pasted from a chat app
+        assertMatches("Alex Yeoh", "Alex Yeoh");
+
         // one word of a multi-word name, in any order
         assertMatches("Yeoh", "Alex Yeoh");
         assertMatches("Yeoh Alex", "Alex Yeoh");
@@ -88,7 +96,21 @@ public class NameFuzzyMatchesPredicateTest {
         assertMatches("Al", "Al Tan"); // 2 chars, exact
         assertMatches("Alx", "Alex Yeoh"); // 3 chars, 1 typo
         assertMatches("Bernse", "Bernice Yu"); // 6 chars, 2 typos
-        assertMatches("Christopher", "Kristophe Lim"); // 11 chars, 3 typos
+        assertMatches("Belakrishnonn", "Roy Balakrishnan"); // 12+ chars, 3 typos
+
+        // start of a name word, at least 3 letters
+        assertMatches("Bala", "Roy Balakrishnan");
+        assertMatches("Jon", "Jonathan Chua"); // Boundary value
+        assertMatches("char", "Charlotte Oliveiro");
+        assertMatches("Chu", "Jonathan Chua"); // start of a later name word
+
+        // the shorter word decides the typos allowed
+        assertMatches("Christopher", "Kristopher Lim"); // 10-char name word, 2 typos
+        assertMatches("Kristopher", "Christopher Lim"); // 10-char search word, 2 typos
+
+        // two adjacent letters swapped count as 1 typo
+        assertMatches("Yoeh", "Alex Yeoh");
+        assertMatches("Aelx", "Alex Yeoh");
 
         // every search word close to some name word
         assertMatches("Alex Yoh", "Alex Yeoh");
@@ -107,17 +129,81 @@ public class NameFuzzyMatchesPredicateTest {
         assertDoesNotMatch("Ab", "Al Tan"); // 2 chars, 1 typo
         assertDoesNotMatch("Akx", "Alex Yeoh"); // 3 chars, 2 typos
         assertDoesNotMatch("Bxxnce", "Bernice Yu"); // 6 chars, 3 typos
-        assertDoesNotMatch("Christopher", "Kristofer Lim"); // 11 chars, 4 typos
+        assertDoesNotMatch("Belakrishnonnn", "Roy Balakrishnan"); // 12+ chars, 4 typos
+
+        // the shorter word decides the typos allowed
+        assertDoesNotMatch("Ong", "Ng Kai"); // 2-char name word, 1 typo
+        assertDoesNotMatch("Lim", "Tay Li Hua"); // 2-char name word, 1 typo
+        assertDoesNotMatch("Christopher", "Kristophe Lim"); // 9-char name word, 3 typos
 
         // one search word matches, another does not
         assertDoesNotMatch("Alex Tan", "Alex Yeoh");
 
-        // short prefix of a word
-        assertDoesNotMatch("Al", "Alex Yeoh");
+        // start of a name word, but too short
+        assertDoesNotMatch("Al", "Alex Yeoh"); // Boundary value
+
+        // start of a name word with a typo
+        assertDoesNotMatch("Blaa", "Roy Balakrishnan");
+
+        // middle or end of a name word
+        assertDoesNotMatch("Krish", "Roy Balakrishnan");
+        assertDoesNotMatch("shnan", "Roy Balakrishnan");
+
+        // longer than the name word it starts with
+        assertDoesNotMatch("Jonathans", "Jon Chua");
 
         // matches phone, email and address, but not name
         assertFalse(new NameFuzzyMatchesPredicate("12345").test(new PersonBuilder().withName("Alice")
                 .withPhone("12345").withEmail("alice@email.com").withAddress("Main Street").build()));
+    }
+
+    @Test
+    public void getRankingComparator_wholeWordThenStartThenTypo_sortedByMatchQuality() {
+        Person wholeWord = personNamed("Lim Jun Jie");
+        Person startOfWord = personNamed("Limah Tan");
+        Person oneTypo = personNamed("Lin Xiao");
+        Person noMatch = personNamed("Tay Li Hua");
+
+        assertRankedOrder("Lim", List.of(noMatch, oneTypo, startOfWord, wholeWord),
+                List.of(wholeWord, startOfWord, oneTypo, noMatch));
+    }
+
+    @Test
+    public void getRankingComparator_severalSearchWords_sortedByTotalMatchQuality() {
+        Person allWholeWords = personNamed("Alex Yeoh");
+        Person oneStartOfWord = personNamed("Alexa Yeoh");
+        Person oneTypo = personNamed("Alex Yeo");
+        Person twoTypos = personNamed("Alix Yeo");
+
+        assertRankedOrder("Alex Yeoh", List.of(twoTypos, oneTypo, oneStartOfWord, allWholeWords),
+                List.of(allWholeWords, oneStartOfWord, oneTypo, twoTypos));
+    }
+
+    @Test
+    public void getRankingComparator_equallyCloseMatches_keepOrder() {
+        Person firstOneTypo = personNamed("Benson Meier");
+        Person secondOneTypo = personNamed("Daniel Meier");
+
+        assertRankedOrder("Meyer", List.of(firstOneTypo, secondOneTypo), List.of(firstOneTypo, secondOneTypo));
+        assertRankedOrder("Meyer", List.of(secondOneTypo, firstOneTypo), List.of(secondOneTypo, firstOneTypo));
+    }
+
+    @Test
+    public void getRankingComparator_nullPerson_throwsNullPointerException() {
+        Comparator<Person> ranking = new NameFuzzyMatchesPredicate("Alex").getRankingComparator();
+        assertThrows(NullPointerException.class, () -> ranking.compare(null, personNamed("Alex Yeoh")));
+        assertThrows(NullPointerException.class, () -> ranking.compare(personNamed("Alex Yeoh"), null));
+    }
+
+    @Test
+    public void getRankingComparator_equals() {
+        NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate("Alex");
+
+        // same search words -> returns true
+        assertEquals(predicate.getRankingComparator(), new NameFuzzyMatchesPredicate(" ALEX ").getRankingComparator());
+
+        // different search words -> returns false
+        assertNotEquals(predicate.getRankingComparator(), new NameFuzzyMatchesPredicate("Bob").getRankingComparator());
     }
 
     @Test
@@ -129,10 +215,23 @@ public class NameFuzzyMatchesPredicateTest {
     }
 
     private static void assertMatches(String searchText, String name) {
-        assertTrue(new NameFuzzyMatchesPredicate(searchText).test(new PersonBuilder().withName(name).build()));
+        assertTrue(new NameFuzzyMatchesPredicate(searchText).test(personNamed(name)));
     }
 
     private static void assertDoesNotMatch(String searchText, String name) {
-        assertFalse(new NameFuzzyMatchesPredicate(searchText).test(new PersonBuilder().withName(name).build()));
+        assertFalse(new NameFuzzyMatchesPredicate(searchText).test(personNamed(name)));
+    }
+
+    /**
+     * Asserts that sorting {@code persons} by the ranking of {@code searchText} gives {@code expectedOrder}.
+     */
+    private static void assertRankedOrder(String searchText, List<Person> persons, List<Person> expectedOrder) {
+        List<Person> sortedPersons = new ArrayList<>(persons);
+        sortedPersons.sort(new NameFuzzyMatchesPredicate(searchText).getRankingComparator());
+        assertEquals(expectedOrder, sortedPersons);
+    }
+
+    private static Person personNamed(String name) {
+        return new PersonBuilder().withName(name).build();
     }
 }

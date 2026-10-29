@@ -23,6 +23,7 @@ public class ModelManager implements Model {
     private final AddressBook addressBook;
     private final UserPrefs userPrefs;
     private final FilteredList<Person> filteredPersons;
+    /** The filtered persons in display order; a null comparator keeps their order in the address book. */
     private final SortedList<Person> sortedPersons;
 
     /**
@@ -100,8 +101,8 @@ public class ModelManager implements Model {
     //=========== Filtered Person List Accessors =============================================================
 
     /**
-     * Returns an unmodifiable view of the list of {@code Person} backed by the internal list of
-     * {@code addressBook}
+     * Returns an unmodifiable view of the filtered list of {@code Person} backed by the internal list of
+     * {@code addressBook}, in display order: sorted by the last comparator given, or in address book order.
      */
     @Override
     public ObservableList<Person> getFilteredPersonList() {
@@ -111,13 +112,16 @@ public class ModelManager implements Model {
     @Override
     public void updateFilteredPersonList(Predicate<Person> predicate) {
         requireNonNull(predicate);
-        sortedPersons.setComparator(null);
         filteredPersons.setPredicate(predicate);
+        sortedPersons.setComparator(null);
     }
 
     @Override
-    public void sortFilteredPersonList(Comparator<Person> comparator) {
-        sortedPersons.setComparator(requireNonNull(comparator));
+    public void updateFilteredPersonList(Predicate<Person> predicate, Comparator<Person> comparator) {
+        requireAllNonNull(predicate, comparator);
+        logger.fine("Filtering persons and sorting them by " + comparator);
+        filteredPersons.setPredicate(predicate);
+        sortedPersons.setComparator(comparator);
     }
 
     @Override

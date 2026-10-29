@@ -107,9 +107,9 @@ public class FavouriteArchiveIntegrationTest {
         logic.execute("fav 1");
         logic.execute("emergency 1 /name John Tan /phone 87654321");
         EmergencyContact replacement = new EmergencyContact(new Name("John Tan"), new Phone("87654321"), "");
-        Person expected = new PersonBuilder(FAVOURITE).withNote("").withTags().build()
+        Person expected = new PersonBuilder(FAVOURITE).withNote("").build()
                 .withEmergencyContact(replacement);
-        logic.execute("edit 1 /note /tag");
+        logic.execute("edit 1 /note");
 
         restart();
         assertEquals(List.of(expected, OTHER), model.getAddressBook().getPersonList());

@@ -1,9 +1,11 @@
 package seedu.address.logic.parser;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ROOM_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
@@ -17,10 +19,8 @@ import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Note;
-import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Room;
-import seedu.address.model.tag.Tag;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 
 public class EditCommandParserTest {
@@ -54,6 +54,7 @@ public class EditCommandParserTest {
         assertParseFailure(parser, " 1 /phone 91234567 /foo", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, " 1 /room B1 /PHONE 91234567", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, " 1 /name Amy Bee /Tag friend", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, " 1 /name Amy Bee /Room B1", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, " 1 /email amy@example.com", MESSAGE_INVALID_FORMAT);
 
         // the old prefixes are no longer recognised
@@ -65,15 +66,6 @@ public class EditCommandParserTest {
         assertParseFailure(parser, " 1 /name James&", Name.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, " 1 /phone 911a", Phone.MESSAGE_INVALID_CHARACTERS);
         assertParseFailure(parser, " 1 /room B#1", Room.MESSAGE_INVALID_CHARACTERS);
-        assertParseFailure(parser, " 1 /tag hubby*", Tag.MESSAGE_INVALID_CHARACTERS);
-
-        // /tag on its own resets the tags, but together with a tag it is an error
-        assertParseFailure(parser, " 1 /tag friend /tag", Tag.MESSAGE_EMPTY);
-        assertParseFailure(parser, " 1 /tag /tag friend", Tag.MESSAGE_EMPTY);
-
-        // same rules as add
-        assertParseFailure(parser, " 1 /tag RA /tag ra", Tag.MESSAGE_DUPLICATE);
-        assertParseFailure(parser, " 1 /tag a /tag b /tag c /tag d /tag e /tag f", Person.MESSAGE_TAG_LIMIT_REACHED);
 
         // only the first invalid value is reported
         assertParseFailure(parser, " 1 /name James& /phone 911a", Name.MESSAGE_CONSTRAINTS);
@@ -82,9 +74,9 @@ public class EditCommandParserTest {
     @Test
     public void parse_allFieldsSpecified_success() {
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withName("Amy Bee")
-                .withPhone("22222222").withRoom("B-204").withTags("Husband", "Friend").build();
+                .withPhone("22222222").withRoom("B-204").withNote("Prefers WhatsApp").build();
 
-        assertParseSuccess(parser, " 2 /tag Husband /phone 22222222 /name Amy Bee /tag Friend /room B-204",
+        assertParseSuccess(parser, " 2 /note Prefers WhatsApp /phone 22222222 /name Amy Bee /room B-204",
                 new EditCommand(INDEX_SECOND_PERSON, descriptor));
     }
 
@@ -96,22 +88,29 @@ public class EditCommandParserTest {
                 new EditPersonDescriptorBuilder().withPhone("9123 4567").build()));
         assertParseSuccess(parser, " 3 /room B-204", new EditCommand(INDEX_THIRD_PERSON,
                 new EditPersonDescriptorBuilder().withRoom("B-204").build()));
-        assertParseSuccess(parser, " 3 /tag friend", new EditCommand(INDEX_THIRD_PERSON,
-                new EditPersonDescriptorBuilder().withTags("friend").build()));
     }
 
     @Test
     public void parse_extraWhitespace_collapsed() {
         EditCommand expected = new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder()
-                .withName("Amy Bee").withPhone("9123 4567").withTags("Resident Fellow").build());
+                .withName("Amy Bee").withPhone("9123 4567").withRoom("B-204").build());
 
-        assertParseSuccess(parser, "  1  /name  Amy   Bee \t/phone 9123   4567\n/tag Resident   Fellow ", expected);
+        assertParseSuccess(parser, "  1  /name  Amy   Bee \t/phone 9123   4567\n/room B-204 ", expected);
     }
 
     @Test
-    public void parse_multipleTags_replacesAllInOrder() {
-        assertParseSuccess(parser, " 1 /tag friend /tag Resident Fellow", new EditCommand(INDEX_FIRST_PERSON,
-                new EditPersonDescriptorBuilder().withTags("friend", "Resident Fellow").build()));
+    public void parse_tagPrefix_failure() {
+        // tags are changed with toggle, so edit no longer recognises /tag in any form
+        assertParseFailure(parser, " 1 /tag friend", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, " 1 /tag", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, " 1 /tag friend /tag Resident Fellow", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, " 1 /room B-204 /tag", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, " 1 /name Amy Bee /tag friend", MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
+    public void usageMessage_doesNotMentionTags() {
+        assertFalse(EditCommand.MESSAGE_USAGE.contains(PREFIX_TAG_COMMAND.getPrefix()));
     }
 
     @Test
@@ -124,12 +123,10 @@ public class EditCommandParserTest {
 
     @Test
     public void parse_emptyOptionalField_clearsField() {
-        assertParseSuccess(parser, " 3 /tag", new EditCommand(INDEX_THIRD_PERSON,
-                new EditPersonDescriptorBuilder().withTags().build()));
         assertParseSuccess(parser, " 3 /room", new EditCommand(INDEX_THIRD_PERSON,
                 new EditPersonDescriptorBuilder().withRoom("").build()));
-        assertParseSuccess(parser, " 3 /room /tag", new EditCommand(INDEX_THIRD_PERSON,
-                new EditPersonDescriptorBuilder().withRoom("").withTags().build()));
+        assertParseSuccess(parser, " 3 /room /note", new EditCommand(INDEX_THIRD_PERSON,
+                new EditPersonDescriptorBuilder().withRoom("").withNote("").build()));
         assertParseSuccess(parser, " 3 /note", new EditCommand(INDEX_THIRD_PERSON,
                 new EditPersonDescriptorBuilder().withNote("").build()));
     }
@@ -145,9 +142,20 @@ public class EditCommandParserTest {
     @Test
     public void parse_invalidNote_failure() {
         assertParseFailure(parser, " 1 /note " + "a".repeat(Note.MAX_LENGTH + 1), Note.MESSAGE_TOO_LONG);
-        assertParseFailure(parser, " 1 /note call w/ parent", Note.MESSAGE_INVALID_CHARACTERS);
         assertParseFailure(parser, " 1 /note a /note b",
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NOTE_COMMAND));
+    }
+
+    @Test
+    public void parse_noteWithWordStartingWithSlash_failure() {
+        assertParseFailure(parser, " 1 /note see /docs", Note.MESSAGE_INVALID_CHARACTERS);
+        assertParseFailure(parser, " 1 /note ends with /", Note.MESSAGE_INVALID_CHARACTERS);
+    }
+
+    @Test
+    public void parse_noteWithSlashInsideWord_success() {
+        assertParseSuccess(parser, " 1 /note call w/ parent 24/7", new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withNote("call w/ parent 24/7").build()));
     }
 
     @Test

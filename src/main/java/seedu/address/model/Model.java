@@ -68,16 +68,19 @@ public interface Model {
     ObservableList<Person> getFilteredPersonList();
 
     /**
-     * Updates the filter of the filtered person list to filter by the given {@code predicate}.
-     * Restores the displayed contacts to their stored order.
+     * Updates the filter of the filtered person list to filter by the given {@code predicate},
+     * listing persons in their order in the address book.
+     *
      * @throws NullPointerException if {@code predicate} is null.
      */
     void updateFilteredPersonList(Predicate<Person> predicate);
 
     /**
-     * Sorts the displayed contacts by {@code comparator} without changing their stored order.
+     * Updates the filter of the filtered person list to filter by the given {@code predicate},
+     * listing persons in the order given by {@code comparator}. Persons that the comparator ranks
+     * equally keep their order in the address book.
      *
-     * @throws NullPointerException if {@code comparator} is null.
+     * @throws NullPointerException if {@code predicate} or {@code comparator} is null.
      */
-    void sortFilteredPersonList(Comparator<Person> comparator);
+    void updateFilteredPersonList(Predicate<Person> predicate, Comparator<Person> comparator);
 }

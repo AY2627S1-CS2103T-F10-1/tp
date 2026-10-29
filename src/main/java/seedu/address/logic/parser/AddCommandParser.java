@@ -61,8 +61,9 @@ public class AddCommandParser implements Parser<AddCommand> {
     private static void verifyFormat(String normalized, ArgumentMultimap argMultimap) throws ParseException {
         boolean isRequiredFieldMissing = PREFIXED_FIELDS.stream().anyMatch(field ->
                 field.isRequired() && argMultimap.getAllValues(field.getPrefix()).isEmpty());
-        if (isRequiredFieldMissing || ParserUtil.hasUnknownPrefix(normalized, PREFIXES)) {
+        if (isRequiredFieldMissing) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE));
         }
+        ParserUtil.verifyNoUnknownPrefix(normalized, argMultimap, AddCommand.MESSAGE_USAGE, PREFIXES);
     }
 }

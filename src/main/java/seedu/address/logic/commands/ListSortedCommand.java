@@ -22,8 +22,7 @@ public class ListSortedCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS);
-        model.sortFilteredPersonList(BY_NAME);
+        model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS, BY_NAME);
         return new CommandResult(model.getFilteredPersonList().isEmpty()
                 ? ListCommand.MESSAGE_EMPTY : MESSAGE_SUCCESS);
     }

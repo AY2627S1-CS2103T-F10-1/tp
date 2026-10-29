@@ -50,17 +50,17 @@ public class EditCommandTest {
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
     @Test
-    public void execute_editNoteAndClearTags_preservesEmergencyDetails() throws Exception {
+    public void execute_editNoteAndRoom_preservesEmergencyDetailsAndTags() throws Exception {
         Person original = model.getFilteredPersonList().getFirst();
         EmergencyContact contact = new EmergencyContact(new Name("Bob Choo"), new Phone("91234567"), "Brother");
         model.setPerson(original, original.withEmergencyContact(contact));
         new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder().withNote("Call after 6pm")
-                .withRoom("B-204").withTags().build()).execute(model);
+                .withRoom("B-204").build()).execute(model);
         Person stored = model.getAddressBook().getPersonList().getFirst();
         assertEquals(contact, stored.getEmergencyContact().orElseThrow());
         assertEquals("Call after 6pm", stored.getNote().value);
         assertEquals("B-204", stored.getRoom().value);
-        assertTrue(stored.getTags().isEmpty());
+        assertEquals(original.getTags(), stored.getTags());
         assertEquals(original.getPhone(), stored.getPhone());
     }
 
@@ -68,7 +68,7 @@ public class EditCommandTest {
     public void execute_allFieldsSpecifiedUnfilteredList_success() {
         Person originalPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
         Person editedPerson = new PersonBuilder(originalPerson).withName(VALID_NAME_BOB).withPhone(VALID_PHONE_BOB)
-                .withRoom(VALID_ROOM_BOB).withTags(VALID_TAG_HUSBAND, VALID_TAG_FRIEND).build();
+                .withRoom(VALID_ROOM_BOB).build();
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder(editedPerson).build();
         EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON, descriptor);
 
@@ -86,11 +86,10 @@ public class EditCommandTest {
         Person lastPerson = model.getFilteredPersonList().get(indexLastPerson.getZeroBased());
 
         PersonBuilder personInList = new PersonBuilder(lastPerson);
-        Person editedPerson = personInList.withName(VALID_NAME_BOB).withPhone(VALID_PHONE_BOB)
-                .withTags(VALID_TAG_HUSBAND).build();
+        Person editedPerson = personInList.withName(VALID_NAME_BOB).withPhone(VALID_PHONE_BOB).build();
 
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withName(VALID_NAME_BOB)
-                .withPhone(VALID_PHONE_BOB).withTags(VALID_TAG_HUSBAND).build();
+                .withPhone(VALID_PHONE_BOB).build();
         EditCommand editCommand = new EditCommand(indexLastPerson, descriptor);
 
         String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS, Messages.format(editedPerson));
@@ -150,7 +149,7 @@ public class EditCommandTest {
     public void execute_editedContact_canBeReadBackFromModel() throws Exception {
         Person original = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
         Person editedPerson = new PersonBuilder(original).withName(VALID_NAME_BOB).withPhone(VALID_PHONE_BOB)
-                .withRoom(VALID_ROOM_BOB).withTags(VALID_TAG_HUSBAND, VALID_TAG_FRIEND).build();
+                .withRoom(VALID_ROOM_BOB).build();
 
         new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder(editedPerson).build()).execute(model);
 
@@ -199,27 +198,16 @@ public class EditCommandTest {
     }
 
     @Test
-    public void execute_replaceTags_preservesFavouriteAndOtherDetails() throws Exception {
+    public void execute_editLeavesTagsUnchanged_preservesFavouriteAndOtherDetails() throws Exception {
         Person original = replaceFirstPerson(person -> person.withFavourite(true).withRoom(VALID_ROOM_BOB)
-                .withNote(VALID_NOTE_AMY));
+                .withNote(VALID_NOTE_AMY).withTags(VALID_TAG_HUSBAND, VALID_TAG_FRIEND));
 
-        new EditCommandParser().parse(" 1 /tag " + VALID_TAG_HUSBAND).execute(model);
+        new EditCommandParser().parse(" 1 /room B-204").execute(model);
 
         Person edited = model.getFilteredPersonList().getFirst();
         assertTrue(edited.isFavourite());
-        assertEquals(new PersonBuilder(original).withTags(VALID_TAG_HUSBAND).build(), edited);
-    }
-
-    @Test
-    public void execute_clearTags_preservesFavouriteAndOtherDetails() throws Exception {
-        Person original = replaceFirstPerson(person -> person.withFavourite(true).withRoom(VALID_ROOM_BOB)
-                .withNote(VALID_NOTE_AMY));
-
-        new EditCommandParser().parse(" 1 /tag").execute(model);
-
-        Person edited = model.getFilteredPersonList().getFirst();
-        assertTrue(edited.isFavourite());
-        assertEquals(new PersonBuilder(original).withTags().build(), edited);
+        assertEquals(original.getTags(), edited.getTags());
+        assertEquals(new PersonBuilder(original).withRoom("B-204").build(), edited);
     }
 
     /** A model that records the replacement given to {@code setPerson} instead of storing it. */
@@ -239,11 +227,11 @@ public class EditCommandTest {
     }
 
     @Test
-    public void execute_roomAndTagsOnly_keepsOtherFields() {
+    public void execute_roomOnly_keepsOtherFields() {
         Person original = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
-        Person editedPerson = new PersonBuilder(original).withRoom(VALID_ROOM_BOB).withTags().build();
+        Person editedPerson = new PersonBuilder(original).withRoom(VALID_ROOM_BOB).build();
         EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON,
-                new EditPersonDescriptorBuilder().withRoom(VALID_ROOM_BOB).withTags().build());
+                new EditPersonDescriptorBuilder().withRoom(VALID_ROOM_BOB).build());
 
         String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS, Messages.format(editedPerson));
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());

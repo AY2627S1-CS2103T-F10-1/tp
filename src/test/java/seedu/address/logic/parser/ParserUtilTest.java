@@ -2,8 +2,11 @@ package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_TAG_TOO_LONG;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_AT_MAX_LENGTH;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTE_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ROOM_COMMAND;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
@@ -19,6 +22,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Note;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Room;
@@ -41,6 +45,45 @@ public class ParserUtilTest {
     private static final List<String> TAGS_AT_LIMIT = JANE.getTags().stream().map(tag -> tag.tagName).toList();
 
     private static final String WHITESPACE = " \t\r\n";
+    private static final String USAGE = "usage";
+    private static final Prefix[] NOTE_AND_ROOM = {PREFIX_NOTE_COMMAND, PREFIX_ROOM_COMMAND};
+
+    /** Tokenizes {@code args} with the note and room prefixes and checks it for unknown prefixes. */
+    private static void verifyNoUnknownPrefix(String args) throws ParseException {
+        ParserUtil.verifyNoUnknownPrefix(args, ArgumentTokenizer.tokenize(args, NOTE_AND_ROOM), USAGE, NOTE_AND_ROOM);
+    }
+
+    @Test
+    public void verifyNoUnknownPrefix_null_throwsNullPointerException() {
+        ArgumentMultimap arguments = new ArgumentMultimap();
+        assertThrows(NullPointerException.class, () ->
+                ParserUtil.verifyNoUnknownPrefix(null, arguments, USAGE, NOTE_AND_ROOM));
+        assertThrows(NullPointerException.class, () ->
+                ParserUtil.verifyNoUnknownPrefix("", null, USAGE, NOTE_AND_ROOM));
+        assertThrows(NullPointerException.class, () ->
+                ParserUtil.verifyNoUnknownPrefix("", arguments, null, NOTE_AND_ROOM));
+    }
+
+    @Test
+    public void verifyNoUnknownPrefix_onlyKnownPrefixes_success() throws Exception {
+        verifyNoUnknownPrefix(" /room C-310 /note call w/ parent 24/7");
+        verifyNoUnknownPrefix("");
+    }
+
+    @Test
+    public void verifyNoUnknownPrefix_unknownPrefixInNote_throwsNoteError() {
+        assertThrows(ParseException.class, Note.MESSAGE_INVALID_CHARACTERS, () ->
+                verifyNoUnknownPrefix(" /room C-310 /note see /docs"));
+        assertThrows(ParseException.class, Note.MESSAGE_INVALID_CHARACTERS, () ->
+                verifyNoUnknownPrefix(" /note ends with /"));
+    }
+
+    @Test
+    public void verifyNoUnknownPrefix_unknownPrefixOutsideNote_throwsFormatError() {
+        String formatError = String.format(MESSAGE_INVALID_COMMAND_FORMAT, USAGE);
+        assertThrows(ParseException.class, formatError, () -> verifyNoUnknownPrefix(" /rom C-310"));
+        assertThrows(ParseException.class, formatError, () -> verifyNoUnknownPrefix(" /room C-310 /docs"));
+    }
 
     @Test
     public void parseIndex_invalidInput_throwsParseException() {

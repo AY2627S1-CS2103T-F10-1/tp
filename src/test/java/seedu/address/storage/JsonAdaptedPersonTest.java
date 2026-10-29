@@ -197,7 +197,13 @@ public class JsonAdaptedPersonTest {
         assertThrows(IllegalValueException.class, Note.MESSAGE_CONSTRAINTS,
                 withRoomAndNote(null, noteTooLong)::toModelType);
         assertThrows(IllegalValueException.class, Note.MESSAGE_CONSTRAINTS,
-                withRoomAndNote(null, "call w/ parent")::toModelType);
+                withRoomAndNote(null, "see /docs")::toModelType);
+    }
+
+    @Test
+    public void toModelType_noteWithSlashInsideWord_returnsPerson() throws Exception {
+        String link = "See https://nus.edu.sg 24/7";
+        assertEquals(new Note(link), withRoomAndNote(null, link).toModelType().getNote());
     }
 
     private static JsonAdaptedPerson withRoomAndNote(String room, String note) {

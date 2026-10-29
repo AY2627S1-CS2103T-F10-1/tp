@@ -66,8 +66,8 @@ public class PersonFieldTest {
     }
 
     @Test
-    public void editAcceptsEveryField() throws Exception {
-        for (PersonField<?> field : PersonField.values()) {
+    public void editAcceptsEveryEditableField() throws Exception {
+        for (PersonField<?> field : PersonField.editableValues()) {
             EditCommand command = new EditCommandParser().parse(" 1 " + field.getPrefix() + " "
                     + PersonFieldSamples.getText(field));
             assertTrue(command.toString().contains(field.getName() + "="),
@@ -76,10 +76,17 @@ public class PersonFieldTest {
     }
 
     @Test
-    public void editMessageUsageMentionsEveryField() {
-        for (PersonField<?> field : PersonField.values()) {
+    public void editMessageUsageMentionsEveryEditableField() {
+        for (PersonField<?> field : PersonField.editableValues()) {
             assertTrue(EditCommand.MESSAGE_USAGE.contains(field.getPrefix().getPrefix()));
         }
+    }
+
+    @Test
+    public void onlyTagsAreNotEditable() {
+        // tags are changed with toggle, so they are the only field that edit does not accept
+        assertEquals(PersonField.values().stream().filter(field -> field != PersonField.TAGS).toList(),
+                PersonField.editableValues());
     }
 
     @Test

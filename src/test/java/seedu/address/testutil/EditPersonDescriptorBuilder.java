@@ -1,9 +1,5 @@
 package seedu.address.testutil;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.stream.Stream;
-
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.logic.parser.PersonField;
 import seedu.address.model.person.Name;
@@ -11,7 +7,6 @@ import seedu.address.model.person.Note;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Room;
-import seedu.address.model.tag.Tag;
 
 /**
  * A utility class to help with building EditPersonDescriptor objects.
@@ -33,7 +28,7 @@ public class EditPersonDescriptorBuilder {
      */
     public EditPersonDescriptorBuilder(Person person) {
         descriptor = new EditPersonDescriptor();
-        PersonField.values().forEach(field -> setFrom(field, person));
+        PersonField.editableValues().forEach(field -> setFrom(field, person));
     }
 
     private <T> void setFrom(PersonField<T> field, Person person) {
@@ -61,17 +56,6 @@ public class EditPersonDescriptorBuilder {
      */
     public EditPersonDescriptorBuilder withRoom(String room) {
         descriptor.set(PersonField.ROOM, new Room(room));
-        return this;
-    }
-
-    /**
-     * Parses the {@code tags} into a {@code Set<Tag>} and sets it to the {@code EditPersonDescriptor}
-     * that we are building.
-     */
-    public EditPersonDescriptorBuilder withTags(String... tags) {
-        Set<Tag> tagSet = new LinkedHashSet<>();
-        Stream.of(tags).map(Tag::new).forEach(tagSet::add);
-        descriptor.set(PersonField.TAGS, tagSet);
         return this;
     }
 
