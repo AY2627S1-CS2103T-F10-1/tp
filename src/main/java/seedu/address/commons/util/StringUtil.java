@@ -13,10 +13,13 @@ import java.util.stream.IntStream;
  */
 public class StringUtil {
 
-    private static final String WHITESPACE_RUN_REGEX = "\\s+";
+    /** Matches runs of ASCII whitespace and Unicode spaces, such as the non-breaking spaces of pasted text. */
+    private static final String WHITESPACE_RUN_REGEX = "[\\s\\p{Z}]+";
     private static final String SINGLE_SPACE = " ";
-    /** Cost of one insertion, deletion or substitution when computing the Levenshtein distance. */
+    /** Cost of one insertion, deletion, substitution or swap when computing the typo distance. */
     private static final int EDIT_COST = 1;
+    /** Number of adjacent characters exchanged by one swap. */
+    private static final int SWAP_LENGTH = 2;
 
     /**
      * Returns true if the {@code sentence} contains the {@code word}.
@@ -47,54 +50,79 @@ public class StringUtil {
     /**
      * Returns {@code s} with leading and trailing whitespace removed and every inner run of whitespace
      * replaced by a single space, e.g. {@code "  Resident   Fellow "} becomes {@code "Resident Fellow"}.
+     * Unicode spaces, such as the non-breaking space (U+00A0), count as whitespace.
      *
      * @param s The string to normalize; cannot be null.
      */
     public static String collapseWhitespace(String s) {
         requireNonNull(s);
-        return s.trim().replaceAll(WHITESPACE_RUN_REGEX, SINGLE_SPACE);
+        // Collapse before trimming, as trim() only removes ASCII whitespace
+        String collapsed = s.replaceAll(WHITESPACE_RUN_REGEX, SINGLE_SPACE).trim();
+        assert !collapsed.contains(SINGLE_SPACE + SINGLE_SPACE) : "Whitespace runs should be collapsed";
+        assert collapsed.equals(collapsed.strip()) : "Leading and trailing whitespace should be removed";
+        return collapsed;
     }
 
     /**
-     * Returns the Levenshtein distance between {@code first} and {@code second}: the minimum number of
-     * single-character insertions, deletions or substitutions needed to turn one into the other.
-     * The comparison is case-sensitive.
+     * Returns the typo distance between {@code first} and {@code second}: the minimum number of
+     * single-character insertions, deletions, substitutions or swaps of two adjacent characters needed
+     * to turn one into the other, where no character is edited more than once (the optimal string
+     * alignment distance). The comparison is case-sensitive.
      *
      * @param first The first string; cannot be null.
      * @param second The second string; cannot be null.
      */
-    public static int levenshteinDistance(String first, String second) {
+    public static int typoDistance(String first, String second) {
         requireNonNull(first);
         requireNonNull(second);
 
+        // costs[i][j] is the distance between the first i characters of first and the first j of second
+        int[][] costs = new int[first.length() + 1][];
         // Turning an empty prefix of first into each prefix of second takes one insertion per character
-        int[] previousRow = IntStream.rangeClosed(0, second.length()).toArray();
+        costs[0] = IntStream.rangeClosed(0, second.length()).toArray();
 
         for (int i = 1; i <= first.length(); i++) {
-            int[] currentRow = new int[second.length() + 1];
-            currentRow[0] = i;
+            costs[i] = new int[second.length() + 1];
+            costs[i][0] = i;
             for (int j = 1; j <= second.length(); j++) {
-                boolean isSameChar = first.charAt(i - 1) == second.charAt(j - 1);
-                currentRow[j] = cheapestEdit(isSameChar, previousRow[j - 1], previousRow[j], currentRow[j - 1]);
+                costs[i][j] = cheapestEdit(first, second, costs, i, j);
             }
-            previousRow = currentRow;
         }
 
-        int distance = previousRow[second.length()];
+        int distance = costs[first.length()][second.length()];
         assert distance >= 0 && distance <= Math.max(first.length(), second.length())
-                : "Levenshtein distance must be between 0 and the length of the longer string";
+                : "Typo distance must be between 0 and the length of the longer string";
         return distance;
     }
 
     /**
-     * Returns the cost of the cheapest edit for one cell of the Levenshtein table, given the costs of
-     * its diagonal, upper and left neighbors.
+     * Returns the cost of the cheapest edit for cell ({@code i}, {@code j}) of the typo distance table,
+     * given that the costs of all earlier cells are already filled in.
      */
-    private static int cheapestEdit(boolean isSameChar, int diagonalCost, int aboveCost, int leftCost) {
-        int substitutionCost = isSameChar ? diagonalCost : diagonalCost + EDIT_COST;
-        int deletionCost = aboveCost + EDIT_COST;
-        int insertionCost = leftCost + EDIT_COST;
-        return Math.min(substitutionCost, Math.min(deletionCost, insertionCost));
+    private static int cheapestEdit(String first, String second, int[][] costs, int i, int j) {
+        assert i >= 1 && j >= 1 : "Row 0 and column 0 of the typo distance table are filled in directly";
+        assert i <= first.length() && j <= second.length() : "Cell must lie within the typo distance table";
+        boolean isSameChar = first.charAt(i - 1) == second.charAt(j - 1);
+        int substitutionCost = isSameChar ? costs[i - 1][j - 1] : costs[i - 1][j - 1] + EDIT_COST;
+        int deletionCost = costs[i - 1][j] + EDIT_COST;
+        int insertionCost = costs[i][j - 1] + EDIT_COST;
+        int cheapestCost = Math.min(substitutionCost, Math.min(deletionCost, insertionCost));
+
+        if (!isAdjacentSwap(first, second, i, j)) {
+            return cheapestCost;
+        }
+        return Math.min(cheapestCost, costs[i - SWAP_LENGTH][j - SWAP_LENGTH] + EDIT_COST);
+    }
+
+    /**
+     * Returns true if the last two of the first {@code i} characters of {@code first} are the last two of
+     * the first {@code j} characters of {@code second}, swapped.
+     */
+    private static boolean isAdjacentSwap(String first, String second, int i, int j) {
+        boolean hasTwoCharsEach = i >= SWAP_LENGTH && j >= SWAP_LENGTH;
+        return hasTwoCharsEach
+                && first.charAt(i - 1) == second.charAt(j - 2)
+                && first.charAt(i - 2) == second.charAt(j - 1);
     }
 
     /**

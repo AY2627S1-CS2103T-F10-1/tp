@@ -128,7 +128,10 @@ Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
 * Room is optional for any contact, regardless of tags. It can contain up to 20 characters:
   letters, digits, spaces and hyphens.
 * Note is optional free text, such as an allergy or how the contact prefers to be reached. It can contain
-  up to 200 characters of any kind except `/`, which marks the start of a field.
+  up to 200 characters of any kind. `/` is allowed inside a word (e.g., `24/7`, `and/or`, `w/`, links), but a word
+  cannot start with `/`, because that marks the start of a field. If a word in the note is a field name such as
+  `/room` or `/tag`, the rest of the note is taken as that field: `/note talk to /room officer` gives the note
+  `talk to` and the room `officer`.
 * Enter the name first. `/phone`, `/room`, `/tag` and `/note` can then be given in any order.
   `/phone`, `/room` and `/note` cannot be repeated.
 * Repeat `/tag` once per tag, up to five tags. Spaces inside a tag are allowed, so `/tag Resident Fellow` is one tag.
@@ -158,12 +161,12 @@ This restores the active list after a search or archived view and does not chang
 
 Format: `list`
 
-* Only the `archived`, `emerg` and `fav` subcommands are supported after `list`. To show only contacts with a given tag, use [`find /tag`](#locating-persons-by-name-tag-or-phone-find).
+* Only the `archived`, `emerg` and `fav` subcommands are supported after `list`. To show only contacts with a given tag, use [`find /tag`](#locating-persons-by-name-tag-phone-or-room-find).
 
 * The command keyword is case-sensitive: use lowercase `list`. `LIST` and `LiSt` are rejected as unknown commands.
 * Leading and trailing spaces are ignored.
 * Use `list emerg` for emergency-tagged contacts or `list fav` for favourite contacts, as described below.
-  To search by any tag, use [`find /tag`](#locating-persons-by-name-tag-or-phone-find).
+  To search by any tag, use [`find /tag`](#locating-persons-by-name-tag-phone-or-room-find).
 * Unsupported arguments, such as `list abc` or the retired `list /filter Emergency`, are rejected with
   `Invalid command format. Usage: list`. The displayed list stays unchanged when the command is rejected.
 * When there are no active contacts, the list is empty and the result message is `No contacts found.`.
@@ -312,31 +315,53 @@ Examples:
 * `toggle 1 /tag emergency` marks the 1st contact as an emergency contact, or removes that if they already are one.
 * `toggle 2 /tag Resident /tag Floor 3` toggles two tags of the 2nd contact at once.
 
-### Locating persons by name, tag or phone: `find`
+### Locating persons by name, tag, phone or room: `find`
 
-Finds active persons whose name is close to the given name, even when run from the archived view. Also finds who have the given tag or phone number.
+Finds active persons whose name is close to the given name, or who have the given tag, phone number or room.
+Searches active contacts even when run from the archived view.
 
-Format: `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`
+Format: `find /name NAME`, `find /tag TAG`, `find /phone NUMBER` or `find /room ROOM`
 
-* Exactly one of `/name`, `/tag` and `/phone` must be given, and nothing may be typed before it.
+* Exactly one of `/name`, `/tag`, `/phone` and `/room` must be given, and nothing may be typed before it.
 * Name search ignores capital letters and forgives small typos; for example, `find /name alx yeo` finds `Alex Yeoh`.
 * Tag search ignores case and extra spaces; for example, `find /tag Friends` matches the tag `friends`.
-* Spaces before and after `NAME`, `TAG` or `NUMBER` are ignored.
+* Spaces before and after `NAME`, `TAG`, `NUMBER` or `ROOM` are ignored.
 * If no person matches, the message `No contacts found` is shown and the list is empty. Otherwise, the number of persons listed is shown.
 * A prefix must be followed by a space, so `find /tagfriends` is not recognised as a tag search.
-* If the prefix is missing or not followed by a space (such as `/tagfriends`), multiple search prefixes are given, or `NAME`, `TAG` or `NUMBER` is empty, an invalid command format message is shown.
-* If `/name`, `/tag` or `/phone` is repeated, a message listing the repeated prefix is shown.
+* If the prefix is missing or not followed by a space (such as `/tagfriends`), multiple search prefixes are given, or `NAME`, `TAG`, `NUMBER` or `ROOM` is empty, an invalid command format message is shown.
+* If `/name`, `/tag`, `/phone` or `/room` is repeated, a message listing the repeated prefix is shown.
 
 Finding by name (`/name`):
-* You do not need the full name. Each word you type must be close to one of the words in the contact's name,
+* You do not need the full name. Each word you type must match one of the words in the contact's name,
   in any order; for example, `find /name Yeoh` and `find /name Yeoh Alex` both find `Alex Yeoh`.
 * Every word you type must match. For example, `find /name Alex Tan` does not find `Alex Yeoh`, because no part of
   the name is close to `Tan`.
-* Longer words can have more typos than shorter ones. Very short words (1 or 2 letters) must be typed exactly, so
-  `find /name Al` does not find `Alex Yeoh`.
+* A word you type matches a word of the name if it is:
+  * the same word, ignoring capital letters,
+  * the start of the word, typed exactly and at least 3 letters long; for example, `find /name Bala` finds
+    `Roy Balakrishnan`, or
+  * the same word with a few typos. One typo is one wrong, missing or extra letter, or two neighboring letters
+    swapped; for example, `Yoeh` is one typo away from `Yeoh`. The number of typos allowed depends on the
+    **shorter** of the two words:
+
+    | Letters in the shorter word | Typos allowed |
+    |-----------------------------|---------------|
+    | 1–2                         | 0             |
+    | 3–5                         | 1             |
+    | 6–9                         | 2             |
+    | 10 or more                  | 3             |
+
+    So `find /name Jonathn` (1 typo) finds `Jonathan Chua`, but `find /name Jnthn` (3 typos in a 5-letter word) does not.
+    Short words must be typed exactly, so `find /name Al` does not find `Alex Yeoh`, and `find /name Ong` does not
+    find `Ng Kai`.
 * Because small typos are allowed, a search may also list contacts with similar names; for example,
   `find /name Tan` may also list a contact named `Tay`.
-* Extra spaces between words are ignored.
+* The closest matches are listed first: contacts whose name contains the exact words you typed, then contacts
+  whose name words start with what you typed, then contacts with typos, fewest typos first. Contacts that match
+  equally well keep their usual order. For example, `find /name Tan` lists `Tan Wei Ming` before `Tay Li Hua`,
+  so `edit 1` changes `Tan Wei Ming`.
+* Extra spaces between words are ignored, including the non-breaking spaces that names pasted from a chat app
+  or web page may contain.
 
 Finding by phone (`/phone`):
 * Searches all active contacts for an exact phone number, including contacts hidden by an earlier search.
@@ -350,11 +375,20 @@ Finding by tag (`/tag`):
 * Any non-empty `TAG` is accepted. A value that is not a valid tag, or that no contact has, simply matches nobody.
 * A person is listed if any one of their tags is exactly `TAG`; for example, `find /tag friends` matches a person tagged `friends` and `owesMoney`, but not one tagged `friends2`.
 
+Finding by room (`/room`):
+* Matches the complete room number, ignoring case and extra whitespace: `find /room b-204` matches `B-204`.
+* Partial numbers do not match. `B-204`, `B204` and `B 204` are different room numbers.
+* Lists all active contacts sharing the room, including those hidden by a previous search.
+* Contacts without a room and archived contacts are excluded. Any non-empty search value is accepted;
+  an unknown room simply matches nobody.
+
 Examples:
 * `find /name Alex Yeoh` returns `Alex Yeoh`
 * `find /name alex` returns `Alex Yeoh`
 * `find /name Bernise` returns `Bernice Yu`, despite the typo
+* `find /name Bala` returns `Roy Balakrishnan`
 * `find /tag friends` returns all persons who have the tag `friends`
+* `find /room B-204` returns all active persons whose room is `B-204`
 
 ### Archiving contacts: `archive`
 
@@ -409,7 +443,7 @@ Format: `delete INDEX` or `delete /name NAME`
 * The index refers to the index number shown in the displayed person list.
 * The index **must be a positive integer** 1, 2, 3, …​
 * Name deletion searches **all active contacts**, even when the displayed list is filtered.
-* `/name NAME` must be the contact's exact full name, with matching capital letters. Unlike [`find /name`](#locating-persons-by-name-tag-or-phone-find), typos and partial names are not accepted, so a typo cannot delete a different contact.
+* `/name NAME` must be the contact's exact full name, with matching capital letters. Unlike [`find /name`](#locating-persons-by-name-tag-phone-or-room-find), typos and partial names are not accepted, so a typo cannot delete a different contact.
 * If `/name` is missing or repeated, `NAME` is empty or there is text before `/name`, an invalid command format message is shown.
 * Exactly one match is deleted immediately. With no matches, nothing is deleted.
 * If more than one contact matches, nothing is deleted. The matching contacts are displayed with their indexes; continue with `delete INDEX`.
@@ -452,7 +486,7 @@ Each contact's `isFavourite` property is a JSON boolean, `true` or `false`. If t
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
-A contact with more than 5 distinct tags also makes the data file invalid.<br>
+A contact with more than 5 distinct tags also makes the data file invalid, as does a note longer than 200 characters or with a word starting with `/` (e.g., `see /docs`; a link such as `https://nus.edu.sg` is fine). See [`add`](#adding-a-contact-add) for the rules of each field.<br>
 Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
@@ -487,7 +521,7 @@ Action | Format, Examples
 **Clear** | `clear`
 **Delete** | `delete INDEX` or `delete /name NAME`<br> e.g., `delete 3`, `delete /name Alice Tan`
 **Edit (suspended)** | Temporarily unavailable. Displays `Edit not currently supported`.
-**Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /name jams`, `find /tag friends`
+**Find** | `find /name NAME`, `find /tag TAG`, `find /phone NUMBER` or `find /room ROOM`<br> e.g., `find /name alx yeo`, `find /tag friends`, `find /phone 87438807`, `find /room B-204`
 **Edit** | `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/note NOTE]`<br> e.g., `edit 2 /phone 9123 4567`, `edit 3 /room`
 **Toggle** | `toggle INDEX /tag TAG [/tag TAG]…​`<br> e.g., `toggle 1 /tag emergency`
 **Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /tag friends`
