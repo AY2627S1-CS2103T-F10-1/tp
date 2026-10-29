@@ -15,10 +15,12 @@ if (Exactly one match?) then (yes)
   :Resolve Person from filtered list;
   :model.deletePerson(person);
   :Return deletion-success CommandResult;
-elseif (No matches?) then (yes)
-  :Return no-matches CommandResult;
-else (multiple)
-  :Return ambiguity message\nrequesting delete INDEX;
+else (no)
+  if (No matches?) then (yes)
+    :Return no-matches CommandResult;
+  else (no: multiple matches)
+    :Return ambiguity message\nrequesting delete INDEX;
+  endif
 endif
 :Keep the name-filtered view;
 :LogicManager saves the address book;

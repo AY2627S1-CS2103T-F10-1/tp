@@ -9,7 +9,13 @@ title: Developer Guide
 
 ## **Acknowledgements**
 
-* _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the originals.}_
+* RAcontact is adapted from [AddressBook-Level3 (AB3)](https://github.com/se-edu/addressbook-level3),
+  created by the [SE-EDU initiative](https://se-education.org). We reused and extended its application structure,
+  contact-management code and test utilities, and adapted its [User Guide](https://se-education.org/addressbook-level3/UserGuide.html),
+  [Developer Guide](https://se-education.org/addressbook-level3/DeveloperGuide.html) and UML diagrams for RAcontact.
+* Libraries used: [JavaFX](https://openjfx.io/) for the user interface,
+  [Jackson](https://github.com/FasterXML/jackson) for JSON storage, and
+  [JUnit 5](https://github.com/junit-team/junit5) for automated tests.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -119,7 +125,6 @@ How the parsing works:
 
 <img src="images/ModelClassDiagram.png" width="450" />
 
-
 The `Model` component,
 
 * stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
@@ -132,7 +137,6 @@ The `Model` component,
 <img src="images/BetterModelClassDiagram.png" width="450" />
 
 </div>
-
 
 ### Storage component
 
@@ -199,31 +203,6 @@ in-memory change.
   observable list update its filtered view.
 * **Snapshot bulk targets before replacement:** avoids iterating over a view that changes as contacts
   are archived, at the cost of temporary lists proportional to the number of matches.
-
-### Find by phone
-
-#### Implementation
-
-`FindCommandParser` tokenizes `/name`, `/tag` and `/phone`, requires exactly one non-empty selector,
-and rejects repeated selectors and preamble text. For `/phone`, it creates a `FindCommand` containing
-a `PhoneEqualsPredicate`. The predicate trims the query and collapses runs matched by Java's `\s+`
-to one ordinary space, then compares it with `Person#getPhone().value` using exact string equality.
-This does not remove internal spaces: `91234567` and `9123 4567` are different search values in this version.
-
-<img src="images/FindByPhoneActivityDiagram.png" alt="Find by phone parsing and filtering" width="650" />
-
-`FindCommand` combines the phone predicate with `PREDICATE_SHOW_ACTIVE_PERSONS` and replaces the current
-filter through `Model#updateFilteredPersonList`. This searches all active contacts, including those hidden
-by an earlier search. It returns either the match count or the no-results message. No contact data changes;
-the normal `LogicManager` save still runs after the command returns.
-
-#### Design considerations
-
-* **Reuse the predicate-based find command:** keeps filtering and result messages shared with other
-  searches, while phone-specific matching remains in one predicate.
-* **Exact matching rather than partial matching:** gives predictable whole-number results, but depends
-  on the stored formatting. Digit-only normalization would support different spacing conventions;
-  it is not implemented in this version.
 
 ### Delete by name
 
@@ -431,6 +410,31 @@ The name does not change, so `toggle` never creates a duplicate contact and does
 
 `find /tag TAG` shows only contacts with the given tag. `FindCommandParser` creates a `PersonHasTagPredicate` from the value after `/tag`, and `FindCommand` applies it with `Model#updateFilteredPersonList()`. `PersonHasTagPredicate` uses `Tag#matchesName()`, so any non-empty value is accepted and a value that is not a valid tag simply matches nobody.
 
+### Find by phone
+
+#### Implementation
+
+`FindCommandParser` tokenizes `/name`, `/tag`, `/phone` and `/room`, requires exactly one non-empty selector,
+and rejects repeated selectors and preamble text. For `/phone`, it creates a `FindCommand` containing
+a `PhoneEqualsPredicate`. The predicate trims the query and collapses runs matched by Java's `\s+`
+to one ordinary space, then compares it with `Person#getPhone().value` using exact string equality.
+This does not remove internal spaces: `91234567` and `9123 4567` are different search values in this version.
+
+<img src="images/FindByPhoneActivityDiagram.png" alt="Find by phone parsing and filtering" width="650" />
+
+`FindCommand` combines the phone predicate with `PREDICATE_SHOW_ACTIVE_PERSONS` and replaces the current
+filter through `Model#updateFilteredPersonList`. This searches all active contacts, including those hidden
+by an earlier search. It returns either the match count or the no-results message. No contact data changes;
+the normal `LogicManager` save still runs after the command returns.
+
+#### Design considerations
+
+* **Reuse the predicate-based find command:** keeps filtering and result messages shared with other
+  searches, while phone-specific matching remains in one predicate.
+* **Exact matching rather than partial matching:** gives predictable whole-number results, but depends
+  on the stored formatting. Digit-only normalization would support different spacing conventions;
+  it is not implemented in this version.
+
 ### Room search
 
 Room search is implemented separately by `RoomEqualsPredicate`, selected by `find /room ROOM`.
@@ -599,6 +603,12 @@ using the existing observable contact list.
   For other contacts, both `visible` and `managed` are false, so no badge space is reserved.
   Replacing a model entry refreshes its list cell with a new card and the updated status.
 
+The following sequence diagram shows a successful `fav 1` execution, assuming the first displayed contact is active and is not already a favourite.
+
+<img src="images/FavExecutionSequenceDiagram.png" width="700" />
+
+`withFavourite(true)` creates a copy with the favourite flag enabled and all other details preserved. `setPerson()` replaces the original contact without resetting the current filter. The diagram focuses on command execution; parsing and saving are omitted.
+
 #### Design considerations
 
 * A dedicated flag keeps favourite status independent of category tags and their replacement semantics.
@@ -758,8 +768,6 @@ The following activity diagram summarizes what happens when a user executes a ne
 
 _{more aspects and alternatives to be added}_
 
-
-
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Documentation, logging, testing, dev-ops**
@@ -786,7 +794,6 @@ _{more aspects and alternatives to be added}_
 * is reasonably comfortable using CLI apps
 
 **Value proposition**: Residential assistants keep track of contacts for residents, hall staff, vendors, and emergency services, currently scattered across chats and documents. This app brings them together in one organised place, optimised for typing so the right person or resident's details can be retrieved in seconds during an emergency.
-
 
 ### User stories
 
@@ -1014,6 +1021,21 @@ testers are expected to do more *exploratory* testing.
        Expected: The most recent window size and location are retained.
 
 1. _{ more test cases …​ }_
+
+### Recalling previous commands
+
+Start each test below in a newly launched app so that command history is empty. Click the command box before
+pressing keys, and use Up/Down without Shift, Ctrl, Alt or Command. These tests do not add, edit or delete contacts.
+For the user-facing explanation, see [Recalling previous commands in the UG](UserGuide.html#recalling-previous-commands).
+
+Test | Steps | Expected
+-----|-------|---------
+Empty history | Type `unfinished draft` without submitting it. Press Up, then Down. | The text stays unchanged and no command executes.
+Browsing and boundaries | Submit `list`, then `list fav`. Type `unfinished draft` without submitting it. Press Up three times, then Down three times. | Up shows `list fav`, `list`, then `list` again. Down shows `list fav`, restores `unfinished draft`, then leaves it unchanged. Browsing does not change the contact list or result message.
+Editing recalled text | Submit `list`, then `list fav`. Type `unfinished draft` and press Up. Replace the recalled text with `list sorted` without submitting it. Press Up, then Down twice. | The text becomes `list`, then the original `list fav`, then `unfinished draft`. Unsubmitted edits do not replace a stored command or the saved draft.
+Failed submissions and resubmission | Submit `list`, then `find /name`. Clear the command box and press Up. Replace the recalled text with `list fav` and press Enter. Press Up, then Down. | The incomplete search reports an error and can be recalled as `find /name`. Submitting the corrected command executes it and clears the field. Up recalls `list fav`; Down restores an empty field.
+Blank submission while browsing | Submit `list`, then `list fav`. Type `unfinished draft` and press Up twice. Replace the recalled text with three ordinary spaces and press Enter. Press Down twice. | The blank submission does not execute or enter history. Down shows `list fav`, then restores `unfinished draft`; the browsing position and draft were preserved.
+Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` and press Up, then Down. | The text stays unchanged because commands from the previous session are not retained.
 
 ### Deleting a person
 

@@ -121,7 +121,8 @@ public class CommandBoxTest {
         runOnFxThread(() -> {
             Fixture fixture = new Fixture();
             fixture.submit("list");
-            for (String blank : List.of("", "   ", "\u2003")) {
+            for (String blank : List.of("", "   ", "\u2003", "\u00A0", "\u2007", "\u202F",
+                    " \u00A0\u202F\u2003 ")) {
                 fixture.submit(blank);
             }
             assertEquals(List.of("list"), fixture.executedCommands);
@@ -132,6 +133,43 @@ public class CommandBoxTest {
             fixture.press(KeyCode.UP);
             fixture.press(KeyCode.DOWN);
             assertEquals("", fixture.commandTextField.getText());
+        });
+    }
+
+    @Test
+    public void enter_blankInputWhileBrowsing_preservesPositionAndDraft() throws Exception {
+        runOnFxThread(() -> {
+            Fixture fixture = new Fixture();
+            fixture.submit("list");
+            fixture.submit("help");
+            fixture.commandTextField.setText("unfinished draft");
+            fixture.press(KeyCode.UP);
+            fixture.press(KeyCode.UP);
+
+            for (String blank : List.of("   ", "\u00A0", "\u2007", "\u202F")) {
+                fixture.submit(blank);
+            }
+
+            assertEquals(List.of("list", "help"), fixture.executedCommands);
+            fixture.press(KeyCode.DOWN);
+            assertEquals("help", fixture.commandTextField.getText());
+            fixture.press(KeyCode.DOWN);
+            assertEquals("unfinished draft", fixture.commandTextField.getText());
+        });
+    }
+
+    @Test
+    public void enter_nonBlankInput_preservesExactSubmittedAndRecalledText() throws Exception {
+        runOnFxThread(() -> {
+            Fixture fixture = new Fixture();
+            String command = "\u00A0find /tag Resident\u202F";
+
+            fixture.submit(command);
+
+            assertEquals(List.of(command), fixture.executedCommands);
+            assertEquals("", fixture.commandTextField.getText());
+            fixture.press(KeyCode.UP);
+            assertEquals(command, fixture.commandTextField.getText());
         });
     }
 

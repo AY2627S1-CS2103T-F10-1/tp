@@ -22,6 +22,18 @@ public class StringUtil {
     private static final int SWAP_LENGTH = 2;
 
     /**
+     * Returns true if {@code text} is empty or contains only whitespace or Unicode space characters,
+     * including non-breaking spaces. Does not change the text.
+     *
+     * @param text The string to check; cannot be null.
+     */
+    public static boolean isBlank(String text) {
+        requireNonNull(text);
+        return text.codePoints().allMatch(codePoint ->
+                Character.isWhitespace(codePoint) || Character.isSpaceChar(codePoint));
+    }
+
+    /**
      * Returns true if the {@code sentence} contains the {@code word}.
      *   Ignores case, but a full word match is required.
      *   <br>examples:<pre>

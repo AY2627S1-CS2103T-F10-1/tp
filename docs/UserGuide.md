@@ -3,7 +3,13 @@ layout: page
 title: User Guide
 ---
 
-AddressBook Level 3 (AB3) is a **desktop application for managing contacts, optimized for use through a Command Line Interface (CLI)** while retaining the benefits of a Graphical User Interface (GUI). If you type quickly, AB3 can help you manage contacts faster than traditional GUI applications.
+RAcontact is a **desktop contact management application for Residential Assistants (RAs) at NUS hostels**.
+It brings contacts for residents, fellow RAs, hall staff, vendors and emergency services together in one place,
+so you can find the right person or a resident's details during a duty shift without searching through chats and documents.
+
+RAcontact is **optimized for fast typists through a Command Line Interface (CLI)**, with a Graphical User Interface (GUI)
+for viewing contacts. You can search by name, phone, room or tag, keep favourites and record a resident's emergency contact.
+The app stores and retrieves contact information; it does not make calls, send messages or manage duty rosters.
 
 * Table of Contents
 {:toc}
@@ -15,7 +21,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 1. Ensure that Java `25` or later is installed on your computer.<br>
    **Mac users:** Ensure you have the precise JDK version prescribed [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 
-1. Download the latest `.jar` file from [here](https://github.com/se-edu/addressbook-level3/releases).
+1. Download the latest `.jar` file from [here](https://github.com/AY2627S1-CS2103T-F10-1/tp/releases).
 
 1. Copy the file to the folder you want to use as the _home folder_ for your AddressBook.
 
@@ -55,17 +61,17 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
 **:information_source: Notes about the command format:**<br>
 
-* Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
-  For example, in `add n/NAME`, replace `NAME` with a value such as `John Doe`.
+* Words in `UPPER_CASE` are parameters to be supplied by the user.<br>
+  For example, in `add NAME /phone PHONE`, replace `NAME` with `John Doe` and `PHONE` with `98765432`.
 
 * Items in square brackets are optional.<br>
-  For example, `n/NAME [t/TAG]` can be used as `n/John Doe t/friend` or as `n/John Doe`.
+  For example, `add NAME /phone PHONE [/room ROOM]` can be used as `add John Doe /phone 98765432` or `add John Doe /phone 98765432 /room B-204`.
 
-* Items followed by `…`​ can appear zero or more times.<br>
-  For example, `[t/TAG]…​` may be omitted, or written as `t/friend` or `t/friend t/family`.
+* Items followed by `…` can appear zero or more times.<br>
+  For example, `[/tag TAG]…` may be omitted, or supplied as `/tag Friend` or `/tag Friend /tag Family`.
 
-* Parameters can be in any order.<br>
-  For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
+* For `add`, the name must come first. The prefixed fields after it can appear in any order.<br>
+  For example, `add John Doe /phone 98765432 /room B-204` and `add John Doe /room B-204 /phone 98765432` are both accepted.
 
 * Extraneous parameters for `help`, `exit`, and `clear` are ignored. The `list`, `list emerg`, `list archived`, `list fav`, `list sorted`,
   `fav INDEX` and `unfav INDEX` commands reject extra parameters.<br>
