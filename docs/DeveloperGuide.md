@@ -905,6 +905,21 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases …​ }_
 
+### Recalling previous commands
+
+Start each test below in a newly launched app so that command history is empty. Click the command box before
+pressing keys, and use Up/Down without Shift, Ctrl, Alt or Command. These tests do not add, edit or delete contacts.
+For the user-facing explanation, see [Recalling previous commands in the UG](UserGuide.html#recalling-previous-commands).
+
+Test | Steps | Expected
+-----|-------|---------
+Empty history | Type `unfinished draft` without submitting it. Press Up, then Down. | The text stays unchanged and no command executes.
+Browsing and boundaries | Submit `list`, then `list fav`. Type `unfinished draft` without submitting it. Press Up three times, then Down three times. | Up shows `list fav`, `list`, then `list` again. Down shows `list fav`, restores `unfinished draft`, then leaves it unchanged. Browsing does not change the contact list or result message.
+Editing recalled text | Submit `list`, then `list fav`. Type `unfinished draft` and press Up. Replace the recalled text with `list sorted` without submitting it. Press Up, then Down twice. | The text becomes `list`, then the original `list fav`, then `unfinished draft`. Unsubmitted edits do not replace a stored command or the saved draft.
+Failed submissions and resubmission | Submit `list`, then `find /name`. Clear the command box and press Up. Replace the recalled text with `list fav` and press Enter. Press Up, then Down. | The incomplete search reports an error and can be recalled as `find /name`. Submitting the corrected command executes it and clears the field. Up recalls `list fav`; Down restores an empty field.
+Blank submission while browsing | Submit `list`, then `list fav`. Type `unfinished draft` and press Up twice. Replace the recalled text with three ordinary spaces and press Enter. Press Down twice. | The blank submission does not execute or enter history. Down shows `list fav`, then restores `unfinished draft`; the browsing position and draft were preserved.
+Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` and press Up, then Down. | The text stays unchanged because commands from the previous session are not retained.
+
 ### Deleting a person
 
 1. Deleting a person while all persons are being shown
