@@ -84,6 +84,15 @@ public class LogicManagerTest {
                 .readAddressBook().orElseThrow();
         assertEquals(List.of(zara, AMY), saved.getPersonList());
         assertEquals(List.of(zara, AMY), new ModelManager(saved, new UserPrefs()).getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_listSortedWithExtraArguments_keepsSortedView() throws Exception {
+        Person zara = new PersonBuilder().withName("Zara Tan").build();
+        model.addPerson(zara);
+        model.addPerson(AMY);
+        logic.execute("list sorted");
+
         assertThrows(ParseException.class, ListSortedCommand.MESSAGE_INVALID_FORMAT, () ->
                 logic.execute("list sorted extra"));
         assertEquals(List.of(AMY, zara), logic.getFilteredPersonList());
