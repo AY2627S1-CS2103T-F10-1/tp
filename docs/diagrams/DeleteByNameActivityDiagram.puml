@@ -1,0 +1,26 @@
+@startuml
+title Delete a contact by full name
+start
+:DeleteCommandParser parses /name NAME;
+if (One non-empty /name selector\nand no preamble?) then (yes)
+  :Create DeleteCommand with\nNameEqualsPredicate;
+else (no)
+  :Throw ParseException;
+  stop
+endif
+:Set model filter to active contacts\nwith exactly matching case-sensitive name;
+:Count displayed matches;
+if (Exactly one match?) then (yes)
+  :Execute index-based DeleteCommand\nwith displayed index 1;
+  :Resolve Person from filtered list;
+  :model.deletePerson(person);
+  :Return deletion-success CommandResult;
+elseif (No matches?) then (yes)
+  :Return no-matches CommandResult;
+else (multiple)
+  :Return ambiguity message\nrequesting delete INDEX;
+endif
+:Keep the name-filtered view;
+:LogicManager saves the address book;
+stop
+@enduml

@@ -1,0 +1,24 @@
+@startuml
+title Archive contacts by tag
+start
+:Parse archive /tag TAG;
+if (Exactly one non-empty /tag value,\nno preamble or unknown prefix?) then (yes)
+  :Create ArchiveCommand with\nPersonHasTagPredicate(TAG);
+else (no)
+  :Throw ParseException with usage;
+  stop
+endif
+:Read all contacts from\nmodel.getAddressBook().getPersonList();
+:Snapshot active contacts whose tags match\n(case and extra whitespace ignored);
+if (Snapshot empty?) then (yes)
+  :Return no-matches CommandResult;
+else (no)
+  :Create all replacement Persons\nusing withArchive(true);
+  while (More targets in snapshot?) is (yes)
+    :model.setPerson(target, replacement);
+  endwhile (no)
+  :Return CommandResult with archived count;
+endif
+:LogicManager saves the address book;
+stop
+@enduml
