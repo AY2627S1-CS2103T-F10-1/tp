@@ -36,11 +36,19 @@ public class CommandTestUtil {
     public static final String VALID_ADDRESS_BOB = "Block 123, Bobby Street 3";
     public static final String VALID_ROOM_AMY = "A-101";
     public static final String VALID_ROOM_BOB = "B-202";
+    public static final String VALID_NOTE_AMY = "Allergic to peanuts";
+    public static final String VALID_NOTE_BOB = "Prefers WhatsApp";
     public static final String VALID_TAG_HUSBAND = "husband";
     public static final String VALID_TAG_FRIEND = "friend";
     public static final String VALID_TAG_RESIDENT_FELLOW = "Resident Fellow";
     public static final String VALID_TAG_AT_MAX_LENGTH = "a".repeat(Tag.MAX_LENGTH);
     public static final String INVALID_TAG_TOO_LONG = "a".repeat(Tag.MAX_LENGTH + 1);
+    /** "İ" becomes two characters in lower case, so these tags are longer in title case than as typed. */
+    public static final String VALID_TAG_LENGTHENED_TO_MAX_LENGTH = "İ".repeat(Tag.MAX_LENGTH / 2);
+    public static final String INVALID_TAG_LENGTHENED_PAST_MAX_LENGTH = "A" + VALID_TAG_LENGTHENED_TO_MAX_LENGTH;
+    /** The Greek capital sigma lowercases to a final sigma at the end of a word and to a medial sigma elsewhere. */
+    public static final String VALID_TAG_GREEK_UPPER_CASE = "ΟΣ";
+    public static final String VALID_TAG_GREEK_LOWER_CASE = "ος";
 
     public static final String NAME_DESC_AMY = " " + PREFIX_NAME + VALID_NAME_AMY;
     public static final String NAME_DESC_BOB = " " + PREFIX_NAME + VALID_NAME_BOB;
@@ -67,11 +75,9 @@ public class CommandTestUtil {
 
     static {
         DESC_AMY = new EditPersonDescriptorBuilder().withName(VALID_NAME_AMY)
-                .withPhone(VALID_PHONE_AMY).withRoom(VALID_ROOM_AMY)
-                .withTags(VALID_TAG_FRIEND).build();
+                .withPhone(VALID_PHONE_AMY).withRoom(VALID_ROOM_AMY).build();
         DESC_BOB = new EditPersonDescriptorBuilder().withName(VALID_NAME_BOB)
-                .withPhone(VALID_PHONE_BOB).withRoom(VALID_ROOM_BOB)
-                .withTags(VALID_TAG_HUSBAND, VALID_TAG_FRIEND).build();
+                .withPhone(VALID_PHONE_BOB).withRoom(VALID_ROOM_BOB).build();
     }
 
     /**

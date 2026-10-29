@@ -3,6 +3,7 @@ package seedu.address.logic.parser;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ROOM_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
@@ -10,13 +11,34 @@ import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSucces
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.FindCommand;
-import seedu.address.model.person.NameEqualsPredicate;
+import seedu.address.model.person.NameFuzzyMatchesPredicate;
 import seedu.address.model.person.PersonHasTagPredicate;
 import seedu.address.model.person.PhoneEqualsPredicate;
+import seedu.address.model.person.RoomEqualsPredicate;
 
 public class FindCommandParserTest {
 
     private FindCommandParser parser = new FindCommandParser();
+
+    @Test
+    public void parse_room_returnsFindCommand() {
+        assertParseSuccess(parser, " /room B-204", new FindCommand(new RoomEqualsPredicate("B-204")));
+        assertParseSuccess(parser, " /room  b   204  ", new FindCommand(new RoomEqualsPredicate("B 204")));
+        assertParseSuccess(parser, " /room unknown", new FindCommand(new RoomEqualsPredicate("unknown")));
+    }
+
+    @Test
+    public void parse_invalidRoomPrefixes_throwsParseException() {
+        String message = String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE);
+        for (String input : new String[]{" /room", " /room   ", " /roomB-204", " /ROOM B-204",
+            " text /room B-204", " /room B-204 /name Alice", " /name Alice /room B-204",
+            " /room B-204 /tag friends", " /tag friends /room B-204",
+            " /room B-204 /phone 91234567", " /phone 91234567 /room B-204"}) {
+            assertParseFailure(parser, input, message);
+        }
+        assertParseFailure(parser, " /room B-204 /room C-101",
+                getErrorMessageForDuplicatePrefixes(PREFIX_ROOM_COMMAND));
+    }
 
     @Test
     public void parse_emptyArg_throwsParseException() {
@@ -85,15 +107,16 @@ public class FindCommandParserTest {
 
     @Test
     public void parse_validArgs_returnsFindCommand() {
-        // full name is kept as a single string, not split into keywords
-        FindCommand expectedFindCommand = new FindCommand(new NameEqualsPredicate("Alice Bob"));
+        // name results are ranked by how closely they match
+        NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate("Alice Bob");
+        FindCommand expectedFindCommand = new FindCommand(predicate, predicate.getRankingComparator());
         assertParseSuccess(parser, " /name Alice Bob", expectedFindCommand);
 
-        // leading and trailing whitespaces around the name are trimmed
-        assertParseSuccess(parser, " /name   Alice Bob  \t", expectedFindCommand);
+        // extra whitespace around and between words is ignored
+        assertParseSuccess(parser, " /name   Alice    Bob  \t", expectedFindCommand);
 
-        // case is preserved
-        assertParseSuccess(parser, " /name alice bob", new FindCommand(new NameEqualsPredicate("alice bob")));
+        // case is ignored
+        assertParseSuccess(parser, " /name alice bob", expectedFindCommand);
     }
 
     @Test

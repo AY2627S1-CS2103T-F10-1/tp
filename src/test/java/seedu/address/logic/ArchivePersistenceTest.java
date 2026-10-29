@@ -19,7 +19,10 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.EmergencyContact;
+import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Phone;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
@@ -37,8 +40,11 @@ public class ArchivePersistenceTest {
 
     @Test
     public void archiveAndRestore_reloadAfterEachMutation_preservesContacts() throws Exception {
-        Person first = new PersonBuilder(ALICE).withTags("friends").withRoom("B-204").build();
-        Person second = new PersonBuilder(BOB).withTags("friends").build();
+        EmergencyContact emergency = new EmergencyContact(new Name("Jane Tan"), new Phone("91234567"), "Sister");
+        Person first = new PersonBuilder(ALICE).withTags("friends").withRoom("B-204")
+                .withNote("Call after six").build().withEmergencyContact(emergency);
+        Person second = new PersonBuilder(BOB).withTags("friends").withNote("Prefers text messages").build()
+                .withEmergencyContact(new EmergencyContact(new Name("John Tan"), new Phone("98765432"), "Brother"));
         AddressBook book = new AddressBook();
         book.addPerson(first);
         book.addPerson(second);
@@ -49,6 +55,9 @@ public class ArchivePersistenceTest {
         logic.execute("archive 1");
         model = new ModelManager(storage.readAddressBook().orElseThrow(), new UserPrefs());
         assertEquals(List.of(second), model.getFilteredPersonList());
+        Person savedFirst = model.getAddressBook().getPersonList().get(0);
+        assertEquals(first.getNote(), savedFirst.getNote());
+        assertEquals(first.getEmergencyContact(), savedFirst.getEmergencyContact());
         logic = createLogic(model, storage);
         logic.execute("archive /tag friends");
 

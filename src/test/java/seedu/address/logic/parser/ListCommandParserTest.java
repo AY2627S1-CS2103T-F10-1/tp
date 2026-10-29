@@ -6,14 +6,38 @@ import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailur
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.ListEmergencyCommand;
+import seedu.address.logic.commands.ListFavouriteCommand;
+import seedu.address.logic.commands.ListSortedCommand;
 
 public class ListCommandParserTest {
 
     private final ListCommandParser parser = new ListCommandParser();
+
+    @Test
+    public void parse_sortedKeyword_returnsListSortedCommand() {
+        for (String args : List.of("sorted", "  sorted  ", "\tsorted\t")) {
+            assertParseSuccess(parser, args, new ListSortedCommand());
+        }
+    }
+
+    @Test
+    public void parse_sortedKeywordWithExtraArguments_throwsParseException() {
+        for (String args : List.of("sorted 1", "sorted fav", "sorted archived", "sorted /name Amy")) {
+            assertParseFailure(parser, args, ListSortedCommand.MESSAGE_INVALID_FORMAT);
+        }
+    }
+
+    @Test
+    public void parse_sortedKeywordWithWrongCase_throwsParseException() {
+        assertParseFailure(parser, "Sorted", ListCommand.MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "SORTED", ListCommand.MESSAGE_INVALID_FORMAT);
+    }
 
     @Test
     public void parse_null_throwsNullPointerException() {
@@ -38,6 +62,27 @@ public class ListCommandParserTest {
         assertInstanceOf(ListEmergencyCommand.class, parser.parse("emerg"));
         assertInstanceOf(ListEmergencyCommand.class, parser.parse("  emerg  "));
         assertInstanceOf(ListEmergencyCommand.class, parser.parse("\temerg\t"));
+    }
+
+    @Test
+    public void parse_favKeyword_returnsListFavouriteCommand() {
+        for (String args : List.of("fav", "  fav  ", "\tfav\t")) {
+            assertParseSuccess(parser, args, new ListFavouriteCommand());
+        }
+    }
+
+    @Test
+    public void parse_favKeywordWithWrongCase_throwsParseException() {
+        for (String args : List.of("FAV", "Fav", "FaV", "FAV 1")) {
+            assertParseFailure(parser, args, ListCommand.MESSAGE_INVALID_FORMAT);
+        }
+    }
+
+    @Test
+    public void parse_favWithExtraArguments_throwsParseException() {
+        for (String args : List.of("fav 1", "fav fav", "fav emerg", "fav\tfriend", "fav /tag friend")) {
+            assertParseFailure(parser, args, ListFavouriteCommand.MESSAGE_INVALID_FORMAT);
+        }
     }
 
     @Test
