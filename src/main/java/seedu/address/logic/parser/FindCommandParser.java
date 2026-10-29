@@ -9,6 +9,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.NameFuzzyMatchesPredicate;
@@ -44,7 +45,7 @@ public class FindCommandParser implements Parser<FindCommand> {
         Optional<String> room = argMultimap.getValue(PREFIX_ROOM_COMMAND);
         boolean hasExactlyOnePrefix = Stream.of(name, tag, phone, room).filter(Optional::isPresent).count() == 1;
         boolean isSearchValueEmpty = Stream.of(name, tag, phone, room)
-                .flatMap(Optional::stream).findFirst().orElse("").isEmpty();
+                .flatMap(Optional::stream).findFirst().map(StringUtil::collapseWhitespace).orElse("").isEmpty();
         if (!argMultimap.getPreamble().isEmpty() || !hasExactlyOnePrefix || isSearchValueEmpty) {
             throw new ParseException(
                     String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE));

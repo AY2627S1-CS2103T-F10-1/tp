@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
@@ -36,6 +37,27 @@ public class ArchivePersistenceTest {
     private Logic createLogic(Model model, JsonAddressBookStorage storage) {
         return new LogicManager(model, new StorageManager(storage,
                 new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json"))));
+    }
+
+    @Test
+    public void unicodeOnlyTag_rejectedWithoutChangingDataViewOrFile() throws Exception {
+        AddressBook book = new AddressBook();
+        book.addPerson(ALICE);
+        book.addPerson(BOB.withArchive(true));
+        Model model = new ModelManager(book, new UserPrefs());
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(temporaryFolder.resolve("contacts.json"));
+        Logic logic = createLogic(model, storage);
+        logic.execute("list archived");
+        List<Person> displayed = List.copyOf(model.getFilteredPersonList());
+
+        for (String command : List.of("archive", "unarchive", "find")) {
+            for (String blank : List.of("\u00a0", "\u2003", "\u202f")) {
+                assertThrows(ParseException.class, () -> logic.execute(command + " /tag " + blank));
+                assertEquals(book, model.getAddressBook());
+                assertEquals(displayed, model.getFilteredPersonList());
+                assertEquals(book, storage.readAddressBook().orElseThrow());
+            }
+        }
     }
 
     @Test

@@ -41,6 +41,16 @@ public class FindCommandParserTest {
     }
 
     @Test
+    public void parse_unicodeOnlyValue_throwsParseException() {
+        String message = String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE);
+        for (String prefix : new String[]{"/name", "/tag", "/phone", "/room"}) {
+            for (String blank : new String[]{"\u00a0", "\u2003", "\u202f"}) {
+                assertParseFailure(parser, " " + prefix + " " + blank, message);
+            }
+        }
+    }
+
+    @Test
     public void parse_emptyArg_throwsParseException() {
         assertParseFailure(parser, "     ", String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE));
     }
