@@ -34,6 +34,8 @@ public class TagTest {
         assertFalse(Tag.isValidTagName("Resident/Fellow")); // command delimiter
         assertFalse(Tag.isValidTagName("hubby*")); // other symbols
         assertFalse(Tag.isValidTagName("Block_4")); // underscore
+        assertFalse(Tag.isValidTagName("Café!")); // non-ASCII letter with a symbol
+        assertFalse(Tag.isValidTagName("🚨")); // emoji is not a letter
         assertFalse(Tag.isValidTagName(INVALID_TAG_TOO_LONG)); // boundary: one character too long
 
         // valid tag names
@@ -45,6 +47,11 @@ public class TagTest {
         assertTrue(Tag.isValidTagName("  Resident    Fellow  ")); // extra spaces are collapsed
         assertTrue(Tag.isValidTagName(VALID_TAG_AT_MAX_LENGTH)); // boundary: exactly at the limit
         assertTrue(Tag.isValidTagName(" " + VALID_TAG_AT_MAX_LENGTH + " ")); // surrounding spaces do not count
+        assertTrue(Tag.isValidTagName("Café Vendor")); // accented letter
+        assertTrue(Tag.isValidTagName("Café")); // letter followed by a combining accent mark
+        assertTrue(Tag.isValidTagName("宿舍")); // non-Latin letters
+        assertTrue(Tag.isValidTagName("விடுதி")); // letters with vowel signs
+        assertTrue(Tag.isValidTagName("٣")); // non-ASCII digit
     }
 
     @Test
@@ -57,6 +64,8 @@ public class TagTest {
         assertEquals("Resident Fellow", new Tag("  resident    Fellow ").tagName);
         assertEquals("Block4-a", new Tag("BLOCK4-A").tagName); // only the start of a word is capitalized
         assertEquals("4th Floor", new Tag("4TH floor").tagName); // digits are left unchanged
+        assertEquals("Élève", new Tag("éLÈVE").tagName); // accented letters
+        assertEquals("宿舍", new Tag("宿舍").tagName); // letters without case are left unchanged
     }
 
     @Test

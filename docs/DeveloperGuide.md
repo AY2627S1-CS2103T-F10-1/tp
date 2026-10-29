@@ -165,6 +165,8 @@ Tags are added to a contact when it is created, with `add NAME /phone PHONE [/ro
 
 For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. So `/tag` with no value is reported as an empty tag, and `/tag RA, Staff` as invalid characters. `AddCommandParser` collects the tags into a `LinkedHashSet`, rejects a tag already given (`Contact already has this tag.`), and then rejects more than `Person.MAX_TAGS` tags.
 
+`Tag.VALIDATION_REGEX` uses `\p{L}`, `\p{M}` and `\p{N}` rather than `\p{Alnum}`, which in Java only matches ASCII, so letters and digits in any language are accepted. `\p{M}` allows accent marks, for letters typed as a base letter followed by a combining mark.
+
 `Tag` compares tag names ignoring case and stores them in title case: the first letter of each word in upper case and the rest in lower case. As `JsonAdaptedTag` also builds a `Tag`, tags in an edited data file are normalized the same way when loaded. `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were typed. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
 
 #### Design considerations
@@ -888,6 +890,9 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `add Tan Wei Ming /phone 81000032 /tag RESIDENT`, then `add Lim Jun Jie /phone 81000033 /tag resident`<br>
       Expected: Both contacts are added, and both cards show the tag as `Resident`.
 
+   1. Test case: `add Ann Lee /phone 81000025 /tag Café Vendor /tag 宿舍`<br>
+      Expected: Ann Lee is added with the tags `Café Vendor` and `宿舍`.
+
    1. Test case: `add Ben Ong /phone 9876 5432 /tag T1 /tag T2 /tag T3 /tag T4 /tag T5`<br>
       Expected: Ben Ong is added with 5 tags.
 
@@ -902,7 +907,7 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `add Ben Ong /phone 9876 5432 /tag RA /tag`<br>
       Expected: No contact is added. Error: `Tag cannot be empty.`
 
-   1. Other incorrect commands to try: `add Ben Ong /phone 9876 5432 /tag RA, Staff`, `add Ben Ong /phone 9876 5432 /tag RA/Staff`, `add Ben Ong /phone 9876 5432 /tag` followed by 51 letters<br>
+   1. Other incorrect commands to try: `add Ben Ong /phone 9876 5432 /tag RA, Staff`, `add Ben Ong /phone 9876 5432 /tag RA/Staff`, `add Ben Ong /phone 9876 5432 /tag Café!`, `add Ben Ong /phone 9876 5432 /tag` followed by 51 letters<br>
       Expected: No contact is added. The status message shows the matching error.
 
 1. Typing the old tag command

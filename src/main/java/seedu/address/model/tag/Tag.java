@@ -26,8 +26,12 @@ public class Tag {
     public static final String MESSAGE_INVALID_CHARACTERS = "Tag contains invalid characters.";
     public static final String MESSAGE_DUPLICATE = "Contact already has this tag.";
 
-    /** One or more words of letters, digits and hyphens, separated by single spaces. */
-    public static final String VALIDATION_REGEX = "[\\p{Alnum}-]+( [\\p{Alnum}-]+)*";
+    /**
+     * One or more words of letters, digits and hyphens, separated by single spaces.
+     * Letters and digits may be from any language; accent marks ({@code \p{M}}) are allowed so that letters
+     * typed as a base letter followed by a combining mark are accepted too.
+     */
+    public static final String VALIDATION_REGEX = "[\\p{L}\\p{M}\\p{N}-]+( [\\p{L}\\p{M}\\p{N}-]+)*";
 
     private static final String WORD_SEPARATOR = " ";
 

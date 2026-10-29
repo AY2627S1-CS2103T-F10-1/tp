@@ -299,6 +299,12 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseTag_nonAsciiLetters_returnsTag() throws Exception {
+        assertEquals("Café Vendor", ParserUtil.parseTag("café VENDOR").tagName);
+        assertEquals("宿舍", ParserUtil.parseTag("宿舍").tagName);
+    }
+
+    @Test
     public void parseTags_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ParserUtil.parseTags(null));
     }
