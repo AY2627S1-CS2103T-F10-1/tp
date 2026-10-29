@@ -90,7 +90,8 @@ public class AddressBookParserTest {
     public void parseCommand_find() throws Exception {
         FindCommand command = (FindCommand) parser.parseCommand(
                 FindCommand.COMMAND_WORD + " /name foo bar baz");
-        assertEquals(new FindCommand(new NameFuzzyMatchesPredicate("foo bar baz")), command);
+        NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate("foo bar baz");
+        assertEquals(new FindCommand(predicate, predicate.getRankingComparator()), command);
     }
 
     @Test

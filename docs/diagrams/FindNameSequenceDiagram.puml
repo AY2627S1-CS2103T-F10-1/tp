@@ -1,0 +1,107 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as LogicManager LOGIC_COLOR
+participant ":AddressBookParser" as AddressBookParser LOGIC_COLOR
+participant ":FindCommandParser" as FindCommandParser LOGIC_COLOR
+participant "f:FindCommand" as FindCommand LOGIC_COLOR
+participant "r:CommandResult" as CommandResult LOGIC_COLOR
+end box
+
+box Model MODEL_COLOR_T1
+participant "m:Model" as Model MODEL_COLOR
+participant "p:NameFuzzyMatchesPredicate" as Predicate MODEL_COLOR
+end box
+
+box Commons #DDDDDD
+participant "<<class>>\nStringUtil" as StringUtil #888888
+end box
+
+[-> LogicManager : execute("find /name alx yeo")
+activate LogicManager
+
+LogicManager -> AddressBookParser : parseCommand("find /name alx yeo")
+activate AddressBookParser
+
+create FindCommandParser
+AddressBookParser -> FindCommandParser
+activate FindCommandParser
+
+FindCommandParser --> AddressBookParser
+deactivate FindCommandParser
+
+AddressBookParser -> FindCommandParser : parse(" /name alx yeo")
+activate FindCommandParser
+
+create Predicate
+FindCommandParser -> Predicate : NameFuzzyMatchesPredicate("alx yeo")
+activate Predicate
+
+Predicate --> FindCommandParser : p
+deactivate Predicate
+
+FindCommandParser -> Predicate : getRankingComparator()
+activate Predicate
+
+Predicate --> FindCommandParser : c
+deactivate Predicate
+
+create FindCommand
+FindCommandParser -> FindCommand : FindCommand(p, c)
+activate FindCommand
+
+FindCommand --> FindCommandParser : f
+deactivate FindCommand
+
+FindCommandParser --> AddressBookParser : f
+deactivate FindCommandParser
+'Hidden arrow to position the destroy marker below the end of the activation bar.
+FindCommandParser -[hidden]-> AddressBookParser
+destroy FindCommandParser
+
+AddressBookParser --> LogicManager : f
+deactivate AddressBookParser
+
+LogicManager -> FindCommand : execute(m)
+activate FindCommand
+
+FindCommand -> Model : updateFilteredPersonList(..., c)
+activate Model
+
+loop for each active person
+    Model -> Predicate : test(person)
+    activate Predicate
+
+    Predicate -> StringUtil : typoDistance(searchWord, nameWord)
+    activate StringUtil
+
+    StringUtil --> Predicate : typos
+    deactivate StringUtil
+
+    Predicate --> Model
+    deactivate Predicate
+end
+
+note right of Model
+  The matches are then sorted with c,
+  which computes the same match costs.
+end note
+
+Model --> FindCommand
+deactivate Model
+
+create CommandResult
+FindCommand -> CommandResult
+activate CommandResult
+
+CommandResult --> FindCommand
+deactivate CommandResult
+
+FindCommand --> LogicManager : r
+deactivate FindCommand
+
+[<--LogicManager
+deactivate LogicManager
+@enduml

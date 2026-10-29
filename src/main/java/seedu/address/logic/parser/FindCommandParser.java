@@ -51,7 +51,8 @@ public class FindCommandParser implements Parser<FindCommand> {
         }
 
         if (name.isPresent()) {
-            return new FindCommand(new NameFuzzyMatchesPredicate(name.get()));
+            NameFuzzyMatchesPredicate namePredicate = new NameFuzzyMatchesPredicate(name.get());
+            return new FindCommand(namePredicate, namePredicate.getRankingComparator());
         }
         if (phone.isPresent()) {
             return new FindCommand(new PhoneEqualsPredicate(phone.get()));

@@ -107,7 +107,9 @@ public class FindCommandParserTest {
 
     @Test
     public void parse_validArgs_returnsFindCommand() {
-        FindCommand expectedFindCommand = new FindCommand(new NameFuzzyMatchesPredicate("Alice Bob"));
+        // name results are ranked by how closely they match
+        NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate("Alice Bob");
+        FindCommand expectedFindCommand = new FindCommand(predicate, predicate.getRankingComparator());
         assertParseSuccess(parser, " /name Alice Bob", expectedFindCommand);
 
         // extra whitespace around and between words is ignored

@@ -7,19 +7,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.JavaFxExtension.runOnFxThread;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
+import static seedu.address.testutil.UiTestUtil.cellAt;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
-import seedu.address.MainApp;
 import seedu.address.logic.commands.FavCommand;
 import seedu.address.logic.commands.UnfavCommand;
 import seedu.address.model.Model;
@@ -30,12 +28,15 @@ import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.testutil.JavaFxExtension;
 import seedu.address.testutil.PersonBuilder;
+import seedu.address.testutil.UiTestUtil;
 
 /**
  * Tests the favourite indicator using real contact cards and the observable list panel.
  */
 @ExtendWith(JavaFxExtension.class)
 public class PersonCardTest {
+    private static final double SCENE_WIDTH = 360;
+    private static final double SCENE_HEIGHT = 320;
     private static final Person CONTACT = new PersonBuilder().withRoom("B-204").withNote("Call after 6 pm")
             .withTags("Resident", "Floor 3").build()
             .withEmergencyContact(new EmergencyContact(new Name("Jane Tan"), new Phone("91234567"), "Sister"));
@@ -127,10 +128,7 @@ public class PersonCardTest {
     }
 
     private static void layout(Region root) {
-        Scene scene = new Scene(root, 360, 320);
-        scene.getStylesheets().add(MainApp.class.getResource("/view/DarkTheme.css").toExternalForm());
-        root.applyCss();
-        root.layout();
+        UiTestUtil.layout(root, SCENE_WIDTH, SCENE_HEIGHT);
     }
 
     private static Label label(Region root, String id) {
@@ -140,9 +138,6 @@ public class PersonCardTest {
     }
 
     private static Region firstCard(Region root) {
-        return root.lookupAll(".list-cell").stream()
-                .filter(node -> node instanceof ListCell<?> cell && !cell.isEmpty() && cell.getIndex() == 0)
-                .map(node -> (Region) ((ListCell<?>) node).getGraphic())
-                .findFirst().orElseThrow(() -> new AssertionError("First contact card was not rendered"));
+        return (Region) cellAt(root, 0).getGraphic();
     }
 }
