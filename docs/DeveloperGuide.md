@@ -9,7 +9,13 @@ title: Developer Guide
 
 ## **Acknowledgements**
 
-* _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the originals.}_
+* RAcontact is adapted from [AddressBook-Level3 (AB3)](https://github.com/se-edu/addressbook-level3),
+  created by the [SE-EDU initiative](https://se-education.org). We reused and extended its application structure,
+  contact-management code and test utilities, and adapted its [User Guide](https://se-education.org/addressbook-level3/UserGuide.html),
+  [Developer Guide](https://se-education.org/addressbook-level3/DeveloperGuide.html) and UML diagrams for RAcontact.
+* Libraries used: [JavaFX](https://openjfx.io/) for the user interface,
+  [Jackson](https://github.com/FasterXML/jackson) for JSON storage, and
+  [JUnit 5](https://github.com/junit-team/junit5) for automated tests.
 
 --------------------------------------------------------------------------------------------------------------------
 
