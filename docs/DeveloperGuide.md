@@ -480,6 +480,12 @@ using the existing observable contact list.
   For other contacts, both `visible` and `managed` are false, so no badge space is reserved.
   Replacing a model entry refreshes its list cell with a new card and the updated status.
 
+The following sequence diagram shows a successful `fav 1` execution, assuming the first displayed contact is active and is not already a favourite.
+
+<img src="images/FavExecutionSequenceDiagram.png" width="700" />
+
+`withFavourite(true)` creates a copy with the favourite flag enabled and all other details preserved. `setPerson()` replaces the original contact without resetting the current filter. The diagram focuses on command execution; parsing and saving are omitted.
+
 #### Design considerations
 
 * A dedicated flag keeps favourite status independent of category tags and their replacement semantics.

@@ -1,0 +1,41 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+title Successful execution of fav 1
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as LogicManager LOGIC_COLOR
+participant "f:FavCommand" as FavCommand LOGIC_COLOR
+end box
+
+box Model MODEL_COLOR_T1
+participant "m:Model" as Model MODEL_COLOR
+participant "target:Person" as Person MODEL_COLOR
+end box
+
+note over FavCommand, Person
+  The first displayed contact exists,
+  is active and is not a favourite.
+end note
+
+LogicManager -> FavCommand : execute(m)
+activate FavCommand
+
+FavCommand -> Model : getFilteredPersonList()
+Model --> FavCommand : displayed
+
+note right of FavCommand
+  target = displayed.get(0)
+  Index and status checks are omitted.
+end note
+
+FavCommand -> Person : withFavourite(true)
+Person --> FavCommand : updatedPerson
+
+FavCommand -> Model : setPerson(target, updatedPerson)
+Model --> FavCommand
+
+FavCommand --> LogicManager : CommandResult
+deactivate FavCommand
+@enduml
