@@ -50,10 +50,10 @@ public class ListSortedCommandTest {
 
     @Test
     public void execute_noActiveContacts_showsEmptyMessage() {
-        model = new ModelManager();
-        model.addPerson(ARCHIVED);
-        assertEquals(ListCommand.MESSAGE_EMPTY, new ListSortedCommand().execute(model).getFeedbackToUser());
-        assertEquals(List.of(), model.getFilteredPersonList());
+        Model emptyModel = new ModelManager();
+        emptyModel.addPerson(ARCHIVED);
+        assertEquals(ListCommand.MESSAGE_EMPTY, new ListSortedCommand().execute(emptyModel).getFeedbackToUser());
+        assertEquals(List.of(), emptyModel.getFilteredPersonList());
     }
 
     @Test
