@@ -26,9 +26,10 @@ import seedu.address.model.tag.Tag;
 
 /**
  * A field of a {@link Person} that the user can set from the command line.
- * This is the single place where a field's prefix, parser and accessor are defined, and both
- * {@code add} and {@code edit} are built from {@link #values()}. To make a new field available to both
- * commands, add one constant here and include it in {@link #values()}.
+ * This is the single place where a field's prefix, parser and accessor are defined. {@code add} is built from
+ * {@link #values()} and {@code edit} from {@link #editableValues()}. To make a new field available to both
+ * commands, add one constant here and include it in both lists. Tags are not editable, as they are changed
+ * with {@code toggle}.
  *
  * @param <T> the type of the field's value
  */
@@ -45,6 +46,7 @@ public final class PersonField<T> {
             single(ParserUtil::parseNote), Person::getNote, () -> new Note(""));
 
     private static final List<PersonField<?>> VALUES = List.of(NAME, PHONE, ROOM, TAGS, NOTE);
+    private static final List<PersonField<?>> EDITABLE_VALUES = List.of(NAME, PHONE, ROOM, NOTE);
     private static final Logger logger = LogsCenter.getLogger(PersonField.class);
 
     private final String name;
@@ -80,6 +82,11 @@ public final class PersonField<T> {
     /** Returns every field a person has, in the order they are shown to the user. */
     public static List<PersonField<?>> values() {
         return VALUES;
+    }
+
+    /** Returns the fields that {@code edit} can change, which are all fields except tags. */
+    public static List<PersonField<?>> editableValues() {
+        return EDITABLE_VALUES;
     }
 
     /** Returns the name of this field, which matches the name of the corresponding field in {@link Person}. */
@@ -133,7 +140,7 @@ public final class PersonField<T> {
     /**
      * Parses the values given for this field in {@code argMultimap}, or returns empty if there are none.
      * If {@code isClearAllowed} is true, an optional field given a single empty value is reset to its default
-     * value, so that for example {@code /tag} on its own removes all tags and {@code /room} removes the room.
+     * value, so that for example {@code /room} on its own removes the room.
      *
      * @throws ParseException if the values are invalid.
      */

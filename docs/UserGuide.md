@@ -212,7 +212,7 @@ Format: `fav INDEX`
 * On success, the message starts with `Marked as favourite:` and includes the contact's details.
 * Repeating the command leaves the contact unchanged and shows `Contact is already a favourite:`
   followed by its details. The command does not toggle the status.
-* Ordinary edits, including replacing or clearing tags, preserve favourite status.
+* Ordinary edits and tag toggles preserve favourite status.
 * Archived contacts must be unarchived before using `fav` or `unfav`. Otherwise, the command reports
   `Cannot change favourite status for an archived contact. Unarchive it first.` and leaves data unchanged.
 * The command word is case-sensitive. Leading and trailing spaces are ignored; extra arguments are rejected.
@@ -260,19 +260,19 @@ Format: `list fav`
 
 Changes one or more details of an active contact. Archived contacts must be unarchived before editing.
 
-Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​ [/note NOTE]`
+Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/note NOTE]`
 
 * `INDEX` is the number shown beside the contact in the current list, and must be a positive integer.
 * At least one field must be given, in any order. Fields you leave out stay as they are.
 * Each field follows the same rules as in `add`, so `/name`, `/phone`, `/room` and `/note` cannot be repeated.
-* `/tag` replaces all of the contact's existing tags with the tags given. Repeat `/tag` once per tag.
-* Favourite status is preserved, including when tags are replaced or cleared.
-* An optional field given with nothing after it is removed: `/room` on its own removes the room,
-  `/note` on its own removes the note, and `/tag` on its own removes all tags. `/name` and `/phone` are required, so they cannot be removed.
+* `edit` does not change tags, and `/tag` is rejected as an invalid command format. Use [`toggle`](#toggling-tags-toggle) to add or remove tags on an existing contact.
+* The contact's tags and favourite status are preserved.
+* An optional field given with nothing after it is removed: `/room` on its own removes the room, and
+  `/note` on its own removes the note. `/name` and `/phone` are required, so they cannot be removed.
 
 Examples:
 * `edit 2 /phone 9123 4567` changes the phone number of the 2nd contact.
-* `edit 1 /room B-204 /tag Resident /tag Floor 3` sets the room of the 1st contact and replaces their tags.
+* `edit 1 /room B-204 /note Prefers WhatsApp` sets the room and the note of the 1st contact.
 * `edit 3 /room` removes the room of the 3rd contact.
 * `edit 1 /note Prefers WhatsApp over calls` sets or replaces the note of the 1st contact.
 * `edit 1 /note` removes the note of the 1st contact.
@@ -290,7 +290,7 @@ Format: `emergency INDEX /name NAME /phone PHONE [/relation RELATION]`
 * Each prefix may appear only once. Invalid input leaves the contact unchanged.
 * A person can have one emergency contact. Running the command again replaces all previous emergency details.
   Name and phone are required each time; omitting relation replaces the previous relation with an empty value.
-* Emergency details are a separate person field. Replacing or clearing tags does not remove them.
+* Emergency details are a separate person field. Toggling tags does not remove them.
   Clearing emergency details without providing a replacement is not supported yet.
 * Details appear on the person's card and are saved automatically. Ordinary edits preserve them.
 * The same emergency details may be assigned to several people independently.
@@ -522,7 +522,7 @@ Action | Format, Examples
 **Delete** | `delete INDEX` or `delete /name NAME`<br> e.g., `delete 3`, `delete /name Alice Tan`
 **Edit (suspended)** | Temporarily unavailable. Displays `Edit not currently supported`.
 **Find** | `find /name NAME`, `find /tag TAG`, `find /phone NUMBER` or `find /room ROOM`<br> e.g., `find /name alx yeo`, `find /tag friends`, `find /phone 87438807`, `find /room B-204`
-**Edit** | `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]…​`<br> e.g., `edit 2 /phone 9123 4567`, `edit 1 /tag`
+**Edit** | `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/note NOTE]`<br> e.g., `edit 2 /phone 9123 4567`, `edit 3 /room`
 **Toggle** | `toggle INDEX /tag TAG [/tag TAG]…​`<br> e.g., `toggle 1 /tag emergency`
 **Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /tag friends`
 **List** | `list`

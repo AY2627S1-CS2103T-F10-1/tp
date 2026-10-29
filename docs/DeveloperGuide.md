@@ -198,17 +198,29 @@ For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and re
 
 ### Edit feature
 
-`edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/tag TAG]… [/note NOTE]` replaces only the fields that are given.
+`edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/note NOTE]` replaces only the fields that are given. It does not change tags, which are changed with `toggle`.
 
 #### Implementation
 
-`add` and `edit` share one definition of each field, so they cannot disagree about it. A `PersonField` holds a field's prefix, how its value is parsed and validated, how it is read from a `Person`, and the value `add` uses when the field is left out. `PersonField.values()` lists every field accepted by `add` and `edit`.
+`add` and `edit` share one definition of each field, so they cannot disagree about it. A `PersonField` holds a field's prefix, how its value is parsed and validated, how it is read from a `Person`, and the value `add` uses when the field is left out. `PersonField.values()` lists every field accepted by `add`, and `PersonField.editableValues()` lists those accepted by `edit`, which is every field except tags.
 
-* `AddCommandParser` and `EditCommandParser` build their prefixes, duplicate checks and parsing from `PersonField.values()`. `add` reads the name from the text before the first prefix, and every other field with its prefix.
+* `AddCommandParser` builds its prefixes, duplicate checks and parsing from `PersonField.values()`, and `EditCommandParser` from `PersonField.editableValues()`. As `/tag` is not one of its prefixes, `edit` rejects it as an unknown prefix with the usual invalid command format message. `add` reads the name from the text before the first prefix, and every other field with its prefix.
 * `PersonFieldValues` stores a value per editable field. `EditPersonDescriptor` wraps one to hold the edited fields, and `EditCommand` copies the contact's current values, overwrites them with the edited ones and builds the new `Person`. It explicitly reapplies the original favourite status, which is not an editable field.
-* `/tag` replaces all tags. Any optional field given with no value, such as `/tag` or `/room`, is reset to the value `add` uses when it is left out, which removes it. Required fields given with no value are rejected.
+* Any optional field given with no value, such as `/room` or `/note`, is reset to the value `add` uses when it is left out, which removes it. Required fields given with no value are rejected.
+* The contact's tags are copied from its current values and never overwritten, since `EditPersonDescriptor` is built only from the editable fields.
 
-To add a new field supported by `add` and `edit`, add it to `Person`, add a constant to `PersonField` and list it in `PersonField.values()`, and add its `ParserUtil#parseXyz` method. `add` and `edit` then accept it without further changes. `PersonFieldTest` fails if such a field is not registered or has no sample value. Properties managed separately, such as `isFavourite`, are explicitly excluded in `NON_EDITABLE_PERSON_FIELDS` and must be preserved when editing.
+To add a new field supported by `add` and `edit`, add it to `Person`, add a constant to `PersonField` and list it in both `PersonField.values()` and `PersonField.editableValues()`, and add its `ParserUtil#parseXyz` method. `add` and `edit` then accept it without further changes. `PersonFieldTest` fails if such a field is not registered or has no sample value. Properties managed separately, such as `isFavourite`, are explicitly excluded in `NON_EDITABLE_PERSON_FIELDS` and must be preserved when editing. `PersonFieldTest` also checks that tags are the only registered field that `edit` does not accept.
+
+#### Design considerations
+
+**Aspect: how tags of an existing contact are changed**
+
+* **Alternative 1 (current choice):** only with `toggle`; `edit` does not accept `/tag`.
+  * Pros: there is one way to change tags, so the two commands cannot disagree about the 5-tag limit or about whether `/tag` adds or replaces. It also removes the risk that `edit 1 /tag` silently wipes every tag.
+  * Cons: replacing all tags takes a `toggle` that names every tag to remove, and clearing all tags needs the contact's current tags to be typed out.
+* **Alternative 2:** keep `/tag` in `edit` as a replace-all, alongside `toggle`.
+  * Pros: one command can set an exact tag list.
+  * Cons: two commands change the same field with opposite meanings, which is easy to mix up.
 
 ### Note field
 
@@ -1163,8 +1175,8 @@ Repeated marking | `fav 1` | Message starts with `Contact is already a favourite
 Removing from favourites | `unfav 2` | Test Three disappears from this view; Test One remains as #1. Test Three still exists in the address book.
 Current displayed index | Repeat `unfav 2` | Error: `The person index provided is invalid.`. No contact is changed.
 Ignoring previous filters | `find /phone 91234568`, then `list fav` | Test One is shown even though the previous search displayed only Test Two.
-Replacing and clearing tags | `find /phone 91234567`, `edit 1 /tag Staff`, `find /phone 91234567`, `edit 1 /tag`, then `list fav` | Test One stays a favourite, with its room and note intact. Its tags are cleared. Search again before each edit because editing restores the full list.
-Saving and restarting | Close and reopen the app, then `list fav` | Only Test One is a favourite. Its room, note and cleared tags remain as saved.
+Changing tags | `find /phone 91234567`, `toggle 1 /tag Staff`, `find /phone 91234567`, `toggle 1 /tag Staff`, then `list fav` | Test One stays a favourite, with its room and note intact. The first toggle adds `Staff` and the second removes it again. Search again before each toggle because toggling restores the active list.
+Saving and restarting | Close and reopen the app, then `list fav` | Only Test One is a favourite. Its room, note and tags remain as saved.
 Repeated removal | `find /phone 91234567`, then `unfav 1` twice | The first command removes the badge. The second message starts with `Contact is not a favourite:`. Test One's other details remain intact.
 No favourites | `list fav`, then `list` | The favourite view is empty with `No favourite contacts found.`. `list` restores all three contacts.
 Invalid formats | `fav`, `fav 0`, `fav -1`, `fav 2147483648`, `unfav 1 extra` | Invalid command format and the respective usage message; data and the displayed list stay unchanged.
@@ -1198,7 +1210,8 @@ Use a disposable address book with just `Amy Bee`, created using
 | `emergency 1 /name Bob Choo` | Usage error; existing details remain unchanged. |
 | `emergency 2 /name Bob Choo /phone 91234567` | Invalid-index error; no contact is changed. |
 | `emergency 1 /name Bob Choo /phone 91234567 /phone 87654321` | Duplicate-prefix error; existing details remain unchanged. |
-| `edit 1 /note Changed note /room B-204 /tag` | Note and room change, tags are cleared, and Alex's emergency details remain. |
+| `edit 1 /note Changed note /room B-204` | Note and room change, tags are unchanged, and Alex's emergency details remain. |
+| `edit 1 /tag Staff` | Invalid-command-format error showing the `edit` usage, which has no `/tag`; nothing changes. |
 | `edit 1 /note` | The note is cleared; emergency details remain. |
 | `list emerg`, then `list` | The general emergency list is empty; `list` restores Amy with her emergency details intact. |
 | Close and reopen the app | Amy's replacement emergency details and room are still present. |

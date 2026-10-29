@@ -55,7 +55,7 @@ the [command recall manual tests](DeveloperGuide.md#recalling-previous-commands)
 The favourite feature is covered at these levels:
 
 * `PersonTest` and `EditCommandTest`: default status, copies, equality, and preservation when editing fields
-  or replacing and clearing tags.
+  and toggling tags.
 * `FavouriteCommandsTest` and `ListFavouriteCommandTest`: displayed indices, repeated commands,
   preservation of details and filters, stored result order, and removal from the favourite view.
 * `FavouriteCommandParsersTest`, `ListCommandParserTest` and `AddressBookParserTest`: supported syntax,
