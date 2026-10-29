@@ -11,6 +11,30 @@ import org.junit.jupiter.api.Test;
 
 public class StringUtilTest {
 
+    @Test
+    public void isBlank_nullGiven_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> StringUtil.isBlank(null));
+    }
+
+    @Test
+    public void isBlank_whitespaceOnly_returnsTrue() {
+        assertTrue(StringUtil.isBlank(""));
+        assertTrue(StringUtil.isBlank(" \t\r\n"));
+        assertTrue(StringUtil.isBlank("\u2003"));
+        assertTrue(StringUtil.isBlank("\u00A0"));
+        assertTrue(StringUtil.isBlank("\u2007"));
+        assertTrue(StringUtil.isBlank("\u202F"));
+        assertTrue(StringUtil.isBlank(" \t\u00A0\u2007\u202F\u2003 "));
+    }
+
+    @Test
+    public void isBlank_nonWhitespace_returnsFalse() {
+        assertFalse(StringUtil.isBlank("list"));
+        assertFalse(StringUtil.isBlank("\u00A0find /tag Resident\u202F"));
+        assertFalse(StringUtil.isBlank("\u200B"));
+        assertFalse(StringUtil.isBlank("\uD83D\uDE00"));
+    }
+
     //---------------- Tests for isNonZeroUnsignedInteger --------------------------------------
 
     @Test

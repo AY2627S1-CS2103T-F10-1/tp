@@ -6,6 +6,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
+import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -66,7 +67,7 @@ public class CommandBox extends UiPart<Region> {
     @FXML
     private void handleCommandEntered() {
         String commandText = commandTextField.getText();
-        if (commandText.isBlank()) {
+        if (StringUtil.isBlank(commandText)) {
             return;
         }
 

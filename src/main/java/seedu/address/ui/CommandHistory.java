@@ -5,6 +5,8 @@ import static java.util.Objects.requireNonNull;
 import java.util.ArrayList;
 import java.util.List;
 
+import seedu.address.commons.util.StringUtil;
+
 /**
  * Stores and browses the latest 100 non-blank command submissions for one application session.
  * Commands are kept as submitted, including repeated or invalid commands.
@@ -26,7 +28,7 @@ public class CommandHistory {
      */
     public void add(String commandText) {
         requireNonNull(commandText);
-        if (commandText.isBlank()) {
+        if (StringUtil.isBlank(commandText)) {
             return;
         }
 

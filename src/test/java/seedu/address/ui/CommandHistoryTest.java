@@ -30,6 +30,10 @@ public class CommandHistoryTest {
         history.add("   ");
         history.add("\t\r\n");
         history.add("\u2003");
+        history.add("\u00A0");
+        history.add("\u2007");
+        history.add("\u202F");
+        history.add(" \t\u00A0\u2007\u202F\u2003 ");
 
         assertEquals(List.of(), history.getCommands());
     }
@@ -39,8 +43,10 @@ public class CommandHistoryTest {
         history.add("  list  ");
         history.add("find /tag Resident");
         history.add("edit 1 /room B-204");
+        history.add("\u00A0find /tag Resident\u202F");
 
-        assertEquals(List.of("  list  ", "find /tag Resident", "edit 1 /room B-204"), history.getCommands());
+        assertEquals(List.of("  list  ", "find /tag Resident", "edit 1 /room B-204",
+                "\u00A0find /tag Resident\u202F"), history.getCommands());
     }
 
     @Test
@@ -82,6 +88,8 @@ public class CommandHistoryTest {
         submissions.forEach(history::add);
 
         history.add(" \t ");
+        history.add("\u00A0");
+        history.add("\u202F");
 
         assertEquals(submissions, history.getCommands());
     }
@@ -233,6 +241,8 @@ public class CommandHistoryTest {
         history.navigatePrevious("help");
 
         history.add(" \t ");
+        history.add("\u00A0");
+        history.add("\u202F");
 
         assertEquals("help", history.navigateNext("list"));
         assertEquals("draft", history.navigateNext("help"));
