@@ -307,6 +307,22 @@ Two Unicode details keep the stored form consistent with loading and comparing:
 * Any optional field given with no value, such as `/room` or `/note`, is reset to the value `add` uses when it is left out, which removes it. Required fields given with no value are rejected.
 * The contact's tags are copied from its current values and never overwritten, since `EditPersonDescriptor` is built only from the editable fields.
 
+The following sequence diagram shows how these classes work together for a successful `edit 1 /phone 91234567`, assuming the first displayed contact is active.
+
+<img src="images/EditSequenceDiagram.png" width="900" />
+
+1. **Parsing.** `EditCommandParser` creates an empty `EditPersonDescriptor` and asks it to `setIfGiven()` each field in `PersonField.editableValues()`. The descriptor delegates to its `PersonFieldValues`, which calls `PersonField#parseFrom()`. That returns an empty `Optional` for a field whose prefix was not given, so only `/phone` is stored. `EditCommandParser` checks that at least one field was edited and returns an `EditCommand` holding a copy of the descriptor.
+2. **Resolving the contact.** `EditCommand#execute()` takes the contact at the given index of `Model#getFilteredPersonList()`, which is the list the user sees.
+3. **Copying and applying.** `PersonFieldValues.of(personToEdit)` copies the contact's current name, phone, room, note and tags, and `putAll()` then overwrites only the values stored in the descriptor.
+4. **Preserving what is not editable.** The email, address, emergency contact and favourite status are not part of the field registry. `EditCommand` reads them from `personToEdit` and passes them to `PersonFieldValues#toPerson()`, which builds `editedPerson` as an active contact. Tags come from the copied values in step 3.
+5. **Replacing the contact.** `Model#setPerson()` replaces `personToEdit` with `editedPerson`, and `Model#updateFilteredPersonList()` then shows the active contacts again.
+
+The diagram omits the following:
+
+* **Errors:** an unknown prefix such as `/tag`, an invalid or missing index, a duplicate single-valued prefix, an invalid field value and an edit with no fields are rejected with a `ParseException`. An index beyond the displayed list, an archived contact, and a duplicate contact are rejected with a `CommandException` before `setPerson()` is called. The duplicate check calls `Model#hasPerson()` only when `isSamePerson()`, which compares names, is false, so it is skipped when the name is unchanged, as in this example.
+* **Earlier steps:** `LogicManager` calling `AddressBookParser`, which picks `EditCommandParser`, and `ParserUtil` splitting the index from the prefixed arguments.
+* **Saving:** `LogicManager` saves the address book through `Storage` after `execute()` returns.
+
 To add a new field supported by `add` and `edit`, add it to `Person`, add a constant to `PersonField` and list it in both `PersonField.values()` and `PersonField.editableValues()`, and add its `ParserUtil#parseXyz` method. `add` and `edit` then accept it without further changes. `PersonFieldTest` fails if such a field is not registered or has no sample value. Properties managed separately, such as `isFavourite`, are explicitly excluded in `NON_EDITABLE_PERSON_FIELDS` and must be preserved when editing. `PersonFieldTest` also checks that tags are the only registered field that `edit` does not accept.
 
 #### Design considerations

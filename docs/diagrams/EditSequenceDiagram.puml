@@ -1,0 +1,122 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+title Successful execution of edit 1 /phone 91234567
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as LogicManager LOGIC_COLOR
+participant ":EditCommandParser" as EditCommandParser LOGIC_COLOR
+participant "d:EditPersonDescriptor" as EditPersonDescriptor LOGIC_COLOR
+participant "phone:PersonField" as PersonField LOGIC_COLOR
+participant "e:EditCommand" as EditCommand LOGIC_COLOR
+participant "v:PersonFieldValues" as PersonFieldValues LOGIC_COLOR
+end box
+
+box Model MODEL_COLOR_T1
+participant "m:Model" as Model MODEL_COLOR
+participant "personToEdit:Person" as OldPerson MODEL_COLOR
+participant "editedPerson:Person" as NewPerson MODEL_COLOR
+end box
+
+note over EditCommandParser, PersonField
+  The first displayed contact exists and is active.
+  The index and the arguments after it have already
+  been split by AddressBookParser and ParserUtil.
+end note
+
+== Parsing ==
+
+LogicManager -> EditCommandParser : parse("1 /phone 91234567")
+activate EditCommandParser
+
+create EditPersonDescriptor
+EditCommandParser -> EditPersonDescriptor
+activate EditPersonDescriptor
+EditPersonDescriptor --> EditCommandParser
+deactivate EditPersonDescriptor
+
+loop for each field in PersonField.editableValues()
+    EditCommandParser -> EditPersonDescriptor : setIfGiven(field, argMultimap)
+    activate EditPersonDescriptor
+
+    note right of EditPersonDescriptor
+      Only /phone is given. The other fields
+      parse to an empty Optional and set nothing.
+      The loop is shown once, for phone.
+    end note
+
+    EditPersonDescriptor -> PersonField : parseFrom(argMultimap, true)
+    activate PersonField
+    PersonField --> EditPersonDescriptor : Optional<Phone>
+    deactivate PersonField
+
+    EditPersonDescriptor -> EditPersonDescriptor : values.set(phone, Phone)
+    EditPersonDescriptor --> EditCommandParser
+    deactivate EditPersonDescriptor
+end
+
+EditCommandParser -> EditPersonDescriptor : isAnyFieldEdited()
+EditPersonDescriptor --> EditCommandParser : true
+
+create EditCommand
+EditCommandParser -> EditCommand : EditCommand(index, d)
+activate EditCommand
+EditCommand --> EditCommandParser : e
+deactivate EditCommand
+
+EditCommandParser --> LogicManager : e
+deactivate EditCommandParser
+
+== Execution ==
+
+LogicManager -> EditCommand : execute(m)
+activate EditCommand
+
+EditCommand -> Model : getFilteredPersonList()
+Model --> EditCommand : displayed
+
+note right of EditCommand
+  personToEdit = displayed.get(0)
+end note
+
+EditCommand -> PersonFieldValues ** : PersonFieldValues.of(personToEdit)
+activate PersonFieldValues
+PersonFieldValues -> OldPerson : getFrom() for name, phone,\nroom, tags and note
+OldPerson --> PersonFieldValues
+PersonFieldValues --> EditCommand : v
+deactivate PersonFieldValues
+
+EditCommand -> PersonFieldValues : putAll(d.values)
+activate PersonFieldValues
+note right of PersonFieldValues
+  Overwrites only the phone.
+  Name, room, note and tags keep
+  the values copied from personToEdit.
+end note
+PersonFieldValues --> EditCommand
+deactivate PersonFieldValues
+
+EditCommand -> PersonFieldValues : toPerson(email, address,\nemergencyContact, isFavourite)
+activate PersonFieldValues
+
+note right of PersonFieldValues
+  email, address, emergency contact and
+  favourite status are not fields, so
+  EditCommand reads them from personToEdit
+  and passes them in.
+end note
+
+PersonFieldValues -> NewPerson ** : new Person(...)
+PersonFieldValues --> EditCommand : editedPerson
+deactivate PersonFieldValues
+
+EditCommand -> Model : setPerson(personToEdit, editedPerson)
+Model --> EditCommand
+
+EditCommand -> Model : updateFilteredPersonList(\nPREDICATE_SHOW_ACTIVE_PERSONS)
+Model --> EditCommand
+
+EditCommand --> LogicManager : CommandResult
+deactivate EditCommand
+@enduml
