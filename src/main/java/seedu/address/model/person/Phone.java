@@ -13,6 +13,7 @@ public class Phone {
     public static final String MESSAGE_EMPTY = "Phone number cannot be empty.";
     public static final String MESSAGE_TOO_LONG = "Phone number too long, please shorten it and try again.";
     public static final String MESSAGE_INVALID_CHARACTERS = "Phone number contains invalid characters.";
+    public static final String MESSAGE_NO_DIGITS = "Phone number must contain at least one digit.";
     public static final String MESSAGE_CONSTRAINTS = "Phone number must be " + MAX_LENGTH
             + " characters or fewer and contain only digits, spaces, '+', '-', or parentheses";
     public static final String VALIDATION_REGEX = "[0-9+()\\- ]{1," + MAX_LENGTH + "}";
