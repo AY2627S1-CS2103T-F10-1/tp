@@ -344,6 +344,7 @@ A word in a note cannot start with `/`, because the parser treats such a word as
 `emergency INDEX /name NAME /phone PHONE [/relation RELATION]` assigns one independent, immutable
 `EmergencyContact` to a person in the displayed list. Name and phone are required; relation is optional.
 Each assignment atomically replaces any existing emergency details; omitted relation defaults to empty.
+The success message and contact card reuse `EmergencyContact#toString()` to display the assigned details consistently.
 Emergency details are independent of tags and of the general `list emerg` feature. Clearing is not supported yet.
 
 `EmergencyCommandParser` and `EditCommandParser` share `ParserUtil#parseIndexedArguments()` for whitespace,

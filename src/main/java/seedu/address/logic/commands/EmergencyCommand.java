@@ -17,7 +17,7 @@ public class EmergencyCommand extends Command {
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Sets or replaces a person's emergency contact.\n"
             + "Parameters: INDEX /name NAME /phone PHONE [/relation RELATION]\n"
             + "Example: emergency 1 /name Bob Choo /phone 9123 4567 /relation Brother";
-    public static final String MESSAGE_SUCCESS = "Emergency contact set for %1$s.";
+    public static final String MESSAGE_SUCCESS = "Emergency contact set for %1$s.\nemergency: %2$s";
 
     private final Index index;
     private final EmergencyContact emergencyContact;
@@ -38,7 +38,7 @@ public class EmergencyCommand extends Command {
         }
         Person person = persons.get(index.getZeroBased());
         model.setPerson(person, person.withEmergencyContact(emergencyContact));
-        return new CommandResult(String.format(MESSAGE_SUCCESS, person.getName()));
+        return new CommandResult(String.format(MESSAGE_SUCCESS, person.getName(), emergencyContact));
     }
 
     @Override

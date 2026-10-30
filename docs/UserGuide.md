@@ -318,6 +318,7 @@ Format: `emergency INDEX /name NAME /phone PHONE [/relation RELATION]`
 * Emergency details are a separate person field. Toggling tags does not remove them.
   Clearing emergency details without providing a replacement is not supported yet.
 * Details appear on the person's card and are saved automatically. Ordinary edits preserve them.
+* The success message identifies the person and shows the new details as `emergency: NAME(RELATION) PHONE`; the relation and parentheses are omitted when no relation is given.
 * The same emergency details may be assigned to several people independently.
 * This does not change `list emerg`, which lists the app's tagged emergency resources.
 
