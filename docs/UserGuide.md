@@ -310,6 +310,7 @@ Stores emergency details for a person without adding another entry to the contac
 Format: `emergency INDEX /name NAME /phone PHONE [/relation RELATION]`
 
 * `INDEX` identifies the person in the currently displayed list, as with `edit`.
+* Archived contacts must be unarchived before assigning or replacing emergency details. Otherwise, the command reports `Cannot change emergency details of an archived contact. Unarchive it first.` and leaves the contact and current view unchanged.
 * Name and phone are required and follow the same rules as `add`. Fields may appear in any order.
 * Relation is optional free text, up to 50 characters. Extra whitespace is collapsed.
 * Each prefix may appear only once. Invalid input leaves the contact unchanged.

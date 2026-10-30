@@ -18,6 +18,8 @@ public class EmergencyCommand extends Command {
             + "Parameters: INDEX /name NAME /phone PHONE [/relation RELATION]\n"
             + "Example: emergency 1 /name Bob Choo /phone 9123 4567 /relation Brother";
     public static final String MESSAGE_SUCCESS = "Emergency contact set for %1$s.";
+    public static final String MESSAGE_ARCHIVED_PERSON =
+            "Cannot change emergency details of an archived contact. Unarchive it first.";
 
     private final Index index;
     private final EmergencyContact emergencyContact;
@@ -37,6 +39,9 @@ public class EmergencyCommand extends Command {
             throw new CommandException(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
         }
         Person person = persons.get(index.getZeroBased());
+        if (person.isArchived()) {
+            throw new CommandException(MESSAGE_ARCHIVED_PERSON);
+        }
         model.setPerson(person, person.withEmergencyContact(emergencyContact));
         return new CommandResult(String.format(MESSAGE_SUCCESS, person.getName()));
     }

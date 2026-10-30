@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import seedu.address.logic.commands.EmergencyCommand;
 import seedu.address.logic.commands.FavCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.AddressBook;
@@ -97,6 +98,35 @@ public class FavouriteArchiveIntegrationTest {
                 assertEquals(List.of(OTHER, archived), model.getAddressBook().getPersonList());
                 assertEquals(savedBefore, Files.readString(storage.getAddressBookFilePath()));
             }
+        }
+    }
+
+    @Test
+    public void emergency_archivedContact_rejectedUntilRestored() throws Exception {
+        EmergencyContact replacement = new EmergencyContact(new Name("Bob Choo"), new Phone("87654321"), "Brother");
+        for (Person original : List.of(AMY, FAVOURITE)) {
+            Person archived = original.withArchive(true);
+            AddressBook book = new AddressBook();
+            book.addPerson(OTHER);
+            book.addPerson(archived);
+            storage.saveAddressBook(book);
+            restart();
+            logic.execute("list archived");
+            String savedBefore = Files.readString(storage.getAddressBookFilePath());
+
+            assertThrows(CommandException.class, EmergencyCommand.MESSAGE_ARCHIVED_PERSON, () ->
+                    logic.execute("emergency 1 /name Bob Choo /phone 87654321 /relation Brother"));
+            assertEquals(List.of(archived), logic.getFilteredPersonList());
+            assertEquals(List.of(OTHER, archived), model.getAddressBook().getPersonList());
+            assertEquals(savedBefore, Files.readString(storage.getAddressBookFilePath()));
+
+            logic.execute("unarchive 1");
+            logic.execute("find /name " + original.getName().fullName);
+            logic.execute("emergency 1 /name Bob Choo /phone 87654321 /relation Brother");
+            Person expected = original.withEmergencyContact(replacement);
+            assertEquals(List.of(OTHER, expected), storage.readAddressBook().orElseThrow().getPersonList());
+            restart();
+            assertEquals(List.of(OTHER, expected), model.getAddressBook().getPersonList());
         }
     }
 
