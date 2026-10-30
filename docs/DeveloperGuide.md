@@ -309,7 +309,7 @@ Two Unicode details keep the stored form consistent with loading and comparing:
 
 The following sequence diagram shows a successful `edit 1 /phone 91234567`, assuming the first displayed contact is active.
 
-<img src="images/EditSequenceDiagram.png" width="900" />
+<img src="images/EditSequenceDiagram.png" width="650" />
 
 1. `EditCommandParser` asks an empty `EditPersonDescriptor` to `setIfGiven()` each field in `PersonField.editableValues()`. Only `/phone` is given, so `PersonField#parseFrom()` returns a value for it alone.
 2. `EditCommand` takes the contact at the index from `Model#getFilteredPersonList()`.
