@@ -1,7 +1,6 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
-import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PERSONS;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -80,7 +79,6 @@ public class ToggleCommand extends Command {
                 personToEdit.getEmergencyContact(), personToEdit.isFavourite());
 
         model.setPerson(personToEdit, editedPerson);
-        model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS);
         // report the stored form of each tag, which is the form shown on the contact card
         List<Tag> removedTags = currentTags.stream().filter(tagsToToggle::contains).toList();
         List<Tag> addedTags = toggledTags.stream().filter(tag -> !currentTags.contains(tag)).toList();
