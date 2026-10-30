@@ -29,6 +29,24 @@ public class EmergencyCommandParserTest {
     }
 
     @Test
+    public void parse_clear_returnsRemovalCommand() {
+        assertParseSuccess(parser, "1 /clear", new EmergencyCommand(INDEX_FIRST_PERSON));
+        assertParseSuccess(parser, "  1 \t /clear  ", new EmergencyCommand(INDEX_FIRST_PERSON));
+    }
+
+    @Test
+    public void parse_invalidClear_failure() {
+        String usage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, EmergencyCommand.MESSAGE_USAGE);
+        for (String input : new String[]{"/clear", "0 /clear", "-1 /clear", "2147483648 /clear",
+            "1 /clear extra", "1 /CLEAR", "1 /clear /name Bob", "1 /phone 91234567 /clear",
+            "1 /clear /relation", "1 /name Bob /phone 91234567 /clear"}) {
+            assertParseFailure(parser, input, usage);
+        }
+        Prefix clear = new Prefix("/clear", true);
+        assertParseFailure(parser, "1 /clear /clear", Messages.getErrorMessageForDuplicatePrefixes(clear));
+    }
+
+    @Test
     public void parse_invalidFormat_failure() {
         String usage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, EmergencyCommand.MESSAGE_USAGE);
         for (String input : new String[]{"", "0 /name Bob /phone 91234567", "1 /name Bob", "1 /phone 91234567",

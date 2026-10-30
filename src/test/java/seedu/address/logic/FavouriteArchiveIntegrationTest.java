@@ -114,11 +114,14 @@ public class FavouriteArchiveIntegrationTest {
             logic.execute("list archived");
             String savedBefore = Files.readString(storage.getAddressBookFilePath());
 
-            assertThrows(CommandException.class, EmergencyCommand.MESSAGE_ARCHIVED_PERSON, () ->
-                    logic.execute("emergency 1 /name Bob Choo /phone 87654321 /relation Brother"));
-            assertEquals(List.of(archived), logic.getFilteredPersonList());
-            assertEquals(List.of(OTHER, archived), model.getAddressBook().getPersonList());
-            assertEquals(savedBefore, Files.readString(storage.getAddressBookFilePath()));
+            for (String command : List.of("emergency 1 /name Bob Choo /phone 87654321 /relation Brother",
+                    "emergency 1 /clear")) {
+                assertThrows(CommandException.class, EmergencyCommand.MESSAGE_ARCHIVED_PERSON, () ->
+                        logic.execute(command));
+                assertEquals(List.of(archived), logic.getFilteredPersonList());
+                assertEquals(List.of(OTHER, archived), model.getAddressBook().getPersonList());
+                assertEquals(savedBefore, Files.readString(storage.getAddressBookFilePath()));
+            }
 
             logic.execute("unarchive 1");
             logic.execute("find /name " + original.getName().fullName);
@@ -128,6 +131,26 @@ public class FavouriteArchiveIntegrationTest {
             restart();
             assertEquals(List.of(OTHER, expected), model.getAddressBook().getPersonList());
         }
+    }
+
+    @Test
+    public void clearEmergency_preservesDetailsAndFilterAndSurvivesRestart() throws Exception {
+        Person target = new PersonBuilder(FAVOURITE).withTags("Emergency", "Resident").build();
+        model.setPerson(FAVOURITE, target);
+        logic.execute("find /name " + FAVOURITE.getName().fullName);
+        logic.execute("emergency 1 /clear");
+        Person expected = target.withoutEmergencyContact();
+        assertEquals(List.of(expected), logic.getFilteredPersonList());
+        assertEquals(List.of(expected, OTHER), storage.readAddressBook().orElseThrow().getPersonList());
+        logic.execute("list emerg");
+        assertEquals(List.of(expected), logic.getFilteredPersonList());
+
+        restart();
+        assertEquals(List.of(expected, OTHER), model.getAddressBook().getPersonList());
+        logic.execute("find /name " + FAVOURITE.getName().fullName);
+        logic.execute("emergency 1 /clear");
+        assertEquals(List.of(expected), logic.getFilteredPersonList());
+        assertEquals(List.of(expected, OTHER), storage.readAddressBook().orElseThrow().getPersonList());
     }
 
     @Test

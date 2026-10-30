@@ -344,9 +344,12 @@ A word in a note cannot start with `/`, because the parser treats such a word as
 `emergency INDEX /name NAME /phone PHONE [/relation RELATION]` assigns one independent, immutable
 `EmergencyContact` to a person in the displayed list. Name and phone are required; relation is optional.
 Each assignment atomically replaces any existing emergency details; omitted relation defaults to empty.
+`emergency INDEX /clear` removes those details. The parser accepts `/clear` only on its own, with no value.
+`EmergencyCommand` uses an empty `Optional` for removal and calls `Person#withoutEmergencyContact()` to preserve
+all other fields. The filter is unchanged and normal JSON saving persists the empty emergency field.
 `EmergencyCommand` rejects archived contacts before replacing any details. Restore the contact with `unarchive`
 before assigning an emergency contact; rejection preserves both stored data and the current view.
-Emergency details are independent of tags and of the general `list emerg` feature. Clearing is not supported yet.
+Emergency details are independent of tags and of the general `list emerg` feature, including when cleared.
 
 `EmergencyCommandParser` and `EditCommandParser` share `ParserUtil#parseIndexedArguments()` for whitespace,
 prefix and index handling. Emergency name and phone reuse `ParserUtil#parseName()` and `parsePhone()`.

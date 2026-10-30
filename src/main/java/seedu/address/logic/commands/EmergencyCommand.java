@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.List;
+import java.util.Optional;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.Messages;
@@ -11,24 +12,32 @@ import seedu.address.model.Model;
 import seedu.address.model.person.EmergencyContact;
 import seedu.address.model.person.Person;
 
-/** Sets or replaces emergency details for a person in the displayed list. */
+/** Sets, replaces or clears emergency details for a person in the displayed list. */
 public class EmergencyCommand extends Command {
     public static final String COMMAND_WORD = "emergency";
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Sets or replaces a person's emergency contact.\n"
-            + "Parameters: INDEX /name NAME /phone PHONE [/relation RELATION]\n"
-            + "Example: emergency 1 /name Bob Choo /phone 9123 4567 /relation Brother";
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Sets, replaces or clears emergency details.\n"
+            + "Parameters: INDEX /name NAME /phone PHONE [/relation RELATION] or INDEX /clear\n"
+            + "Examples: emergency 1 /name Bob Choo /phone 9123 4567 /relation Brother; emergency 1 /clear";
     public static final String MESSAGE_SUCCESS = "Emergency contact set for %1$s.";
+    public static final String MESSAGE_CLEAR_SUCCESS = "Emergency contact cleared for %1$s.";
     public static final String MESSAGE_ARCHIVED_PERSON =
             "Cannot change emergency details of an archived contact. Unarchive it first.";
 
     private final Index index;
-    private final EmergencyContact emergencyContact;
+    private final Optional<EmergencyContact> emergencyContact;
 
     /** Creates an assignment for the given index in the displayed list. */
     public EmergencyCommand(Index index, EmergencyContact emergencyContact) {
         requireAllNonNull(index, emergencyContact);
         this.index = index;
-        this.emergencyContact = emergencyContact;
+        this.emergencyContact = Optional.of(emergencyContact);
+    }
+
+    /** Creates a removal of emergency details for the given displayed index. */
+    public EmergencyCommand(Index index) {
+        requireAllNonNull(index);
+        this.index = index;
+        this.emergencyContact = Optional.empty();
     }
 
     @Override
@@ -42,7 +51,11 @@ public class EmergencyCommand extends Command {
         if (person.isArchived()) {
             throw new CommandException(MESSAGE_ARCHIVED_PERSON);
         }
-        model.setPerson(person, person.withEmergencyContact(emergencyContact));
+        if (emergencyContact.isEmpty()) {
+            model.setPerson(person, person.withoutEmergencyContact());
+            return new CommandResult(String.format(MESSAGE_CLEAR_SUCCESS, person.getName()));
+        }
+        model.setPerson(person, person.withEmergencyContact(emergencyContact.orElseThrow()));
         return new CommandResult(String.format(MESSAGE_SUCCESS, person.getName()));
     }
 
