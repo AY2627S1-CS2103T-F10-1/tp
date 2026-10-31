@@ -315,7 +315,7 @@ The following sequence diagram shows a successful `edit 1 /phone 91234567`, assu
 2. `EditCommand` takes the contact at the index from `Model#getFilteredPersonList()`.
 3. `PersonFieldValues.of()` copies the contact's name, phone, room, note and tags, and `putAll()` overwrites only the phone.
 4. The email, address, emergency contact and favourite status are not fields, so `EditCommand` passes them from the original contact to `toPerson()`.
-5. `Model#setPerson()` replaces the contact, and the active list is shown again.
+5. `Model#setPerson()` replaces the contact. The current filter and sorting stay applied, so the edited contact may disappear from the list or move, for example when its new name no longer matches the `find` that is showing.
 
 The diagram omits error paths (invalid input, an out-of-range index, an archived contact and a duplicate contact), the `AddressBookParser` routing, and saving by `LogicManager`.
 
@@ -391,7 +391,7 @@ the same ordering. Sorting does not modify the backing address book or its saved
 1. Rejects an index outside `Model#getFilteredPersonList()` with `Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX`, and an archived contact with `ToggleCommand.MESSAGE_ARCHIVED_PERSON`, as `edit` does.
 2. Builds the new tag set: the contact's tags that are not being toggled, in their existing order, followed by the toggled tags the contact does not have, in the order typed. `Tag#equals()` ignores case and extra spaces, so `/tag FRIENDS` removes `Friends`.
 3. Rejects the command with `Person.MESSAGE_TAG_LIMIT_REACHED` if the new set has more than `Person.MAX_TAGS` tags. The limit applies to the result, so removing one tag and adding another is allowed at 5 tags, and so is removing all 5 and adding 1 (6 tags typed). `emergency` is a normal tag and counts towards the limit.
-4. Copies the contact's other values with `PersonFieldValues`, replaces the tags, and calls `Model#setPerson()`. The contact's emergency details and favourite status are passed to `PersonFieldValues#toPerson()` so they are kept, as in `edit`. Like `edit`, it then shows the active contact list again.
+4. Copies the contact's other values with `PersonFieldValues`, replaces the tags, and calls `Model#setPerson()`. The contact's emergency details and favourite status are passed to `PersonFieldValues#toPerson()` so they are kept, as in `edit`. Like `edit`, it keeps the current filter and sorting applied.
 
 The name does not change, so `toggle` never creates a duplicate contact and does not call `Model#hasPerson()`.
 

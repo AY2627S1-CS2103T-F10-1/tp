@@ -51,7 +51,6 @@ EditCommand -> PersonFieldValues : toPerson(email, address,\nemergency, isFavour
 PersonFieldValues --> EditCommand : editedPerson
 
 EditCommand -> Model : setPerson(personToEdit, editedPerson)
-EditCommand -> Model : updateFilteredPersonList(active)
 
 [<-- EditCommand : CommandResult
 deactivate EditCommand
