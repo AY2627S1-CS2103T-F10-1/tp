@@ -21,6 +21,10 @@ Class Phone
 Class Room
 Class Note
 Class Tag
+Class EmergencyContact {
+  relation: String
+}
+show EmergencyContact fields
 
 Class I #FFFFFF
 }
@@ -46,6 +50,9 @@ Person *--> Address
 Person *--> Room
 Person *--> Note
 Person *--> "*" Tag
+Person --> "0..1" EmergencyContact : emergencyContact
+EmergencyContact --> "1" Name
+EmergencyContact --> "1" Phone
 
 Person -[hidden]up--> I
 UniquePersonList -[hidden]right-> I

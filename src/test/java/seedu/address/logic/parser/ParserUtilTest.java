@@ -150,6 +150,18 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parsePhone_noDigits_throwsParseException() {
+        for (String phone : new String[]{"++++", "---", "( )", "+()-"}) {
+            assertThrows(ParseException.class, Phone.MESSAGE_NO_DIGITS, () -> ParserUtil.parsePhone(phone));
+        }
+    }
+
+    @Test
+    public void parsePhone_oneDigitWithFormatting_returnsPhone() throws Exception {
+        assertEquals(new Phone("+(1)-"), ParserUtil.parsePhone("+(1)-"));
+    }
+
+    @Test
     public void parsePhone_lengthBoundary() throws Exception {
         String longestPhone = "1".repeat(Phone.MAX_LENGTH);
         assertEquals(new Phone(longestPhone), ParserUtil.parsePhone(longestPhone));

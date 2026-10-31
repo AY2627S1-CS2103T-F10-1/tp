@@ -18,6 +18,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
+import seedu.address.logic.commands.EmergencyClearCommand;
 import seedu.address.logic.commands.FavCommand;
 import seedu.address.logic.commands.UnfavCommand;
 import seedu.address.model.Model;
@@ -102,6 +103,29 @@ public class PersonCardTest {
             assertFalse(label(firstCard(root), "favourite").isVisible());
             assertFalse(label(firstCard(root), "favourite").isManaged());
             assertEquals(List.of(CONTACT), model.getAddressBook().getPersonList());
+        });
+    }
+
+    @Test
+    public void listPanel_clearEmergency_hidesDetailsAndPreservesContact() throws Exception {
+        runOnFxThread(() -> {
+            Model model = new ModelManager();
+            Person original = CONTACT.withFavourite(true);
+            model.addPerson(original);
+            PersonListPanel panel = new PersonListPanel(model.getFilteredPersonList());
+            Region root = panel.getRoot();
+            layout(root);
+            assertTrue(label(firstCard(root), "emergencyContact").isVisible());
+
+            assertDoesNotThrow(() -> new EmergencyClearCommand(INDEX_FIRST_PERSON).execute(model));
+            root.layout();
+
+            assertFalse(label(firstCard(root), "emergencyContact").isVisible());
+            assertFalse(label(firstCard(root), "emergencyContact").isManaged());
+            assertTrue(label(firstCard(root), "favourite").isVisible());
+            assertEquals("Room: B-204", label(firstCard(root), "room").getText());
+            assertEquals("Note: Call after 6 pm", label(firstCard(root), "note").getText());
+            assertEquals(List.of(original.withoutEmergencyContact()), model.getAddressBook().getPersonList());
         });
     }
 

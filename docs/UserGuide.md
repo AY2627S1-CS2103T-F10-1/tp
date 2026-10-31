@@ -130,7 +130,7 @@ Adds a contact with a required name and phone number, and optional room, tags an
 Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
 
 * Name is required and can contain up to 100 characters. Existing name character rules apply.
-* Phone is required and can contain up to 20 characters: digits, spaces, `+`, hyphens and parentheses.
+* Phone is required and can contain up to 20 characters: digits, spaces, `+`, hyphens and parentheses. It must contain at least one digit; formatting characters alone are rejected with `Phone number must contain at least one digit.`
 * Room is optional for any contact, regardless of tags. It can contain up to 20 characters:
   letters, digits, spaces and hyphens.
 * Note is optional free text, such as an allergy or how the contact prefers to be reached. It can contain
@@ -305,23 +305,28 @@ Examples:
 
 ### Assigning an emergency contact: `emergency`
 
-Stores emergency details for a person without adding another entry to the contact list.
+Stores or clears emergency details for a person without adding another entry to the contact list.
 
-Format: `emergency INDEX /name NAME /phone PHONE [/relation RELATION]`
+Format: `emergency INDEX /name NAME /phone PHONE [/relation RELATION]` or `emergency INDEX /clear`
 
 * `INDEX` identifies the person in the currently displayed list, as with `edit`.
-* Name and phone are required and follow the same rules as `add`. Fields may appear in any order.
+* Archived contacts must be unarchived before assigning, replacing or clearing emergency details. Otherwise, the command reports `Cannot change emergency details of an archived contact. Unarchive it first.` and leaves the contact and current view unchanged.
+* When assigning or replacing details, name and phone are required and follow the same rules as `add`. Fields may appear in any order.
 * Relation is optional free text, up to 50 characters. Extra whitespace is collapsed.
 * Each prefix may appear only once. Invalid input leaves the contact unchanged.
 * A person can have one emergency contact. Running the command again replaces all previous emergency details.
   Name and phone are required each time; omitting relation replaces the previous relation with an empty value.
 * Emergency details are a separate person field. Toggling tags does not remove them.
-  Clearing emergency details without providing a replacement is not supported yet.
+* Use `/clear` alone after the index to remove the emergency details. It cannot be combined with `/name`, `/phone` or `/relation`, repeated, or followed by a value. If no emergency details are assigned, the command reports `No emergency contact assigned to NAME. No changes made.` and leaves the contact unchanged.
+* Clearing preserves every other contact detail, including the general emergency tag, and keeps the current view.
 * Details appear on the person's card and are saved automatically. Ordinary edits preserve them.
+* The success message identifies the person and shows the new details as `emergency: NAME(RELATION) PHONE`; the relation and parentheses are omitted when no relation is given.
 * The same emergency details may be assigned to several people independently.
 * This does not change `list emerg`, which lists the app's tagged emergency resources.
 
 Example: `emergency 1 /name Bob Choo /phone 9123 4567 /relation Brother`
+
+To remove those details: `emergency 1 /clear`. The message is `Emergency contact cleared for NAME.`
 
 ### Toggling tags: `toggle`
 
@@ -558,6 +563,6 @@ Action | Format, Examples
 **Mark favourite** | `fav INDEX`<br> e.g., `fav 2`
 **Remove favourite status** | `unfav INDEX`<br> e.g., `unfav 1`
 **List favourite contacts** | `list fav`
-**Assign emergency contact** | `emergency INDEX /name NAME /phone PHONE [/relation RELATION]`
+**Assign or clear emergency contact** | `emergency INDEX /name NAME /phone PHONE [/relation RELATION]` or `emergency INDEX /clear`
 **Help** | `help`
 **Recall commands** | ↑ for older commands; ↓ for newer commands or the saved unfinished input. Press Enter to execute. The command box must be focused.

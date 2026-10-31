@@ -18,8 +18,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import seedu.address.logic.commands.EmergencyCommand;
 import seedu.address.logic.commands.FavCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
@@ -101,6 +103,116 @@ public class FavouriteArchiveIntegrationTest {
     }
 
     @Test
+    public void emergency_archivedContact_rejectedUntilRestored() throws Exception {
+        EmergencyContact replacement = new EmergencyContact(new Name("Bob Choo"), new Phone("87654321"), "Brother");
+        for (Person original : List.of(AMY, FAVOURITE)) {
+            Person archived = original.withArchive(true);
+            AddressBook book = new AddressBook();
+            book.addPerson(OTHER);
+            book.addPerson(archived);
+            storage.saveAddressBook(book);
+            restart();
+            logic.execute("list archived");
+            String savedBefore = Files.readString(storage.getAddressBookFilePath());
+
+            for (String command : List.of("emergency 1 /name Bob Choo /phone 87654321 /relation Brother",
+                    "emergency 1 /clear")) {
+                assertThrows(CommandException.class, EmergencyCommand.MESSAGE_ARCHIVED_PERSON, () ->
+                        logic.execute(command));
+                assertEquals(List.of(archived), logic.getFilteredPersonList());
+                assertEquals(List.of(OTHER, archived), model.getAddressBook().getPersonList());
+                assertEquals(savedBefore, Files.readString(storage.getAddressBookFilePath()));
+            }
+
+            logic.execute("unarchive 1");
+            logic.execute("find /name " + original.getName().fullName);
+            logic.execute("emergency 1 /name Bob Choo /phone 87654321 /relation Brother");
+            Person expected = original.withEmergencyContact(replacement);
+            assertEquals(List.of(OTHER, expected), storage.readAddressBook().orElseThrow().getPersonList());
+            restart();
+            assertEquals(List.of(OTHER, expected), model.getAddressBook().getPersonList());
+        }
+    }
+
+    @Test
+    public void clearEmergency_preservesDetailsAndFilterAndSurvivesRestart() throws Exception {
+        Person target = new PersonBuilder(FAVOURITE).withTags("Emergency", "Resident").build();
+        model.setPerson(FAVOURITE, target);
+        logic.execute("find /name " + FAVOURITE.getName().fullName);
+        logic.execute("emergency 1 /clear");
+        Person expected = target.withoutEmergencyContact();
+        assertEquals(List.of(expected), logic.getFilteredPersonList());
+        assertEquals(List.of(expected, OTHER), storage.readAddressBook().orElseThrow().getPersonList());
+        logic.execute("list emerg");
+        assertEquals(List.of(expected), logic.getFilteredPersonList());
+
+        restart();
+        assertEquals(List.of(expected, OTHER), model.getAddressBook().getPersonList());
+        logic.execute("find /name " + FAVOURITE.getName().fullName);
+        logic.execute("emergency 1 /clear");
+        assertEquals(List.of(expected), logic.getFilteredPersonList());
+        assertEquals(List.of(expected, OTHER), storage.readAddressBook().orElseThrow().getPersonList());
+    }
+
+    @Test
+    public void emergencyLifecycle_filteredAndSortedViews_preservesDetailsAcrossRestart() throws Exception {
+        Person original = new PersonBuilder(FAVOURITE).withTags("Emergency", "Resident").build()
+                .withoutEmergencyContact();
+        EmergencyContact contact = new EmergencyContact(new Name("Bob Choo"), new Phone("87654321"), "Brother");
+        EmergencyContact replacement = new EmergencyContact(new Name("Jane Tan"), new Phone("90000001"), "");
+        for (String view : List.of("find /room B-204", "list sorted")) {
+            AddressBook book = new AddressBook();
+            book.addPerson(OTHER);
+            book.addPerson(original);
+            storage.saveAddressBook(book);
+            restart();
+            logic.execute(view);
+
+            assertEquals("Emergency contact set for " + original.getName()
+                    + ".\nemergency: Bob Choo(Brother) 87654321", logic.execute(
+                            "emergency 1 /name Bob Choo /phone 87654321 /relation Brother").getFeedbackToUser());
+            assertEmergencyState(original.withEmergencyContact(contact), view);
+            String saved = Files.readString(storage.getAddressBookFilePath());
+            assertThrows(ParseException.class, Phone.MESSAGE_NO_DIGITS, () ->
+                    logic.execute("emergency 1 /name Bob Choo /phone +()-"));
+            assertEquals(saved, Files.readString(storage.getAddressBookFilePath()));
+            assertEmergencyState(original.withEmergencyContact(contact), view);
+
+            assertEquals("Emergency contact set for " + original.getName() + ".\nemergency: Jane Tan 90000001",
+                    logic.execute("emergency 1 /name Jane Tan /phone 90000001").getFeedbackToUser());
+            assertEmergencyState(original.withEmergencyContact(replacement), view);
+            assertEquals("Emergency contact cleared for " + original.getName() + ".",
+                    logic.execute("emergency 1 /clear").getFeedbackToUser());
+            assertEmergencyState(original, view);
+            saved = Files.readString(storage.getAddressBookFilePath());
+            assertEquals("No emergency contact assigned to " + original.getName() + ". No changes made.",
+                    logic.execute("emergency 1 /clear").getFeedbackToUser());
+            assertEquals(saved, Files.readString(storage.getAddressBookFilePath()));
+            assertEmergencyState(original, view);
+
+            logic.execute("emergency 1 /name Bob Choo /phone 87654321 /relation Brother");
+            logic.execute("archive 1");
+            Person archived = original.withEmergencyContact(contact).withArchive(true);
+            assertEquals(List.of(OTHER, archived), storage.readAddressBook().orElseThrow().getPersonList());
+            logic.execute("list archived");
+            saved = Files.readString(storage.getAddressBookFilePath());
+            for (String command : List.of("emergency 1 /clear", "emergency 1 /name Jane Tan /phone 90000001")) {
+                assertThrows(CommandException.class, EmergencyCommand.MESSAGE_ARCHIVED_PERSON, () ->
+                        logic.execute(command));
+                assertEquals(List.of(archived), logic.getFilteredPersonList());
+                assertEquals(saved, Files.readString(storage.getAddressBookFilePath()));
+            }
+            logic.execute("unarchive 1");
+            logic.execute(view);
+            logic.execute("emergency 1 /clear");
+            assertEmergencyState(original, view);
+            restart();
+            assertEquals(List.of(OTHER, original), logic.getFilteredPersonList());
+            assertEquals(List.of(OTHER, original), model.getAddressBook().getPersonList());
+        }
+    }
+
+    @Test
     public void changingFavouriteAndEmergencyAndEditing_preservesOtherDetailsAfterRestart() throws Exception {
         logic.execute("unfav 1");
         assertEquals(FAVOURITE.withFavourite(false), model.getAddressBook().getPersonList().getFirst());
@@ -157,6 +269,13 @@ public class FavouriteArchiveIntegrationTest {
                 assertFalse(restored.isFavourite());
             }
         }
+    }
+
+    private void assertEmergencyState(Person expected, String view) throws Exception {
+        assertEquals(List.of(OTHER, expected), model.getAddressBook().getPersonList());
+        assertEquals(List.of(OTHER, expected), storage.readAddressBook().orElseThrow().getPersonList());
+        assertEquals(view.equals("list sorted") ? List.of(expected, OTHER) : List.of(expected),
+                logic.getFilteredPersonList());
     }
 
     private void restart() throws Exception {

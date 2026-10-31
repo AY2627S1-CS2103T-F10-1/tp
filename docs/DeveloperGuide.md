@@ -344,7 +344,15 @@ A word in a note cannot start with `/`, because the parser treats such a word as
 `emergency INDEX /name NAME /phone PHONE [/relation RELATION]` assigns one independent, immutable
 `EmergencyContact` to a person in the displayed list. Name and phone are required; relation is optional.
 Each assignment atomically replaces any existing emergency details; omitted relation defaults to empty.
-Emergency details are independent of tags and of the general `list emerg` feature. Clearing is not supported yet.
+`emergency INDEX /clear` removes those details. The parser accepts `/clear` only on its own, with no value.
+If no emergency details are assigned, the command reports that no changes were made without replacing the person.
+`EmergencyCommandParser` creates an `EmergencyCommand` for assignment or an `EmergencyClearCommand` for removal.
+`EmergencyClearCommand` calls `Person#withoutEmergencyContact()` to preserve all other fields.
+The filter is unchanged and normal JSON saving persists the empty emergency field.
+Both commands reject archived contacts before changing any details. Restore the contact with `unarchive`
+before assigning an emergency contact; rejection preserves both stored data and the current view.
+The success message and contact card reuse `EmergencyContact#toString()` to display the assigned details consistently.
+Emergency details are independent of tags and of the general `list emerg` feature, including when cleared.
 
 `EmergencyCommandParser` and `EditCommandParser` share `ParserUtil#parseIndexedArguments()` for whitespace,
 prefix and index handling. Emergency name and phone reuse `ParserUtil#parseName()` and `parsePhone()`.
@@ -1362,7 +1370,7 @@ and `unfav 1`: both must report that the contact needs to be unarchived, with no
 Run `unarchive 1`, restart, and enter `list fav`: Test One is shown with its favourite badge, note and
 emergency details preserved.
 
-### Assigning and replacing a person's emergency contact
+### Assigning, replacing and clearing a person's emergency contact
 
 Use a disposable address book with just `Amy Bee`, created using
 `add Amy Bee /phone 85355255 /note Call after 6pm`. Run `list` so Amy is displayed as contact 1.
@@ -1380,9 +1388,17 @@ Use a disposable address book with just `Amy Bee`, created using
 | `edit 1 /note` | The note is cleared; emergency details remain. |
 | `list emerg`, then `list` | The general emergency list is empty; `list` restores Amy with her emergency details intact. |
 | Close and reopen the app | Amy's replacement emergency details and room are still present. |
+| `emergency 1 /clear /name Bob Choo` | Usage error; Alex's emergency details remain unchanged. |
+| `archive 1`, then `list archived` | Amy is displayed as archived contact 1 with Alex's emergency details intact. |
+| `emergency 1 /name Bob Choo /phone 91234567`, then `emergency 1 /clear` | Both commands report `Cannot change emergency details of an archived contact. Unarchive it first.`; Amy's details and the archived view remain unchanged. |
+| `unarchive 1`, then `list` | Amy returns as active contact 1 with Alex's emergency details intact. |
+| `emergency 1 /clear` | Shows `Emergency contact cleared for Amy Bee.`; the emergency field disappears without leaving blank space. Amy's room, phone and other details remain unchanged. |
+| `emergency 1 /clear` again | Shows `No emergency contact assigned to Amy Bee. No changes made.`; Amy remains unchanged. |
+| Close and reopen the app | Amy's emergency details remain absent; her room, phone and other details are preserved. |
 
 For filtered-list indexing, add a second person, use `find /name` to display only that person, and run
 `emergency 1 /name Bob Choo /phone 91234567`. Only the displayed person receives the details.
+Then run `emergency 1 /clear`: only that person's emergency details are removed and the search remains in place.
 
 ### Listing contacts sorted by name
 

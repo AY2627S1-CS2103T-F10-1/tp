@@ -10,6 +10,7 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.EmergencyClearCommand;
 import seedu.address.logic.commands.EmergencyCommand;
 import seedu.address.model.person.EmergencyContact;
 import seedu.address.model.person.Name;
@@ -26,6 +27,24 @@ public class EmergencyCommandParserTest {
         assertParseSuccess(parser, "1 /name Bob Choo /phone +65 9123 4567 /relation", command(""));
         assertParseSuccess(parser, "1 /name Bob Choo /phone +65 9123 4567 /relation " + "a".repeat(50),
                 command("a".repeat(50)));
+    }
+
+    @Test
+    public void parse_clear_returnsRemovalCommand() {
+        assertParseSuccess(parser, "1 /clear", new EmergencyClearCommand(INDEX_FIRST_PERSON));
+        assertParseSuccess(parser, "  1 \t /clear  ", new EmergencyClearCommand(INDEX_FIRST_PERSON));
+    }
+
+    @Test
+    public void parse_invalidClear_failure() {
+        String usage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, EmergencyCommand.MESSAGE_USAGE);
+        for (String input : new String[]{"/clear", "0 /clear", "-1 /clear", "2147483648 /clear",
+            "1 /clear extra", "1 /CLEAR", "1 /clear /name Bob", "1 /phone 91234567 /clear",
+            "1 /clear /relation", "1 /name Bob /phone 91234567 /clear"}) {
+            assertParseFailure(parser, input, usage);
+        }
+        Prefix clear = new Prefix("/clear", true);
+        assertParseFailure(parser, "1 /clear /clear", Messages.getErrorMessageForDuplicatePrefixes(clear));
     }
 
     @Test
