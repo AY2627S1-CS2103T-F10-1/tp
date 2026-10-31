@@ -130,7 +130,7 @@ Adds a contact with a required name and phone number, and optional room, tags an
 Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
 
 * Name is required and can contain up to 100 characters. Existing name character rules apply.
-* Phone is required and can contain up to 20 characters: digits, spaces, `+`, hyphens and parentheses.
+* Phone is required and can contain up to 20 characters: digits, spaces, `+`, hyphens and parentheses. It must contain at least one digit; formatting characters alone are rejected with `Phone number must contain at least one digit.`
 * Room is optional for any contact, regardless of tags. It can contain up to 20 characters:
   letters, digits, spaces and hyphens.
 * Note is optional free text, such as an allergy or how the contact prefers to be reached. It can contain

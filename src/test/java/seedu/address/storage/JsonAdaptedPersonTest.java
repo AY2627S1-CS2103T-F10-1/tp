@@ -99,6 +99,13 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_legacyPhoneWithoutDigits_remainsReadable() throws Exception {
+        JsonAdaptedPerson person =
+                new JsonAdaptedPerson(VALID_NAME, "---", VALID_EMAIL, VALID_ADDRESS, VALID_TAGS);
+        assertEquals("---", person.toModelType().getPhone().value);
+    }
+
+    @Test
     public void toModelType_nullPhone_throwsIllegalValueException() {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, null, VALID_EMAIL, VALID_ADDRESS, VALID_TAGS);
         String expectedMessage = String.format(MISSING_FIELD_MESSAGE_FORMAT, Phone.class.getSimpleName());
