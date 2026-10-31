@@ -20,6 +20,8 @@ public class EmergencyCommand extends Command {
             + "Examples: emergency 1 /name Bob Choo /phone 9123 4567 /relation Brother; emergency 1 /clear";
     public static final String MESSAGE_SUCCESS = "Emergency contact set for %1$s.\nemergency: %2$s";
     public static final String MESSAGE_CLEAR_SUCCESS = "Emergency contact cleared for %1$s.";
+    public static final String MESSAGE_NO_EMERGENCY_CONTACT =
+            "No emergency contact assigned to %1$s. No changes made.";
     public static final String MESSAGE_ARCHIVED_PERSON =
             "Cannot change emergency details of an archived contact. Unarchive it first.";
 
@@ -52,6 +54,9 @@ public class EmergencyCommand extends Command {
             throw new CommandException(MESSAGE_ARCHIVED_PERSON);
         }
         if (emergencyContact.isEmpty()) {
+            if (person.getEmergencyContact().isEmpty()) {
+                return new CommandResult(String.format(MESSAGE_NO_EMERGENCY_CONTACT, person.getName()));
+            }
             model.setPerson(person, person.withoutEmergencyContact());
             return new CommandResult(String.format(MESSAGE_CLEAR_SUCCESS, person.getName()));
         }

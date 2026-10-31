@@ -184,7 +184,10 @@ public class FavouriteArchiveIntegrationTest {
             assertEquals("Emergency contact cleared for " + original.getName() + ".",
                     logic.execute("emergency 1 /clear").getFeedbackToUser());
             assertEmergencyState(original, view);
-            logic.execute("emergency 1 /clear");
+            saved = Files.readString(storage.getAddressBookFilePath());
+            assertEquals("No emergency contact assigned to " + original.getName() + ". No changes made.",
+                    logic.execute("emergency 1 /clear").getFeedbackToUser());
+            assertEquals(saved, Files.readString(storage.getAddressBookFilePath()));
             assertEmergencyState(original, view);
 
             logic.execute("emergency 1 /name Bob Choo /phone 87654321 /relation Brother");

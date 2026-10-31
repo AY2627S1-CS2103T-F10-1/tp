@@ -317,7 +317,7 @@ Format: `emergency INDEX /name NAME /phone PHONE [/relation RELATION]` or `emerg
 * A person can have one emergency contact. Running the command again replaces all previous emergency details.
   Name and phone are required each time; omitting relation replaces the previous relation with an empty value.
 * Emergency details are a separate person field. Toggling tags does not remove them.
-* Use `/clear` alone after the index to remove the emergency details. It cannot be combined with `/name`, `/phone` or `/relation`, repeated, or followed by a value. Clearing an already-empty field succeeds without changing the contact.
+* Use `/clear` alone after the index to remove the emergency details. It cannot be combined with `/name`, `/phone` or `/relation`, repeated, or followed by a value. If no emergency details are assigned, the command reports `No emergency contact assigned to NAME. No changes made.` and leaves the contact unchanged.
 * Clearing preserves every other contact detail, including the general emergency tag, and keeps the current view.
 * Details appear on the person's card and are saved automatically. Ordinary edits preserve them.
 * The success message identifies the person and shows the new details as `emergency: NAME(RELATION) PHONE`; the relation and parentheses are omitted when no relation is given.

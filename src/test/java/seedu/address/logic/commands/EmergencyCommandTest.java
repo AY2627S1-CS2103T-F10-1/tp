@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
@@ -18,6 +19,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.person.EmergencyContact;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 
 public class EmergencyCommandTest {
@@ -60,7 +62,11 @@ public class EmergencyCommandTest {
         assertEquals("Emergency contact cleared for " + BOB.getName() + ".", result.getFeedbackToUser());
         assertEquals(List.of(ALICE, BOB.withFavourite(true)), model.getAddressBook().getPersonList());
         assertEquals(List.of(BOB.withFavourite(true)), model.getFilteredPersonList());
-        new EmergencyCommand(INDEX_FIRST_PERSON).execute(model);
+        Person cleared = model.getFilteredPersonList().getFirst();
+        CommandResult repeated = new EmergencyCommand(INDEX_FIRST_PERSON).execute(model);
+        assertEquals("No emergency contact assigned to " + BOB.getName() + ". No changes made.",
+                repeated.getFeedbackToUser());
+        assertSame(cleared, model.getFilteredPersonList().getFirst());
         assertEquals(List.of(ALICE, BOB.withFavourite(true)), model.getAddressBook().getPersonList());
     }
 
