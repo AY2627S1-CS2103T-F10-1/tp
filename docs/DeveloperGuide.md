@@ -346,9 +346,10 @@ A word in a note cannot start with `/`, because the parser treats such a word as
 Each assignment atomically replaces any existing emergency details; omitted relation defaults to empty.
 `emergency INDEX /clear` removes those details. The parser accepts `/clear` only on its own, with no value.
 If no emergency details are assigned, the command reports that no changes were made without replacing the person.
-`EmergencyCommand` uses an empty `Optional` for removal and calls `Person#withoutEmergencyContact()` to preserve
-all other fields. The filter is unchanged and normal JSON saving persists the empty emergency field.
-`EmergencyCommand` rejects archived contacts before replacing any details. Restore the contact with `unarchive`
+`EmergencyCommandParser` creates an `EmergencyCommand` for assignment or an `EmergencyClearCommand` for removal.
+`EmergencyClearCommand` calls `Person#withoutEmergencyContact()` to preserve all other fields.
+The filter is unchanged and normal JSON saving persists the empty emergency field.
+Both commands reject archived contacts before changing any details. Restore the contact with `unarchive`
 before assigning an emergency contact; rejection preserves both stored data and the current view.
 The success message and contact card reuse `EmergencyContact#toString()` to display the assigned details consistently.
 Emergency details are independent of tags and of the general `list emerg` feature, including when cleared.

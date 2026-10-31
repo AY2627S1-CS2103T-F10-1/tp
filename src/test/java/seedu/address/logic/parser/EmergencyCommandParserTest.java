@@ -10,6 +10,7 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.EmergencyClearCommand;
 import seedu.address.logic.commands.EmergencyCommand;
 import seedu.address.model.person.EmergencyContact;
 import seedu.address.model.person.Name;
@@ -30,8 +31,8 @@ public class EmergencyCommandParserTest {
 
     @Test
     public void parse_clear_returnsRemovalCommand() {
-        assertParseSuccess(parser, "1 /clear", new EmergencyCommand(INDEX_FIRST_PERSON));
-        assertParseSuccess(parser, "  1 \t /clear  ", new EmergencyCommand(INDEX_FIRST_PERSON));
+        assertParseSuccess(parser, "1 /clear", new EmergencyClearCommand(INDEX_FIRST_PERSON));
+        assertParseSuccess(parser, "  1 \t /clear  ", new EmergencyClearCommand(INDEX_FIRST_PERSON));
     }
 
     @Test

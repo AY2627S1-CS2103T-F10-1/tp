@@ -5,6 +5,8 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE_COMMAND;
 
 import seedu.address.commons.core.index.Index;
+import seedu.address.logic.commands.Command;
+import seedu.address.logic.commands.EmergencyClearCommand;
 import seedu.address.logic.commands.EmergencyCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.EmergencyContact;
@@ -12,14 +14,14 @@ import seedu.address.model.person.Name;
 import seedu.address.model.person.Phone;
 
 /** Parses emergency assignment or removal, reusing the name and phone rules from add and edit. */
-public class EmergencyCommandParser implements Parser<EmergencyCommand> {
+public class EmergencyCommandParser implements Parser<Command> {
     private static final Prefix NAME = PREFIX_NAME_COMMAND;
     private static final Prefix PHONE = PREFIX_PHONE_COMMAND;
     private static final Prefix RELATION = new Prefix("/relation", true);
     private static final Prefix CLEAR = new Prefix("/clear", true);
 
     @Override
-    public EmergencyCommand parse(String args) throws ParseException {
+    public Command parse(String args) throws ParseException {
         ArgumentMultimap arguments = ParserUtil.parseIndexedArguments(
                 args, EmergencyCommand.MESSAGE_USAGE, NAME, PHONE, RELATION, CLEAR);
         arguments.verifyNoDuplicatePrefixesFor(NAME, PHONE, RELATION, CLEAR);
@@ -30,7 +32,7 @@ public class EmergencyCommandParser implements Parser<EmergencyCommand> {
             if (hasAssignmentFields || !arguments.getValue(CLEAR).orElseThrow().isEmpty()) {
                 throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, EmergencyCommand.MESSAGE_USAGE));
             }
-            return new EmergencyCommand(index);
+            return new EmergencyClearCommand(index);
         }
         if (arguments.getValue(NAME).isEmpty() || arguments.getValue(PHONE).isEmpty()) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, EmergencyCommand.MESSAGE_USAGE));

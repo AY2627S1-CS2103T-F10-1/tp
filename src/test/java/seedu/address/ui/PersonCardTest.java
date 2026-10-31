@@ -18,7 +18,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
-import seedu.address.logic.commands.EmergencyCommand;
+import seedu.address.logic.commands.EmergencyClearCommand;
 import seedu.address.logic.commands.FavCommand;
 import seedu.address.logic.commands.UnfavCommand;
 import seedu.address.model.Model;
@@ -117,7 +117,7 @@ public class PersonCardTest {
             layout(root);
             assertTrue(label(firstCard(root), "emergencyContact").isVisible());
 
-            assertDoesNotThrow(() -> new EmergencyCommand(INDEX_FIRST_PERSON).execute(model));
+            assertDoesNotThrow(() -> new EmergencyClearCommand(INDEX_FIRST_PERSON).execute(model));
             root.layout();
 
             assertFalse(label(firstCard(root), "emergencyContact").isVisible());
