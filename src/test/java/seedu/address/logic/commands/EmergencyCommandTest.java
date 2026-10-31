@@ -33,7 +33,8 @@ public class EmergencyCommandTest {
 
         CommandResult result = new EmergencyCommand(INDEX_FIRST_PERSON, contact).execute(model);
 
-        assertEquals(String.format(EmergencyCommand.MESSAGE_SUCCESS, BOB.getName()), result.getFeedbackToUser());
+        assertEquals("Emergency contact set for " + BOB.getName() + ".\nemergency: Bob Choo(Brother) 91234567",
+                result.getFeedbackToUser());
         assertEquals(List.of(ALICE, BOB.withEmergencyContact(contact)), model.getAddressBook().getPersonList());
         assertEquals(1, model.getFilteredPersonList().size());
     }
@@ -43,7 +44,8 @@ public class EmergencyCommandTest {
         model.addPerson(ALICE.withEmergencyContact(contact));
         EmergencyContact replacement = new EmergencyContact(new Name("Amy Bee"), new Phone("87654321"), "");
         CommandResult result = new EmergencyCommand(INDEX_FIRST_PERSON, replacement).execute(model);
-        assertEquals(String.format(EmergencyCommand.MESSAGE_SUCCESS, ALICE.getName()), result.getFeedbackToUser());
+        assertEquals("Emergency contact set for " + ALICE.getName() + ".\nemergency: Amy Bee 87654321",
+                result.getFeedbackToUser());
         assertEquals(List.of(ALICE.withEmergencyContact(replacement)), model.getAddressBook().getPersonList());
     }
 

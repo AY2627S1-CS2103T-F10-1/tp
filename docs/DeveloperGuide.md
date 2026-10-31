@@ -349,6 +349,7 @@ Each assignment atomically replaces any existing emergency details; omitted rela
 all other fields. The filter is unchanged and normal JSON saving persists the empty emergency field.
 `EmergencyCommand` rejects archived contacts before replacing any details. Restore the contact with `unarchive`
 before assigning an emergency contact; rejection preserves both stored data and the current view.
+The success message and contact card reuse `EmergencyContact#toString()` to display the assigned details consistently.
 Emergency details are independent of tags and of the general `list emerg` feature, including when cleared.
 
 `EmergencyCommandParser` and `EditCommandParser` share `ParserUtil#parseIndexedArguments()` for whitespace,

@@ -18,7 +18,7 @@ public class EmergencyCommand extends Command {
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Sets, replaces or clears emergency details.\n"
             + "Parameters: INDEX /name NAME /phone PHONE [/relation RELATION] or INDEX /clear\n"
             + "Examples: emergency 1 /name Bob Choo /phone 9123 4567 /relation Brother; emergency 1 /clear";
-    public static final String MESSAGE_SUCCESS = "Emergency contact set for %1$s.";
+    public static final String MESSAGE_SUCCESS = "Emergency contact set for %1$s.\nemergency: %2$s";
     public static final String MESSAGE_CLEAR_SUCCESS = "Emergency contact cleared for %1$s.";
     public static final String MESSAGE_ARCHIVED_PERSON =
             "Cannot change emergency details of an archived contact. Unarchive it first.";
@@ -55,8 +55,9 @@ public class EmergencyCommand extends Command {
             model.setPerson(person, person.withoutEmergencyContact());
             return new CommandResult(String.format(MESSAGE_CLEAR_SUCCESS, person.getName()));
         }
-        model.setPerson(person, person.withEmergencyContact(emergencyContact.orElseThrow()));
-        return new CommandResult(String.format(MESSAGE_SUCCESS, person.getName()));
+        EmergencyContact assignedContact = emergencyContact.orElseThrow();
+        model.setPerson(person, person.withEmergencyContact(assignedContact));
+        return new CommandResult(String.format(MESSAGE_SUCCESS, person.getName(), assignedContact));
     }
 
     @Override

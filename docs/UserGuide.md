@@ -320,6 +320,7 @@ Format: `emergency INDEX /name NAME /phone PHONE [/relation RELATION]` or `emerg
 * Use `/clear` alone after the index to remove the emergency details. It cannot be combined with `/name`, `/phone` or `/relation`, repeated, or followed by a value. Clearing an already-empty field succeeds without changing the contact.
 * Clearing preserves every other contact detail, including the general emergency tag, and keeps the current view.
 * Details appear on the person's card and are saved automatically. Ordinary edits preserve them.
+* The success message identifies the person and shows the new details as `emergency: NAME(RELATION) PHONE`; the relation and parentheses are omitted when no relation is given.
 * The same emergency details may be assigned to several people independently.
 * This does not change `list emerg`, which lists the app's tagged emergency resources.
 
