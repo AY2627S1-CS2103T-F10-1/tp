@@ -311,7 +311,7 @@ The following sequence diagram shows a successful `edit 1 /phone 91234567`, assu
 
 <img src="images/EditSequenceDiagram.png" width="650" />
 
-1. `EditCommandParser` asks an empty `EditPersonDescriptor` to `setIfGiven()` each field in `PersonField.editableValues()`. Only `/phone` is given, so `PersonField#parseFrom()` returns a value for it alone.
+1. `EditCommandParser` asks an empty `EditPersonDescriptor` to `setIfGiven()` each field in `PersonField.editableValues()`. The descriptor passes each field to its `PersonFieldValues#setIfGiven(field, args, true)`, which calls `PersonField#parseFrom(args, true)`. That returns an `Optional`, empty for a field that was not given, so only `/phone` is stored. The `true` allows an optional field given with no value, such as `/room`, to be cleared.
 2. `EditCommand` takes the contact at the index from `Model#getFilteredPersonList()`.
 3. `PersonFieldValues.of()` copies the contact's name, phone, room, note and tags, and `putAll()` overwrites only the phone.
 4. The email, address, emergency contact and favourite status are not fields, so `EditCommand` passes them from the original contact to `toPerson()`.

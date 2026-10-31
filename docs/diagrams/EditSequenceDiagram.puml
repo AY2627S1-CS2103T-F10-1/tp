@@ -9,6 +9,7 @@ title Successful execution of edit 1 /phone 91234567
 box Logic LOGIC_COLOR_T1
 participant ":EditCommandParser" as EditCommandParser LOGIC_COLOR
 participant "d:EditPersonDescriptor" as EditPersonDescriptor LOGIC_COLOR
+participant "dv:PersonFieldValues" as DescriptorValues LOGIC_COLOR
 participant "phone:PersonField" as PersonField LOGIC_COLOR
 participant "e:EditCommand" as EditCommand LOGIC_COLOR
 participant "v:PersonFieldValues" as PersonFieldValues LOGIC_COLOR
@@ -25,8 +26,13 @@ create EditPersonDescriptor
 EditCommandParser -> EditPersonDescriptor
 EditCommandParser -> EditPersonDescriptor : setIfGiven(phone, args)
 activate EditPersonDescriptor
-EditPersonDescriptor -> PersonField : parseFrom(args)
-PersonField --> EditPersonDescriptor : Phone
+EditPersonDescriptor -> DescriptorValues : setIfGiven(phone, args, true)
+note right: true lets an optional field\nbe cleared by giving no value
+activate DescriptorValues
+DescriptorValues -> PersonField : parseFrom(args, true)
+PersonField --> DescriptorValues : Optional<Phone>
+DescriptorValues -> DescriptorValues : set(phone, Phone)
+deactivate DescriptorValues
 deactivate EditPersonDescriptor
 
 create EditCommand
