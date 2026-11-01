@@ -210,18 +210,18 @@ public class AddCommandParserTest {
 
     @Test
     public void parse_repeatedTag_failure() {
-        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag RA /tag RA", Tag.MESSAGE_DUPLICATE);
-        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag RA /tag ra", Tag.MESSAGE_DUPLICATE);
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag RA /tag RA", repeatedTagMessage("RA"));
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag RA /tag ra", repeatedTagMessage("ra"));
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag Resident Fellow /tag resident  fellow",
-                Tag.MESSAGE_DUPLICATE);
+                repeatedTagMessage("Resident Fellow"));
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag " + VALID_TAG_GREEK_UPPER_CASE
-                + " /tag " + VALID_TAG_GREEK_LOWER_CASE, Tag.MESSAGE_DUPLICATE);
+                + " /tag " + VALID_TAG_GREEK_LOWER_CASE, repeatedTagMessage(VALID_TAG_GREEK_LOWER_CASE));
     }
 
     @Test
     public void parse_repeatedTagAtLimit_failure() {
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag T1 /tag T2 /tag T3 /tag T4 /tag T5 /tag t1",
-                Tag.MESSAGE_DUPLICATE);
+                repeatedTagMessage("t1"));
     }
 
     @Test
@@ -249,6 +249,11 @@ public class AddCommandParserTest {
                 Tag.MESSAGE_TOO_LONG);
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /tag " + INVALID_TAG_LENGTHENED_PAST_MAX_LENGTH,
                 Tag.MESSAGE_TOO_LONG);
+    }
+
+    /** Returns the error for a tag named {@code tagName} that was already given. */
+    private static String repeatedTagMessage(String tagName) {
+        return String.format(Tag.MESSAGE_REPEATED, new Tag(tagName).tagName);
     }
 
     /** Returns the {@code AddCommand} expected for {@link #VALID_NAME_AND_PHONE} with only the given {@code note}. */

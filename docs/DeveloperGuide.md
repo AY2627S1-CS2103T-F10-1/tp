@@ -240,7 +240,7 @@ Tags are added to a contact when it is created, with `add NAME /phone PHONE [/ro
 
 `AddCommandParser` uses `ArgumentTokenizer` with the `/phone`, `/room` and `/tag` keywords, so they can be given in any order. The text before the first keyword is the name. `/phone` must be given exactly once and `/room` at most once; a word starting with `/` that is not one of these keywords is rejected. `/tag` is optional and may be repeated, once per tag.
 
-For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. So `/tag` with no value is reported as an empty tag, and `/tag RA, Staff` as invalid characters. `AddCommandParser` collects the tags into a `LinkedHashSet`, rejects a tag already given (`Contact already has this tag.`), and then rejects more than `Person.MAX_TAGS` tags.
+For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. So `/tag` with no value is reported as an empty tag, and `/tag RA, Staff` as invalid characters. `AddCommandParser` collects the tags into a `LinkedHashSet`, rejects a tag already given (`Repeated tag: TAG. Each tag can only be given once.`), and then rejects more than `Person.MAX_TAGS` tags.
 
 The activity diagram below shows the order in which these checks run for an `add` command.
 
@@ -380,7 +380,7 @@ the same ordering. Sorting does not modify the backing address book or its saved
 1. Collapse whitespace, then reject any word starting with `/` other than `/tag` as an invalid format.
 2. Parse the text before the first keyword as the `INDEX`; an invalid index is reported as an invalid format.
 3. Require at least one `/tag`; otherwise report an invalid format.
-4. Parse each value with `ParserUtil#parseTag()`, as `add` does, so an empty or invalid tag is reported the same way. A tag given twice is reported as `Repeated tag: TAG. Each tag can only be given once.` rather than `add`'s `Contact already has this tag.`, which would wrongly suggest that the contact already has the tag. The tag limit is not checked here, because it applies to the tags left after the toggle.
+4. Parse each value with `ParserUtil#parseTag()`, as `add` does, so an empty or invalid tag is reported the same way. A tag given twice is reported as `Repeated tag: TAG. Each tag can only be given once.`, as in `add`. The tag limit is not checked here, because it applies to the tags left after the toggle.
 
 `ToggleCommand` holds the `Index` and a `LinkedHashSet<Tag>` of tags to toggle. In `execute()` it:
 
@@ -1113,13 +1113,13 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
       Expected: No contact is added. Error: `Tag limit reached (max 5)`
 
    1. Test case: `add Ben Ong /phone 9876 5432 /tag RA /tag ra`<br>
-      Expected: No contact is added. Error: `Contact already has this tag.`
+      Expected: No contact is added. Error: `Repeated tag: Ra. Each tag can only be given once.`
 
    1. Test case: `add Ben Ong /phone 9876 5432 /tag RA /tag`<br>
       Expected: No contact is added. Error: `Tag cannot be empty.`
 
    1. Test case: `add Ben Ong /phone 9876 5432 /tag ΟΣ /tag ος`<br>
-      Expected: No contact is added. Error: `Contact already has this tag.`
+      Expected: No contact is added. Error: `Repeated tag: Ος. Each tag can only be given once.`
 
    1. Test case: `add Ben Ong /phone 9876 5432 /tag A` followed by 25 copies of `İ` (26 characters as typed, 51 in title case)<br>
       Expected: No contact is added. Error: `Tag too long, please shorten it and try again.`

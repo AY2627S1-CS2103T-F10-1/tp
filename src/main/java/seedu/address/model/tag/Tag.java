@@ -23,8 +23,9 @@ public class Tag {
             + "with at least one letter or digit, and be at most " + MAX_LENGTH + " characters long.";
     public static final String MESSAGE_EMPTY = "Tag cannot be empty.";
     public static final String MESSAGE_TOO_LONG = "Tag too long, please shorten it and try again.";
-    public static final String MESSAGE_INVALID_CHARACTERS = "Tag contains invalid characters.";
-    public static final String MESSAGE_DUPLICATE = "Contact already has this tag.";
+    public static final String MESSAGE_INVALID_CHARACTERS =
+            "Tags should only contain letters, digits, spaces and hyphens, with at least one letter or digit.";
+    public static final String MESSAGE_REPEATED = "Repeated tag: %1$s. Each tag can only be given once.";
 
     /**
      * One or more words of letters, digits and hyphens, separated by single spaces, with at least one letter or digit.

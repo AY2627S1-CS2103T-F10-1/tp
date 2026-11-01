@@ -373,6 +373,7 @@ public class ParserUtilTest {
     public void parseTags_duplicatesDifferingInCase_throwsParseException() {
         List<String> tagsWithDuplicate = List.of(VALID_TAG_1, VALID_TAG_1.toUpperCase());
 
-        assertThrows(ParseException.class, Tag.MESSAGE_DUPLICATE, () -> ParserUtil.parseTags(tagsWithDuplicate));
+        String expectedMessage = String.format(Tag.MESSAGE_REPEATED, new Tag(VALID_TAG_1).tagName);
+        assertThrows(ParseException.class, expectedMessage, () -> ParserUtil.parseTags(tagsWithDuplicate));
     }
 }
