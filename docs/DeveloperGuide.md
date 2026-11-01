@@ -1166,10 +1166,11 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 
 1. Prerequisites: Start with the sample data.
 
-1. Test case: `find /tag friends`<br>
-   Expected: Only contacts tagged `Friends` are shown. The status message shows how many are listed.
+1. Test case: `find /tag resident`<br>
+   Expected: Only `Alex Yeoh`, `Bernice Yu`, `Charlotte Oliveiro` and `Roy Balakrishnan` are shown. `David Li` is not
+   shown, because `Resident Fellow` is a different tag. The status message shows `4 person(s) listed!`.
 
-1. Test case: `find   /tag   FRIENDS  `<br>
+1. Test case: `find   /tag   RESIDENT  `<br>
    Expected: Same as above.
 
 1. Test case: `find /tag Nobody`<br>
@@ -1178,8 +1179,11 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 1. Test case: `find /tag`<br>
    Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
 
-1. Other incorrect commands to try: `find friends`, `find /tag friends /name Alex`, `find /tag friends /tag family`<br>
+1. Other incorrect commands to try: `find resident`, `find /tag resident /name Alex`<br>
    Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
+
+1. Test case: `find /tag resident /tag staff`<br>
+   Expected: The list is unchanged. Error: `Multiple values specified for the following single-valued field(s): /tag`
 
 1. Test case: `list /filter friends`<br>
    Expected: The list is unchanged. Error: `Invalid command format. Usage: list`
