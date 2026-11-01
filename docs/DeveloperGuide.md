@@ -240,11 +240,11 @@ Tags are added to a contact when it is created, with `add NAME /phone PHONE [/ro
 
 `AddCommandParser` uses `ArgumentTokenizer` with the `/phone`, `/room` and `/tag` keywords, so they can be given in any order. The text before the first keyword is the name. `/phone` must be given exactly once and `/room` at most once; a word starting with `/` that is not one of these keywords is rejected. `/tag` is optional and may be repeated, once per tag.
 
-For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. So `/tag` with no value is reported as an empty tag, and `/tag RA, Staff` as invalid characters. `AddCommandParser` collects the tags into a `LinkedHashSet`, rejects a tag already given (`Repeated tag: TAG. Each tag can only be given once.`), and then rejects more than `Person.MAX_TAGS` tags.
+For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters, longer than `Tag.MAX_LENGTH` in title case. So `/tag` with no value is reported as an empty tag, and `/tag RA, Staff` as invalid characters. The diagram below groups these as an invalid value. `ParserUtil#parseTags()` then creates the `Tag` and collects the tags into a `LinkedHashSet`, rejects a tag already given (`Repeated tag: TAG. Each tag can only be given once.`), and then rejects more than `Person.MAX_TAGS` tags.
 
 The activity diagram below shows the order in which these checks run for an `add` command.
 
-<img src="images/TagValidationActivityDiagram.png" width="800" />
+<img src="images/TagValidationActivityDiagram.png" alt="Order of the tag checks in the add command" width="400" />
 
 `Tag.VALIDATION_REGEX` uses `\p{L}`, `\p{M}` and `\p{N}` rather than `\p{Alnum}`, which in Java only matches ASCII, so letters and digits in any language are accepted. `\p{M}` allows accent marks, for letters typed as a base letter followed by a combining mark.
 
