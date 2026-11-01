@@ -356,7 +356,7 @@ Format: `find /name NAME`, `find /tag TAG`, `find /phone NUMBER` or `find /room 
 * Exactly one of `/name`, `/tag`, `/phone` and `/room` must be given, and nothing may be typed before it.
 * Spaces before and after `NAME`, `TAG`, `NUMBER` or `ROOM` are ignored.
 * If no person matches, the message `No contacts found` is shown and the list is empty. Otherwise, the number of persons listed is shown.
-* If the prefix is missing or not followed by a space (such as `/tagfriends`), multiple search prefixes are given, or `NAME`, `TAG`, `NUMBER` or `ROOM` is empty, an invalid command format message is shown.
+* If the prefix is missing or not followed by a space (such as `/tagfriends`), multiple search prefixes are given, any other word starts with `/` (such as a mistyped `/rom`), or `NAME`, `TAG`, `NUMBER` or `ROOM` is empty, an invalid command format message is shown and the list does not change.
 * If `/name`, `/tag`, `/phone` or `/room` is repeated, a message listing the repeated prefix is shown.
 
 #### Finding by name: `/name`

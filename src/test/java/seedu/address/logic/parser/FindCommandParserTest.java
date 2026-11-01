@@ -41,6 +41,21 @@ public class FindCommandParserTest {
     }
 
     @Test
+    public void parse_unknownPrefix_throwsParseException() {
+        String message = String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE);
+        for (String input : new String[]{" /name Amy /rom B-204", " /tag friends /foo", " /room B-204 /x",
+            " /phone 91234567 /x", " /name /Amy", " /name Amy /", " /name Amy /NAME Bob"}) {
+            assertParseFailure(parser, input, message);
+        }
+    }
+
+    @Test
+    public void parse_slashInsideWord_returnsFindCommand() {
+        NameFuzzyMatchesPredicate predicate = new NameFuzzyMatchesPredicate("Kumar s/o");
+        assertParseSuccess(parser, " /name Kumar s/o", new FindCommand(predicate, predicate.getRankingComparator()));
+    }
+
+    @Test
     public void parse_unicodeOnlyValue_throwsParseException() {
         String message = String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE);
         for (String prefix : new String[]{"/name", "/tag", "/phone", "/room"}) {
