@@ -5,18 +5,18 @@ import java.util.function.Predicate;
 import seedu.address.commons.util.ToStringBuilder;
 
 /**
- * Tests that a {@code Person}'s {@code Phone} equals the given number, ignoring extra spaces.
+ * Tests that a {@code Person}'s {@code Phone} equals the given number, ignoring whitespace.
  */
 public class PhoneEqualsPredicate implements Predicate<Person> {
     private final String phone;
 
     public PhoneEqualsPredicate(String phone) {
-        this.phone = phone.trim().replaceAll("\\s+", " ");
+        this.phone = phone.replaceAll("\\s+", "");
     }
 
     @Override
     public boolean test(Person person) {
-        return person.getPhone().value.equals(phone);
+        return person.getPhone().value.replaceAll("\\s+", "").equals(phone);
     }
 
     @Override

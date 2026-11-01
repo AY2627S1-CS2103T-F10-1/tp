@@ -14,9 +14,28 @@ public class PhoneEqualsPredicateTest {
         Person person = new PersonBuilder().withName("12345").withPhone("+65 9123 4567").build();
         assertTrue(new PhoneEqualsPredicate(" +65  9123 4567 ").test(person));
         assertFalse(new PhoneEqualsPredicate("9123").test(person));
-        assertFalse(new PhoneEqualsPredicate("+6591234567").test(person));
+        assertTrue(new PhoneEqualsPredicate("+6591234567").test(person));
         assertFalse(new PhoneEqualsPredicate("12345").test(person));
         assertFalse(new PhoneEqualsPredicate("unknown").test(person));
+    }
+
+    @Test
+    public void test_spacingDifferences_matchesInBothDirections() {
+        Person spaced = new PersonBuilder().withPhone("9123 4567").build();
+        Person compact = new PersonBuilder().withPhone("91234567").build();
+        assertTrue(new PhoneEqualsPredicate("91234567").test(spaced));
+        assertTrue(new PhoneEqualsPredicate(" 9123  4567 ").test(compact));
+        assertTrue(new PhoneEqualsPredicate("9123\t4567").test(compact));
+        assertEquals("9123 4567", spaced.getPhone().value);
+    }
+
+    @Test
+    public void test_otherFormatting_remainsSignificant() {
+        Person person = new PersonBuilder().withPhone("+65-(9123)-4567").build();
+        assertTrue(new PhoneEqualsPredicate(" +65 - (9123) - 4567 ").test(person));
+        assertFalse(new PhoneEqualsPredicate("65-(9123)-4567").test(person));
+        assertFalse(new PhoneEqualsPredicate("+65(9123)4567").test(person));
+        assertFalse(new PhoneEqualsPredicate("+65-9123-4567").test(person));
     }
 
     @Test
@@ -24,6 +43,7 @@ public class PhoneEqualsPredicateTest {
         PhoneEqualsPredicate predicate = new PhoneEqualsPredicate("9123 4567");
         assertTrue(predicate.equals(predicate));
         assertEquals(predicate, new PhoneEqualsPredicate(" 9123  4567 "));
+        assertEquals(predicate, new PhoneEqualsPredicate("91234567"));
         assertFalse(predicate.equals(new PhoneEqualsPredicate("12345")));
         assertFalse(predicate.equals(null));
         assertFalse(predicate.equals("9123 4567"));
