@@ -271,8 +271,9 @@ Format: `list fav`
 * For example, if the main list contains Alice at #1, Bob at #2 and Charlie at #3, marking Alice and Charlie
   shows Alice at #1 and Charlie at #2 in `list fav`. In that view, `unfav 2` removes Charlie's favourite status.
 * Listing favourites does not change stored contact data.
-* Archived contacts are hidden from this view but retain their favourite status. Restoring an archived
-  favourite makes it appear here again. Run `list archived` and `unarchive INDEX` to restore it.
+* Archived contacts are hidden from this view but retain their favourite status.
+  To restore an archived favourite, run `list archived`, then `unarchive INDEX` using its displayed index.
+  Restoring keeps the archived view selected. Run `list fav` to see the restored favourite again.
 * Both words must be lowercase. Extra spaces or tabs between them are accepted.
 * Extra arguments such as `list fav 1` are rejected with `Invalid command format. Usage: list fav`.
   The displayed list stays unchanged.
