@@ -234,11 +234,11 @@ After the command returns, `LogicManager` saves the address book through the exi
 
 ### Tag feature
 
-Tags are added to a contact when it is created, with `add NAME /phone PHONE [/room ROOM] [/tag TAG]...`.
+Tags are added to a contact when it is created, with `add NAME /phone PHONE [/room ROOM] [/tag TAG]... [/note NOTE]`.
 
 #### Implementation
 
-`AddCommandParser` uses `ArgumentTokenizer` with the `/phone`, `/room` and `/tag` keywords, so they can be given in any order. The text before the first keyword is the name. `/phone` must be given exactly once and `/room` at most once; a word starting with `/` that is not one of these keywords is rejected. `/tag` is optional and may be repeated, once per tag.
+`AddCommandParser` uses `ArgumentTokenizer` with the `/phone`, `/room`, `/tag` and `/note` keywords, so they can be given in any order. The text before the first keyword is the name. `/phone` must be given exactly once, and `/room` and `/note` at most once; a word starting with `/` that is not one of these keywords is rejected. `/tag` is optional and may be repeated, once per tag.
 
 For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. So `/tag` with no value is reported as an empty tag, and `/tag RA, Staff` as invalid characters. `AddCommandParser` collects the tags into a `LinkedHashSet`, rejects a tag already given (`Contact already has this tag.`), and then rejects more than `Person.MAX_TAGS` tags.
 
@@ -1326,7 +1326,16 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
       Expected: The 2nd contact's card shows `Room: B-204`, then the room line is removed.
 
    1. Test case: `edit 1 /note see /docs`<br>
-      Expected: No contact is changed. The status message shows the `edit` usage, because `/docs` is not a known field.
+      Expected: No contact is changed. Error: `No word in a note can start with "/", as that starts a new field.`
+
+   1. Test case: `edit 3 /note ask /name Bob Lee`<br>
+      Expected: The 3rd contact is renamed to `Bob Lee` and its note becomes `ask`, as described in the UG.
+
+   1. Test case: `edit 2 /room B-204`, then `edit 2 /note keep /room`<br>
+      Expected: The 2nd contact's room is removed and its note becomes `keep`, as described in the UG.
+
+   1. Test case: `edit 4 /note ask /tag Staff`<br>
+      Expected: No contact is changed. Error: `No word in a note can start with "/", as that starts a new field.`
 
    1. Test case: Close the app and reopen it.<br>
       Expected: Notes added or edited above are still shown.
