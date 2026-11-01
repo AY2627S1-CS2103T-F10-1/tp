@@ -128,7 +128,7 @@ public class AddCommandParserTest {
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /room", Room.MESSAGE_EMPTY);
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /room " + "B".repeat(Room.MAX_LENGTH + 1),
                 Room.MESSAGE_TOO_LONG);
-        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /room B#204", Room.MESSAGE_INVALID_CHARACTERS);
+        assertParseFailure(parser, VALID_NAME_AND_PHONE + " /room B_204", Room.MESSAGE_INVALID_CHARACTERS);
     }
 
     @Test

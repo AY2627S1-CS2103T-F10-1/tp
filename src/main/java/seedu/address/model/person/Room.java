@@ -24,7 +24,7 @@ public class Room {
 
     /** Returns true if {@code room} is a valid room; an empty room means the contact has no room. */
     public static boolean isValidRoom(String room) {
-        return room.length() <= MAX_LENGTH && (room.isEmpty() || room.matches("[\\p{Alnum} -]+"));
+        return room.length() <= MAX_LENGTH && (room.isEmpty() || room.matches("(?=.*\\p{Alnum})[\\p{Alnum}# -]+"));
     }
 
     @Override

@@ -177,7 +177,7 @@ public class JsonAdaptedPersonTest {
 
     @Test
     public void toModelType_invalidRoom_throwsIllegalValueException() {
-        JsonAdaptedPerson person = withRoomAndNote("B#204", null);
+        JsonAdaptedPerson person = withRoomAndNote("B_204", null);
         assertThrows(IllegalValueException.class, Room.MESSAGE_INVALID_CHARACTERS, person::toModelType);
     }
 
