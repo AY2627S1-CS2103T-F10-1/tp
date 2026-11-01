@@ -1300,15 +1300,17 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
    1. Test case: `add Wei Ling /phone 9876 5433 /note ends with /`<br>
       Expected: Same error as above.
 
-   1. Test case: `add Wei Ling /phone 9876 5433 /note talk to /room officer`<br>
-      Expected: Wei Ling is added with the note `talk to` and the room `officer`, as described in the UG.
+   1. Test case: `add Wei Jie /phone 9876 5435 /note talk to /room officer`<br>
+      Expected: Wei Jie is added with the note `talk to` and the room `officer`, as described in the UG.
 
    1. Test case: `add Wei Ling /phone 9876 5433 /note a /note b`<br>
       Expected: No contact is added. The error names `/note` as a repeated field.
 
    1. Test case: `add Wei Ling /phone 9876 5433 /note ` followed by 201 letters<br>
       Expected: No contact is added. Error: `Note too long, please shorten it and try again.`
-      With exactly 200 letters, the contact is added and the note wraps onto several lines on the card.
+
+   1. Test case: `add Wei Min /phone 9876 5436 /note ` followed by 200 letters<br>
+      Expected: Wei Min is added and the note wraps onto several lines on the card.
 
 1. Editing and removing a note
 
