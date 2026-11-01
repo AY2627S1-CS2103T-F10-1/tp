@@ -90,6 +90,20 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_nameTooLong_throwsIllegalValueException() {
+        JsonAdaptedPerson person = new JsonAdaptedPerson("A".repeat(Name.MAX_LENGTH + 1), VALID_PHONE, VALID_EMAIL,
+                VALID_ADDRESS, VALID_TAGS);
+        assertThrows(IllegalValueException.class, Name.MESSAGE_CONSTRAINTS, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_nameWithExtraSpaces_collapsesSpaces() throws Exception {
+        JsonAdaptedPerson person =
+                new JsonAdaptedPerson("Sarah   Tan", VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_TAGS);
+        assertEquals(new Name("Sarah Tan"), person.toModelType().getName());
+    }
+
+    @Test
     public void toModelType_nullName_throwsIllegalValueException() {
         JsonAdaptedPerson person = new JsonAdaptedPerson(null, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_TAGS);
         String expectedMessage = String.format(MISSING_FIELD_MESSAGE_FORMAT, Name.class.getSimpleName());

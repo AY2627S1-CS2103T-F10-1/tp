@@ -236,6 +236,8 @@ After the command returns, `LogicManager` saves the address book through the exi
 
 `Name.VALIDATION_REGEX` accepts letters and digits in any language, using `\p{L}` and `\p{N}` rather than `\p{Alnum}`, which in Java only matches ASCII, so an RA can save a resident's real name. `\p{M}` allows accent marks, and `'`, `-`, `.` and `/` allow names such as `O'Brien`, `Mary-Jane`, `Tan Jr.` and `Kumar s/o Rajan`. Each word must start with a letter or digit, so no word of a name starts with `/`, which `ArgumentTokenizer` and `ParserUtil#hasUnknownPrefix()` treat as a field. `add`, `edit`, `emergency` and the data file all use this rule.
 
+`Name` also collapses extra whitespace and checks `Name.MAX_LENGTH` itself, as `Tag` and `Room` do. `JsonAdaptedPerson` and `JsonAdaptedEmergencyContact` both build a `Name`, so a name in an edited data file follows the same rules as a typed one, and the existing duplicate check catches `Sarah Tan` and `Sarah  Tan`.
+
 ### Tag feature
 
 Tags are added to a contact when it is created, with `add NAME /phone PHONE [/room ROOM] [/tag TAG]...`.

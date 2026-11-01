@@ -1,5 +1,6 @@
 package seedu.address.model.person;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -17,6 +18,12 @@ public class NameTest {
     public void constructor_invalidName_throwsIllegalArgumentException() {
         String invalidName = "";
         assertThrows(IllegalArgumentException.class, () -> new Name(invalidName));
+    }
+
+    @Test
+    public void constructor_extraWhitespace_collapsed() {
+        assertEquals("Sarah Tan", new Name("  Sarah   Tan ").fullName);
+        assertEquals(new Name("Sarah Tan"), new Name("Sarah  Tan"));
     }
 
     @Test
@@ -53,6 +60,12 @@ public class NameTest {
         assertTrue(Name.isValidName("Jose\u0301")); // letter followed by a combining accent mark
         assertTrue(Name.isValidName("李小明")); // non-Latin letters
         assertTrue(Name.isValidName("A")); // boundary: single letter
+        assertTrue(Name.isValidName("  Sarah   Tan  ")); // extra spaces are collapsed
+
+        // length boundary
+        assertTrue(Name.isValidName("A".repeat(Name.MAX_LENGTH)));
+        assertFalse(Name.isValidName("A".repeat(Name.MAX_LENGTH + 1)));
+        assertTrue(Name.isValidName(" " + "A".repeat(Name.MAX_LENGTH) + " ")); // surrounding spaces do not count
     }
 
     @Test
