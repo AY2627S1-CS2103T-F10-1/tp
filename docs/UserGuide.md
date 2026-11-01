@@ -294,6 +294,10 @@ Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/note NOTE]`
 * On success, the full active contact list is shown again in stored order. Search again before using an index from the previous results.
 * An optional field given with nothing after it is removed: `/room` on its own removes the room, and
   `/note` on its own removes the note. `/name` and `/phone` are required, so they cannot be removed.
+* Be careful with field names in a note, as they change that field and still report success:
+  `edit 1 /note ask /name Bob Lee` renames the contact to `Bob Lee`, and `edit 1 /note keep /room` removes the room.
+  Because `/tag` is not a field of `edit`, `edit 1 /note ask /tag Staff` is rejected with the note's message about
+  words starting with `/`. Check the status message after editing a note.
 
 Examples:
 * `edit 2 /phone 9123 4567` changes the phone number of the 2nd contact.
