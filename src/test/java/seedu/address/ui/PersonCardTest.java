@@ -66,6 +66,19 @@ public class PersonCardTest {
     }
 
     @Test
+    public void constructor_longName_wrapsWithoutTruncating() throws Exception {
+        String longName = "Wei Ming Tan ".repeat(7).trim();
+        runOnFxThread(() -> {
+            PersonCard card = new PersonCard(new PersonBuilder().withName(longName).build(), 1);
+            layout(card.getRoot());
+
+            Label name = (Label) card.getRoot().lookup("#name");
+            assertEquals(longName, name.getText());
+            assertTrue(name.isWrapText());
+        });
+    }
+
+    @Test
     public void constructor_ordinaryContact_hidesIndicatorWithoutReservingSpace() throws Exception {
         runOnFxThread(() -> {
             PersonCard card = new PersonCard(CONTACT, 1);

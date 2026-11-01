@@ -1108,6 +1108,9 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 1. Test case: `add /x /phone 91234567`<br>
    Expected: No contact is added. Error: `Invalid command format!` followed by the `add` usage.
 
+1. Test case: Add a contact named `Wei Ming Tan` repeated seven times, then shrink the window to its minimum width.<br>
+   Expected: The whole name wraps onto several lines on the card and does not end in `...`.
+
 ### Adding a contact with tags
 
 1. Adding a contact with tags
