@@ -370,6 +370,14 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseTags_duplicatesDifferingInUnicodeForm_throwsParseException() {
+        List<String> tagsWithDuplicate = List.of("Caf\u00e9", "Cafe\u0301");
+
+        String expectedMessage = String.format(Tag.MESSAGE_REPEATED, "Cafe\u0301");
+        assertThrows(ParseException.class, expectedMessage, () -> ParserUtil.parseTags(tagsWithDuplicate));
+    }
+
+    @Test
     public void parseTags_duplicatesDifferingInCase_throwsParseException() {
         List<String> tagsWithDuplicate = List.of(VALID_TAG_1, VALID_TAG_1.toUpperCase());
 

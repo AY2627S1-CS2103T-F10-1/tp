@@ -3,6 +3,7 @@ package seedu.address.model.tag;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import java.text.Normalizer;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -107,12 +108,13 @@ public class Tag {
     }
 
     /**
-     * Returns the form of {@code name} used to compare tag names, ignoring case and extra whitespace.
+     * Returns the form of {@code name} used to compare tag names, ignoring case, extra whitespace and how
+     * accented letters are encoded, such as "é" typed as one character or as "e" and a combining mark.
      * Two names refer to the same tag exactly when their comparison keys are equal.
      */
     public static String toComparisonKey(String name) {
         requireNonNull(name);
-        return StringUtil.collapseWhitespace(name).toLowerCase(Locale.ROOT);
+        return Normalizer.normalize(StringUtil.collapseWhitespace(name).toLowerCase(Locale.ROOT), Normalizer.Form.NFC);
     }
 
     private String getComparisonKey() {

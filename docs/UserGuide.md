@@ -147,7 +147,8 @@ Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
   Tags in an edited data file are displayed the same way.
   The 50-character limit applies to the tag as displayed; a few letters, such as the Turkish `İ`, take two
   characters in lower case.
-* Duplicate tags, including tags differing only in case or extra spaces (e.g., `/tag RA /tag ra`), are rejected.
+* Duplicate tags, including tags differing only in case or extra spaces (e.g., `/tag RA /tag ra`) or in how an
+  accented letter was typed, are rejected.
 * Leading and trailing spaces are trimmed, and extra whitespace is collapsed into one space.
 * Supplying `/room`, `/tag` or `/note` without a value is rejected.
 * A contact is a duplicate when its name matches an existing contact (case-sensitive).
