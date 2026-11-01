@@ -464,7 +464,8 @@ The sequence diagram below shows how `find /name alx yeo` is executed.
 
 1. `FindCommandParser` creates a `NameFuzzyMatchesPredicate` `p` from the value after `/name`, gets its ranking
    comparator `c` with `NameFuzzyMatchesPredicate#getRankingComparator()`, and creates a `FindCommand` with both.
-   `/tag` and `/phone` searches create a `FindCommand` without a comparator, so their results keep their usual order.
+   `/tag`, `/phone` and `/room` searches create a `FindCommand` without a comparator, so their results keep their usual
+   order.
 2. The predicate's constructor collapses whitespace (including Unicode spaces such as U+00A0), converts the text
    to lowercase and splits it into the search words `alx` and `yeo`. Blank text is rejected, although the parser
    already prevents this.
@@ -489,7 +490,7 @@ The sequence diagram below shows how `find /name alx yeo` is executed.
      | 10 or more                 | 3             |
 
      The tiers are kept in the private `TypoTolerance` enum, which `NameFuzzyMatchesPredicate#getAllowedTypos()` reads.
-5. `alx` is 1 typo from `alex` and `yeo` is 1 typo from `yeoh`, so `Alex Yeoh` is listed.
+5. `alx` is 1 typo from `alex` and `yeo` is the start of `yeoh`, so `Alex Yeoh` is listed.
 6. The `SortedList` orders the matches with `c`. Each search word costs 0 for a whole word, 1 for the start of a
    word, and 1 plus its typos otherwise, using its cheapest name word; a contact's cost is the sum over the search
    words. Cheaper contacts are listed first. `ModelManager` breaks ties by position in the `FilteredList`, so contacts of
