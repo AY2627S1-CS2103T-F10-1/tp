@@ -492,8 +492,9 @@ The sequence diagram below shows how `find /name alx yeo` is executed.
 5. `alx` is 1 typo from `alex` and `yeo` is 1 typo from `yeoh`, so `Alex Yeoh` is listed.
 6. The `SortedList` orders the matches with `c`. Each search word costs 0 for a whole word, 1 for the start of a
    word, and 1 plus its typos otherwise, using its cheapest name word; a contact's cost is the sum over the search
-   words. Cheaper contacts are listed first, and `SortedList`'s stable sort keeps contacts of equal cost in their
-   address book order. `test()` and the comparator share the same cost calculation, so they cannot disagree.
+   words. Cheaper contacts are listed first. `ModelManager` breaks ties by position in the `FilteredList`, so contacts of
+   equal cost keep their address book order, even after `fav` replaces one of them or an earlier `list sorted`.
+   `test()` and the comparator share the same cost calculation, so they cannot disagree.
 
 #### Design considerations
 
@@ -1230,6 +1231,14 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 
 1. Test case: `find /name Alex Tan`<br>
    Expected: An empty list. The status message shows `No contacts found`, because no word in any name is close to `Tan`.
+
+1. Test case: In a disposable address book, `clear`, then `add Tan Ah /phone 91110001`, `add Tan Bo /phone 91110002`,
+   `add Tan Cy /phone 91110003`, `add Tan Di /phone 91110004`, `find /name Tan`, `fav 1` and `fav 1` again<br>
+   Expected: The list stays in the order added. The second `fav 1` reports that `Tan Ah` is already a favourite.
+
+1. Test case: In a disposable address book, `clear`, then `add Tan Cy /phone 91110003`, `add Tan Ah /phone 91110001`,
+   `find /name Tan`, `list sorted` and `find /name Tan` again<br>
+   Expected: Both searches list `Tan Cy` before `Tan Ah`, the order added.
 
 1. Test case: `find /name`<br>
    Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.

@@ -121,7 +121,8 @@ public class ModelManager implements Model {
         requireAllNonNull(predicate, comparator);
         logger.fine("Filtering persons and sorting them by " + comparator);
         filteredPersons.setPredicate(predicate);
-        sortedPersons.setComparator(comparator);
+        // Ties keep their address book order, so a replaced person does not move and indices stay reliable.
+        sortedPersons.setComparator(comparator.thenComparingInt(filteredPersons::indexOf));
     }
 
     @Override
