@@ -458,9 +458,10 @@ case-sensitive `NameEqualsPredicate`, so a typo cannot delete a different contac
 
 #### Implementation
 
-The sequence diagram below shows how `find /name alx yeo` is executed.
+The sequence diagram below shows the parts of `find /name alx yeo` specific to this feature. It leaves out how
+`AddressBookParser` creates `FindCommandParser` and the `CommandResult`, which the general logic diagram already covers.
 
-![Interactions for the `find /name alx yeo` Command](images/FindNameSequenceDiagram.png)
+<img src="images/FindNameSequenceDiagram.png" alt="Interactions for the find /name alx yeo command" width="740" />
 
 1. `FindCommandParser` creates a `NameFuzzyMatchesPredicate` `p` from the value after `/name`, gets its ranking
    comparator `c` with `NameFuzzyMatchesPredicate#getRankingComparator()`, and creates a `FindCommand` with both.
