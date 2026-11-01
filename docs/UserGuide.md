@@ -134,7 +134,7 @@ Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
 * Room is optional for any contact, regardless of tags. It can contain up to 20 characters:
   letters, digits, spaces and hyphens.
 * Note is optional free text, such as an allergy or how the contact prefers to be reached. It can contain
-  up to 200 characters of any kind. `/` is allowed inside a word (e.g., `24/7`, `and/or`, `w/`, links), but a word
+  up to 200 characters of any kind, although most emoji count as 2 or more. `/` is allowed inside a word (e.g., `24/7`, `and/or`, `w/`, links), but a word
   cannot start with `/`, because that marks the start of a field. If a word in the note is a field name such as
   `/room` or `/tag`, the rest of the note is taken as that field: `/note talk to /room officer` gives the note
   `talk to` and the room `officer`.
