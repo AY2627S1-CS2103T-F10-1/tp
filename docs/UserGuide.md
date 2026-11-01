@@ -129,7 +129,9 @@ Adds a contact with a required name and phone number, and optional room, tags an
 
 Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
 
-* Name is required and can contain up to 100 characters. Existing name character rules apply.
+* Name is required and can contain up to 100 characters: letters and digits in any language, spaces, and the
+  symbols `'`, `-`, `.` and `/`. Each word must start with a letter or digit, so `Kumar s/o Rajan`, `O'Brien`,
+  `Mary-Jane Lee`, `José García` and `李小明` are accepted, but `/x` and `-Lee` are not.
 * Phone is required and can contain up to 20 characters: digits, spaces, `+`, hyphens and parentheses. It must contain at least one digit; formatting characters alone are rejected with `Phone number must contain at least one digit.`
 * Room is optional for any contact, regardless of tags. It can contain up to 20 characters:
   letters, digits, spaces and hyphens.
@@ -384,7 +386,7 @@ Finding by name (`/name`):
 
     So `find /name Jonathn` (1 typo) finds `Jonathan Chua`, but `find /name Jnthn` (3 typos in a 5-letter word) does not.
     Short words must be typed exactly, so `find /name Al` does not find `Alex Yeoh`, and `find /name Ong` does not
-    find `Ng Kai`.
+    find `Ng Kai`. This also applies to names in other languages, so `find /name 李小` does not find `李小明`.
 * Because small typos are allowed, a search may also list contacts with similar names; for example,
   `find /name Tan` may also list a contact named `Tay`.
 * The closest matches are listed first: contacts whose name contains the exact words you typed, then contacts

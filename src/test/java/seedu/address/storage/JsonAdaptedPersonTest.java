@@ -76,6 +76,12 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_nameWithSymbols_returnsPerson() throws Exception {
+        Person person = new PersonBuilder(BENSON).withName("Kumar s/o Rajan").build();
+        assertEquals(person, new JsonAdaptedPerson(person).toModelType());
+    }
+
+    @Test
     public void toModelType_invalidName_throwsIllegalValueException() {
         JsonAdaptedPerson person =
                 new JsonAdaptedPerson(INVALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_TAGS);

@@ -13,13 +13,17 @@ public class Name {
     public static final String MESSAGE_EMPTY = "Contact name cannot be empty.";
     public static final String MESSAGE_TOO_LONG = "Contact name too long, please shorten it and try again.";
     public static final String MESSAGE_CONSTRAINTS =
-            "Names should only contain alphanumeric characters and spaces, and should not be blank";
+            "Names should only contain letters, digits, spaces and the symbols ' - . /, and each word should "
+            + "start with a letter or digit.";
 
-    /*
-     * The first character of the name must not be a whitespace,
-     * otherwise " " (a blank string) becomes a valid input.
+    /**
+     * A word starts with a letter or digit in any language, so " " is invalid and a word cannot be mistaken for a
+     * {@code /} prefix. Accent marks ({@code \p{M}}) are allowed for letters typed as a base letter and a combining
+     * mark, and the symbols are for names such as "s/o", "O'Brien", "Mary-Jane" and "Jr.".
      */
-    public static final String VALIDATION_REGEX = "[\\p{Alnum}][\\p{Alnum} ]*";
+    private static final String WORD_REGEX = "[\\p{L}\\p{N}][\\p{L}\\p{M}\\p{N}'./-]*";
+
+    public static final String VALIDATION_REGEX = WORD_REGEX + "( +" + WORD_REGEX + ")* *";
 
     public final String fullName;
 
