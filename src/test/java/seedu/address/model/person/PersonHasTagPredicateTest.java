@@ -46,6 +46,14 @@ public class PersonHasTagPredicateTest {
     }
 
     @Test
+    public void test_dotlessITagSearchedAsTyped_returnsTrue() {
+        Person person = new PersonBuilder().withTags("\u0131").build();
+        for (String typed : new String[]{"\u0131", "I", "i"}) {
+            assertTrue(new PersonHasTagPredicate(typed).test(person), typed);
+        }
+    }
+
+    @Test
     public void test_personDoesNotHaveTag_returnsFalse() {
         // person has no tags
         assertFalse(new PersonHasTagPredicate("RA").test(new PersonBuilder().build()));

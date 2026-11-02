@@ -173,6 +173,17 @@ public class TagTest {
     }
 
     @Test
+    public void matchesName_dotlessI_matchesTypedAndStoredForms() {
+        Tag tag = new Tag("ı");
+        assertEquals("I", tag.tagName);
+        for (String name : new String[]{"ı", "I", "i"}) {
+            assertTrue(tag.matchesName(name), name);
+            assertEquals(tag, new Tag(name));
+        }
+        assertTrue(new Tag("Kıvanç").matchesName("kıvanç"));
+    }
+
+    @Test
     public void hashCode_differentCase_sameHashCode() {
         assertEquals(new Tag("RA").hashCode(), new Tag("ra").hashCode());
         assertNotEquals(new Tag("RA").hashCode(), new Tag("Resident").hashCode());

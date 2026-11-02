@@ -1251,6 +1251,9 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 1. Test case: `list /filter friends`<br>
    Expected: The list is unchanged. Error: `Invalid command format. Usage: list`
 
+1. Test case: `add Unicode Tester /phone 91234567 /tag ı` (Turkish dotless i), then `find /tag ı`, then `find /tag I`<br>
+   Expected: The tag is shown as `I`. Both searches list Unicode Tester.
+
 ### Finding contacts by name
 
 1. Prerequisites: Start with the sample data.
