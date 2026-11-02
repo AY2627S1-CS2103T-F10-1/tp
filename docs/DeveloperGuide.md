@@ -1251,6 +1251,10 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 1. Test case: `find /name Alex /rom B-204`<br>
    Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
 
+1. Test case: `find /name Alex /rom B-204` and `find /name Alex /room B-204`, each with a non-breaking space (U+00A0)
+   instead of the space after `Alex`<br>
+   Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
+
 1. Test case: `delete /name alex yeoh`<br>
    Expected: Nothing is deleted. The status message shows `No contacts found matching that search. No contacts deleted.`,
    because `delete /name` still needs the exact full name.

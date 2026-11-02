@@ -36,7 +36,8 @@ public class FindCommandParser implements Parser<FindCommand> {
      * @throws ParseException if the user input does not conform to the expected format
      */
     public FindCommand parse(String args) throws ParseException {
-        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, SEARCH_PREFIXES);
+        String normalized = " " + StringUtil.collapseWhitespace(args);
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalized, SEARCH_PREFIXES);
 
         argMultimap.verifyNoDuplicatePrefixesFor(SEARCH_PREFIXES);
 
@@ -48,7 +49,7 @@ public class FindCommandParser implements Parser<FindCommand> {
         boolean hasExactlyOnePrefix = Stream.of(name, tag, phone, room).filter(Optional::isPresent).count() == 1;
         boolean isSearchValueEmpty = Stream.of(name, tag, phone, room)
                 .flatMap(Optional::stream).findFirst().map(StringUtil::collapseWhitespace).orElse("").isEmpty();
-        boolean hasUnknownPrefix = ParserUtil.hasUnknownPrefix(args, SEARCH_PREFIXES);
+        boolean hasUnknownPrefix = ParserUtil.hasUnknownPrefix(normalized, SEARCH_PREFIXES);
         if (!argMultimap.getPreamble().isEmpty() || !hasExactlyOnePrefix || isSearchValueEmpty || hasUnknownPrefix) {
             throw new ParseException(
                     String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE));
