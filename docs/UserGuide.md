@@ -23,7 +23,7 @@ The app stores and retrieves contact information; it does not make calls, send m
 
 1. Download the latest `.jar` file from [here](https://github.com/AY2627S1-CS2103T-F10-1/tp/releases).
 
-1. Copy the file to the folder you want to use as the _home folder_ for your AddressBook.
+1. Copy the file to the folder you want to use as the _home folder_ for RAcontact.
 
 1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar addressbook.jar`.<br>
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
@@ -40,7 +40,7 @@ The app stores and retrieves contact information; it does not make calls, send m
 
    * `list fav` : Lists favourite contacts.
 
-   * `add John Doe /phone 98765432` : Adds a contact named `John Doe` to the Address Book.
+   * `add John Doe /phone 98765432` : Adds a contact named `John Doe` to RAcontact.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
@@ -514,7 +514,7 @@ Format: `exit`
 
 ### Saving the data
 
-AddressBook automatically saves data after every command. You do not need to save manually. Archive state is stored as the boolean `archive`: `true`
+RAcontact automatically saves data after every command. You do not need to save manually. Archive state is stored as the boolean `archive`: `true`
 means archived, and `false` means active. Older files without this field load contacts as active.
 
 If saving fails, an error is shown and the in-memory change remains visible. It has not been
@@ -525,15 +525,15 @@ Older data files without favourite status still load; their contacts start unfav
 
 ### Editing the data file
 
-AddressBook data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
+RAcontact data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
 
 Each contact's `isFavourite` property is a JSON boolean, `true` or `false`. If the property is absent, it defaults to `false`.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
-If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
+If your changes make the data file invalid, RAcontact starts with an empty contact list at the next run. The invalid file remains on disk until you run a command (RAcontact saves after every command). Still, we recommend backing up the file before editing it.<br>
 A contact with more than 5 distinct tags also makes the data file invalid, as does a name over 100 characters or with characters `add` does not allow, a tag or room with no letter or digit (e.g., `---`), or a note longer than 200 characters or with a word starting with `/` (e.g., `see /docs`; a link such as `https://nus.edu.sg` is fine). See [`add`](#adding-a-contact-add) for the rules of each field.<br>
 Extra spaces in a name are collapsed when the file is loaded, so `Sarah Tan` and `Sarah  Tan` count as duplicates, which also makes the file invalid.<br>
-Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
+Furthermore, certain edits can cause RAcontact to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
 ### Archiving data files `[coming in v2.0]`
@@ -545,7 +545,7 @@ _Details coming soon ..._
 ## FAQ
 
 **Q**: How do I transfer my data to another computer?<br>
-**A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous AddressBook home folder.
+**A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous RAcontact home folder.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -566,11 +566,9 @@ Action | Format, Examples
 **Unarchive** | `unarchive INDEX` or `unarchive /tag TAG`
 **Clear** | `clear`
 **Delete** | `delete INDEX` or `delete /name NAME`<br> e.g., `delete 3`, `delete /name Alice Tan`
-**Edit (suspended)** | Temporarily unavailable. Displays `Edit not currently supported`.
 **Find** | `find /name NAME`, `find /tag TAG`, `find /phone NUMBER` or `find /room ROOM`<br> e.g., `find /name alx yeo`, `find /tag friends`, `find /phone 87438807`, `find /room B-204`
 **Edit** | `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/note NOTE]`<br> e.g., `edit 2 /phone 9123 4567`, `edit 3 /room`
 **Toggle** | `toggle INDEX /tag TAG [/tag TAG]…​`<br> e.g., `toggle 1 /tag emergency`
-**Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /tag friends`
 **List** | `list`
 **List sorted by name** | `list sorted`
 **List emergency contacts** | `list emerg`
