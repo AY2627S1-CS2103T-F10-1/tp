@@ -410,8 +410,10 @@ Format: `find /name NAME`, `find /tag TAG`, `find /phone NUMBER` or `find /room 
 #### Finding by phone: `/phone`
 
 * Searches all active contacts for an exact phone number, including contacts hidden by an earlier search.
-* Extra spaces are ignored, as when storing phone numbers. Other formatting must match:
-  `+65 9123 4567` does not match `+6591234567`, and `9123` does not match `91234567`.
+* Whitespace is ignored when searching: `9123 4567` matches `91234567`, and
+  `+65 9123 4567` matches `+6591234567`. Stored phone formatting is preserved.
+* Other formatting (`+`, hyphens and parentheses) must match. Partial numbers do not match:
+  `9123` does not match `91234567`.
 * All contacts sharing the number are listed. Any non-empty value is accepted; an unknown value matches nobody.
 * Example: `find /phone 91234567` lists contacts whose phone number is `91234567`.
 

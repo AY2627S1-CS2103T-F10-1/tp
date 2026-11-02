@@ -4,13 +4,13 @@ start
 :FindCommandParser tokenizes selectors;
 if (Exactly one non-empty /phone selector,\nno other selector, repetition or preamble?) then (yes)
   :Create PhoneEqualsPredicate;
-  :Trim query and collapse repeated\nwhitespace to one space;
+  :Normalize Unicode whitespace and\nremove all spaces from query;
   :Create FindCommand(predicate);
 else (no)
   :Throw ParseException;
   stop
 endif
-:FindCommand sets the model filter to\nactive AND exact phone string match;
+:FindCommand sets the model filter to\nactive AND exact phone match after\nremoving whitespace from stored number;
 :Read size of filtered person list;
 if (No matches?) then (yes)
   :Return no-results CommandResult;

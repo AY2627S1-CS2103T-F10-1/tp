@@ -446,9 +446,10 @@ The name does not change, so `toggle` never creates a duplicate contact and does
 
 `FindCommandParser` tokenizes `/name`, `/tag`, `/phone` and `/room`, requires exactly one non-empty selector,
 and rejects repeated selectors and preamble text. For `/phone`, it creates a `FindCommand` containing
-a `PhoneEqualsPredicate`. The predicate trims the query and collapses runs matched by Java's `\s+`
-to one ordinary space, then compares it with `Person#getPhone().value` using exact string equality.
-This does not remove internal spaces: `91234567` and `9123 4567` are different search values in this version.
+a `PhoneEqualsPredicate`. Its shared `removeWhitespace()` helper uses `StringUtil.collapseWhitespace()`
+and removes the resulting ordinary spaces from both the query and stored number before comparison.
+This includes Unicode spaces such as U+00A0: `91234567`, `9123 4567` and a query with a non-breaking
+space all match. Stored phone formatting is unchanged.
 
 <img src="images/FindByPhoneActivityDiagram.png" alt="Find by phone parsing and filtering" width="650" />
 
@@ -461,9 +462,9 @@ the normal `LogicManager` save still runs after the command returns.
 
 * **Reuse the predicate-based find command:** keeps filtering and result messages shared with other
   searches, while phone-specific matching remains in one predicate.
-* **Exact matching rather than partial matching:** gives predictable whole-number results, but depends
-  on the stored formatting. Digit-only normalization would support different spacing conventions;
-  it is not implemented in this version.
+* **Whole-number matching ignoring whitespace:** accepts numbers pasted with different spacing while
+  preserving stored formatting. Other characters (`+`, hyphens and parentheses) remain significant;
+  partial numbers do not match.
 
 ### Room search
 
@@ -1568,3 +1569,16 @@ Start with two active contacts sharing room `B-204`, one contact in `B-205`, and
 
    1. Test case: Close the main window.<br>
       Expected: The app quits.
+
+
+### Finding contacts by phone
+
+Use an empty, disposable address book. Add `add Phone Test /phone 9123 4567`.
+
+1. Run `find /phone 91234567`: Phone Test is listed.
+2. Run `find /phone 9123 4567`: the same contact is listed.
+3. Copy `find /phone 9123 4567` (the internal space is U+00A0): the same contact is listed.
+4. Run `edit 1 /phone 91234567`, then repeat steps 2 and 3: the same contact is listed.
+5. Run `find /phone 9123`: no contacts are found, because partial numbers do not match.
+
+Searching must not change the stored phone number or its displayed formatting.
