@@ -45,7 +45,7 @@ deactivate EditCommandParser
 activate EditCommand
 
 EditCommand -> Model : getFilteredPersonList()
-Model --> EditCommand : lastShownList: ObservableList<Person>
+Model --> EditCommand : lastShownList
 
 EditCommand -> EditCommand : personToEdit = lastShownList.get(index.getZeroBased())
 
