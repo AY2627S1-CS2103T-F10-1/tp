@@ -598,9 +598,10 @@ The command words `list` and `emerg` must be lowercase. `AddressBookParser` rout
 `ListCommandParser` also accepts `fav` for favourite contacts. Unsupported arguments are rejected;
 additional arguments after `emerg` use the emergency command's usage message.
 
-`ListEmergencyCommand` applies `EmergencyContactPredicate` through `Model#updateFilteredPersonList()`.
-It searches all stored contacts, preserves their order, and leaves stored data unchanged. The GUI reuses
-the normal contact list. If there are no matches, the result message is `No emergency contacts found.`;
+`ListEmergencyCommand` combines the active-contact filter with `EmergencyTagPredicate` through
+`Model#updateFilteredPersonList()`. The predicate uses `Tag#matchesName()` to share the general tag search's
+matching rules. It searches all active contacts, preserves their order, and leaves stored data unchanged.
+The GUI reuses the normal contact list. If there are no matches, the result message is `No emergency contacts found.`;
 otherwise it is `Listed all emergency contacts.`. `find /tag Emergency` produces the same contact list
 through the general tag search, while `list` restores all contacts.
 
