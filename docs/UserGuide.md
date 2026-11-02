@@ -358,15 +358,14 @@ Searches active contacts even when run from the archived view.
 Format: `find /name NAME`, `find /tag TAG`, `find /phone NUMBER` or `find /room ROOM`
 
 * Exactly one of `/name`, `/tag`, `/phone` and `/room` must be given, and nothing may be typed before it.
-* Name search ignores capital letters and forgives small typos; for example, `find /name alx yeo` finds `Alex Yeoh`.
-* Tag search ignores case and extra spaces; for example, `find /tag Friends` matches the tag `friends`.
 * Spaces before and after `NAME`, `TAG`, `NUMBER` or `ROOM` are ignored.
 * If no person matches, the message `No contacts found` is shown and the list is empty. Otherwise, the number of persons listed is shown.
-* A prefix must be followed by a space, so `find /tagfriends` is not recognised as a tag search.
-* If the prefix is missing or not followed by a space (such as `/tagfriends`), multiple search prefixes are given, or `NAME`, `TAG`, `NUMBER` or `ROOM` is empty, an invalid command format message is shown.
+* If the prefix is missing or not followed by a space (such as `/tagfriends`), multiple search prefixes are given, any other word starts with `/` (such as a mistyped `/rom`), or `NAME`, `TAG`, `NUMBER` or `ROOM` is empty, an invalid command format message is shown and the list does not change.
 * If `/name`, `/tag`, `/phone` or `/room` is repeated, a message listing the repeated prefix is shown.
 
-Finding by name (`/name`):
+#### Finding by name: `/name`
+
+* Capital letters are ignored and small typos are forgiven; for example, `find /name alx yeo` finds `Alex Yeoh`.
 * You do not need the full name. Each word you type must match one of the words in the contact's name,
   in any order; for example, `find /name Yeoh` and `find /name Yeoh Alex` both find `Alex Yeoh`.
 * Every word you type must match. For example, `find /name Alex Tan` does not find `Alex Yeoh`, because no part of
@@ -398,26 +397,33 @@ Finding by name (`/name`):
 * Extra spaces between words are ignored, including the non-breaking spaces that names pasted from a chat app
   or web page may contain.
 
-Finding by phone (`/phone`):
+![Results of find /name alx yeo](images/findNameResults.png)
+
+#### Finding by phone: `/phone`
+
 * Searches all active contacts for an exact phone number, including contacts hidden by an earlier search.
 * Extra spaces are ignored, as when storing phone numbers. Other formatting must match:
   `+65 9123 4567` does not match `+6591234567`, and `9123` does not match `91234567`.
 * All contacts sharing the number are listed. Any non-empty value is accepted; an unknown value matches nobody.
 * Example: `find /phone 91234567` lists contacts whose phone number is `91234567`.
 
-Finding by tag (`/tag`):
+#### Finding by tag: `/tag`
+
+* Case and extra spaces are ignored; for example, `find /tag Friends` matches the tag `friends`.
 * Only one tag can be searched at a time, so `find /tag friends /tag family` is rejected.
 * Any non-empty `TAG` is accepted. A value that is not a valid tag, or that no contact has, simply matches nobody.
 * A person is listed if any one of their tags is exactly `TAG`; for example, `find /tag friends` matches a person tagged `friends` and `owesMoney`, but not one tagged `friends2`.
 
-Finding by room (`/room`):
+#### Finding by room: `/room`
+
 * Matches the complete room number, ignoring case and extra whitespace: `find /room b-204` matches `B-204`.
 * Partial numbers do not match. `B-204`, `B204` and `B 204` are different room numbers.
 * Lists all active contacts sharing the room, including those hidden by a previous search.
 * Contacts without a room and archived contacts are excluded. Any non-empty search value is accepted;
   an unknown room simply matches nobody.
 
-Examples:
+#### Examples
+
 * `find /name Alex Yeoh` returns `Alex Yeoh`
 * `find /name alex` returns `Alex Yeoh`
 * `find /name Bernise` returns `Bernice Yu`, despite the typo

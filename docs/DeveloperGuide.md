@@ -458,13 +458,15 @@ case-sensitive `NameEqualsPredicate`, so a typo cannot delete a different contac
 
 #### Implementation
 
-The sequence diagram below shows how `find /name alx yeo` is executed.
+The sequence diagram below shows the parts of `find /name alx yeo` specific to this feature. It leaves out how
+`AddressBookParser` creates `FindCommandParser` and the `CommandResult`, which the general logic diagram already covers.
 
-![Interactions for the `find /name alx yeo` Command](images/FindNameSequenceDiagram.png)
+<img src="images/FindNameSequenceDiagram.png" alt="Interactions for the find /name alx yeo command" width="740" />
 
 1. `FindCommandParser` creates a `NameFuzzyMatchesPredicate` `p` from the value after `/name`, gets its ranking
    comparator `c` with `NameFuzzyMatchesPredicate#getRankingComparator()`, and creates a `FindCommand` with both.
-   `/tag` and `/phone` searches create a `FindCommand` without a comparator, so their results keep their usual order.
+   `/tag`, `/phone` and `/room` searches create a `FindCommand` without a comparator, so their results keep their usual
+   order.
 2. The predicate's constructor collapses whitespace (including Unicode spaces such as U+00A0), converts the text
    to lowercase and splits it into the search words `alx` and `yeo`. Blank text is rejected, although the parser
    already prevents this.
@@ -489,11 +491,12 @@ The sequence diagram below shows how `find /name alx yeo` is executed.
      | 10 or more                 | 3             |
 
      The tiers are kept in the private `TypoTolerance` enum, which `NameFuzzyMatchesPredicate#getAllowedTypos()` reads.
-5. `alx` is 1 typo from `alex` and `yeo` is 1 typo from `yeoh`, so `Alex Yeoh` is listed.
+5. `alx` is 1 typo from `alex` and `yeo` is the start of `yeoh`, so `Alex Yeoh` is listed.
 6. The `SortedList` orders the matches with `c`. Each search word costs 0 for a whole word, 1 for the start of a
    word, and 1 plus its typos otherwise, using its cheapest name word; a contact's cost is the sum over the search
-   words. Cheaper contacts are listed first, and `SortedList`'s stable sort keeps contacts of equal cost in their
-   address book order. `test()` and the comparator share the same cost calculation, so they cannot disagree.
+   words. Cheaper contacts are listed first. `ModelManager` breaks ties by position in the `FilteredList`, so contacts of
+   equal cost keep their address book order, even after `fav` replaces one of them or an earlier `list sorted`.
+   `test()` and the comparator share the same cost calculation, so they cannot disagree.
 
 #### Design considerations
 
@@ -1231,11 +1234,26 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 1. Test case: `find /name Alex Tan`<br>
    Expected: An empty list. The status message shows `No contacts found`, because no word in any name is close to `Tan`.
 
+1. Test case: In a disposable address book, `clear`, then `add Tan Ah /phone 91110001`, `add Tan Bo /phone 91110002`,
+   `add Tan Cy /phone 91110003`, `add Tan Di /phone 91110004`, `find /name Tan`, `fav 1` and `fav 1` again<br>
+   Expected: The list stays in the order added. The second `fav 1` reports that `Tan Ah` is already a favourite.
+
+1. Test case: In a disposable address book, `clear`, then `add Tan Cy /phone 91110003`, `add Tan Ah /phone 91110001`,
+   `find /name Tan`, `list sorted` and `find /name Tan` again<br>
+   Expected: Both searches list `Tan Cy` before `Tan Ah`, the order added.
+
 1. Test case: `find /name`<br>
    Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
 
 1. Test case: `find /name Alex /name Bernice`<br>
    Expected: The list is unchanged. An error names the repeated `/name` prefix.
+
+1. Test case: `find /name Alex /rom B-204`<br>
+   Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
+
+1. Test case: `find /name Alex /rom B-204` and `find /name Alex /room B-204`, each with a non-breaking space (U+00A0)
+   instead of the space after `Alex`<br>
+   Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
 
 1. Test case: `delete /name alex yeoh`<br>
    Expected: Nothing is deleted. The status message shows `No contacts found matching that search. No contacts deleted.`,
