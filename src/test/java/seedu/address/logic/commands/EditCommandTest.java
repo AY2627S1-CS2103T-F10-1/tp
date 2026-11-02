@@ -20,6 +20,7 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
+import java.util.List;
 import java.util.function.UnaryOperator;
 
 import org.junit.jupiter.api.Test;
@@ -241,15 +242,38 @@ public class EditCommandTest {
     }
 
     @Test
-    public void execute_noFieldSpecifiedUnfilteredList_success() {
-        EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptor());
-        Person editedPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+    public void execute_noFieldSpecifiedUnfilteredList_reportsNoChanges() {
+        assertFirstPersonNotChanged(new EditPersonDescriptor());
+    }
 
-        String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS, Messages.format(editedPerson));
+    @Test
+    public void execute_removeMissingRoomOrNote_reportsNoChanges() {
+        replaceFirstPerson(person -> person.withRoom("").withNote(""));
+        assertFirstPersonNotChanged(new EditPersonDescriptorBuilder().withRoom("").build());
+        assertFirstPersonNotChanged(new EditPersonDescriptorBuilder().withNote("").build());
+    }
 
+    @Test
+    public void execute_sameValues_reportsNoChanges() {
+        Person original = replaceFirstPerson(person -> person.withRoom(VALID_ROOM_BOB).withNote(VALID_NOTE_AMY));
+        assertFirstPersonNotChanged(new EditPersonDescriptorBuilder().withNote(VALID_NOTE_AMY).build());
+        assertFirstPersonNotChanged(new EditPersonDescriptorBuilder(original).build());
+    }
+
+    @Test
+    public void execute_noChangesFilteredList_keepsFilter() {
+        showPersonAtIndex(model, INDEX_SECOND_PERSON);
+        assertFirstPersonNotChanged(new EditPersonDescriptor());
+    }
+
+    /** Asserts that editing the first shown person with {@code descriptor} reports and makes no changes. */
+    private void assertFirstPersonNotChanged(EditPersonDescriptor descriptor) {
+        Person original = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        String expectedMessage = String.format(EditCommand.MESSAGE_NO_CHANGES, original.getName());
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expectedModel.updateFilteredPersonList(List.copyOf(model.getFilteredPersonList())::contains);
 
-        assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+        assertCommandSuccess(new EditCommand(INDEX_FIRST_PERSON, descriptor), model, expectedMessage, expectedModel);
     }
 
     @Test
@@ -299,6 +323,14 @@ public class EditCommandTest {
         EditCommand editCommand = new EditCommand(outOfBoundIndex, descriptor);
 
         assertCommandFailure(editCommand, model, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+    }
+
+    @Test
+    public void execute_indexTooLargeForInt_reportsInvalidIndex() throws Exception {
+        for (String index : List.of("2147483647", "2147483648", "99999999999999999999")) {
+            EditCommand editCommand = new EditCommandParser().parse(index + " /room");
+            assertCommandFailure(editCommand, model, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        }
     }
 
     /**

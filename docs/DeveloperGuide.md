@@ -208,8 +208,10 @@ in-memory change.
 
 #### Implementation
 
-`DeleteCommandParser` retains signed integer input as an index attempt, so invalid or overflowing indices
-are rejected rather than interpreted as names. Other input must contain a single non-empty `/name`
+`DeleteCommandParser` retains signed integer input as an index attempt, so invalid indices are rejected
+rather than interpreted as names. As with every index, `ParserUtil#parseIndex()` treats a positive integer too
+large for an `int` as the largest index, so `delete 2147483648` reports an invalid index rather than an invalid
+format. Other input must contain a single non-empty `/name`
 selector without preamble text. The parser constructs `DeleteCommand` with `NameEqualsPredicate`, which
 compares the supplied name with the stored full name exactly and case-sensitively; it does not collapse
 internal whitespace.
@@ -260,6 +262,7 @@ Three Unicode details keep the stored form consistent with loading and comparing
 
 * `Tag#toComparisonKey()` normalizes names to NFC, because `é` can be typed as one character or as `e` and a combining mark. Otherwise they would look the same on the card but count as two tags, and `find /tag` would match only the form typed.
 * Each word is lowercased as a whole before its first letter is title-cased. Some letters lowercase differently depending on their neighbors: the Greek `Σ` becomes `ς` at the end of a word and `σ` elsewhere. Lowercasing letters one at a time would store `ΟΣ` as `Οσ`, while `Tag#toComparisonKey()` lowercases the whole name to `ος`, so `find /tag ΟΣ` would match nothing and `/tag ΟΣ /tag ος` would be two different tags.
+* `Tag#toComparisonKey()` lowercases, uppercases, then lowercases again, because title-casing can turn a letter into one that lowercases differently. The dotless `ı` is stored as `I`, which lowercases to `i`, and `ẞ` is stored as `ß`, which uppercases to `SS`. The round trip gives a typed name and its stored form the same key, so `find /tag ı` and `find /tag ẞ` find the tags they created.
 * `Tag#isValidTagName()` also checks the length of the title-case form, because a few letters, such as `İ`, become two characters in lower case. Otherwise a tag within the limit as typed could be saved longer than `Tag.MAX_LENGTH` and make the data file fail to load. `ParserUtil#parseTag()` reports such a tag as too long.
  `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were typed. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
 
@@ -798,8 +801,6 @@ The following activity diagram summarizes what happens when a user executes a ne
   * Pros: Will use less memory (e.g. for `delete`, just save the person being deleted).
   * Cons: We must ensure that the implementation of each individual command is correct.
 
-_{more aspects and alternatives to be added}_
-
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Documentation, logging, testing, dev-ops**
@@ -1052,7 +1053,25 @@ testers are expected to do more *exploratory* testing.
    1. Relaunch the app by double-clicking the JAR file.<br>
        Expected: The most recent window size and location are retained.
 
-1. _{ more test cases …​ }_
+1. Window title
+
+   1. Launch the app.<br>
+      Expected: The title bar of the main window shows `RAcontact`.
+
+### Viewing help
+
+1. Closing the help window with the keyboard
+
+   1. Test case: `help`, then press Esc, then type `list` and press Enter.<br>
+      Expected: The help window closes, the command box has focus again, and `list` runs without using the mouse.
+
+   1. Test case: Press F1, then press Esc.<br>
+      Expected: Same as above.
+
+1. Reopening a minimized help window
+
+   1. Test case: `help`, minimize the help window, then click the main window and run `help` again.<br>
+      Expected: The help window is restored and brought to the front.
 
 ### Recalling previous commands
 
@@ -1083,8 +1102,6 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 
    1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
       Expected: Similar to previous.
-
-1. _{ more test cases …​ }_
 
 ### Listing all contacts
 
@@ -1231,6 +1248,12 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 
 1. Test case: `list /filter friends`<br>
    Expected: The list is unchanged. Error: `Invalid command format. Usage: list`
+
+1. Test case: `add Unicode Tester /phone 91234567 /tag ı` (Turkish dotless i), then `find /tag ı`, then `find /tag I`<br>
+   Expected: The tag is shown as `I`. Both searches list Unicode Tester.
+
+1. Test case: `add Sharp Tester /phone 91234568 /tag ẞ` (capital sharp s), then `find /tag ẞ`, then `find /tag ß`<br>
+   Expected: The tag is shown as `ß`. Both searches list Sharp Tester.
 
 ### Finding contacts by name
 
@@ -1389,6 +1412,15 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
    1. Test case: `edit 2 /room B-204`, then `edit 2 /room`<br>
       Expected: The 2nd contact's card shows `Room: B-204`, then the room line is removed.
 
+   1. Test case: `edit 2 /room` again, after the test case above<br>
+      Expected: Nothing changes. The status message is `Bernice Yu already has these details. No changes made.`
+
+   1. Test case: `edit 2 /note same` twice<br>
+      Expected: The first command sets the note. The second shows the same `No changes made.` message as above.
+
+   1. Test case: `edit 2147483648 /room`, then `edit 99999999999999999999 /room`<br>
+      Expected: No contact is changed. Both show `The person index provided is invalid.`, like `edit 2147483647 /room`.
+
    1. Test case: `edit 1 /note see /docs`<br>
       Expected: No contact is changed. Error: `No word in a note can start with "/", as that starts a new field.`
 
@@ -1427,8 +1459,8 @@ Changing tags | `find /phone 91234567`, `toggle 1 /tag Staff`, `find /phone 9123
 Saving and restarting | Close and reopen the app, then `list fav` | Only Test One is a favourite. Its room, note and tags remain as saved.
 Repeated removal | `find /phone 91234567`, then `unfav 1` twice | The first command removes the badge. The second message starts with `Contact is not a favourite:`. Test One's other details remain intact.
 No favourites | `list fav`, then `list` | The favourite view is empty with `No favourite contacts found.`. `list` restores all three contacts.
-Invalid formats | `fav`, `fav 0`, `fav -1`, `fav 2147483648`, `unfav 1 extra` | Invalid command format and the respective usage message; data and the displayed list stay unchanged.
-Out-of-range index | `fav 999999` | Error: `The person index provided is invalid.`; data and the displayed list stay unchanged.
+Invalid formats | `fav`, `fav 0`, `fav -1`, `unfav 1 extra` | Invalid command format and the respective usage message; data and the displayed list stay unchanged.
+Out-of-range index | `fav 999999`, `fav 2147483648`, `unfav 99999999999999999999` | Error: `The person index provided is invalid.`; data and the displayed list stay unchanged.
 Invalid listing | `list fav 1` | Error: `Invalid command format. Usage: list fav`; the displayed list stays unchanged.
 Case sensitivity | `FAV 1`, `UNFAV 1`, `LIST fav`, `list FAV` | The first three report `Unknown command.`. The last reports `Invalid command format. Usage: list`. No data changes.
 
@@ -1501,8 +1533,38 @@ Start with two active contacts sharing room `B-204`, one contact in `B-205`, and
 
 ### Saving data
 
-1. Dealing with missing/corrupted data files
+1. Dealing with missing and corrupted data files
 
-   1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
+   1. Prerequisites: Copy the JAR file into an empty folder and use that folder for every test case below,
+      so that your real data is never touched. Close the app before changing any file.
 
-1. _{ more test cases …​ }_
+   1. Test case: Delete `data/addressbook.json` (or launch the app for the first time), then launch the app.<br>
+      Expected: The sample contacts are shown. `data/addressbook.json` is not created until a command is run.
+      Run `list`, and the file is created containing the sample contacts.
+
+   1. Test case: Replace the contents of `data/addressbook.json` with `{ not json`, then launch the app.<br>
+      Expected: The app starts with an empty contact list. The file still contains `{ not json`.
+
+   1. Test case: After the test case above, close the app without running a command, then relaunch it.<br>
+      Expected: Same as above. The corrupted file is kept until a command is run.
+
+   1. Test case: After the test case above, run `list`.<br>
+      Expected: `data/addressbook.json` is overwritten with an empty contact list, and the corrupted contents are lost.
+
+   1. Test case: Restore a valid data file, then edit one contact's `name` to a value longer than 100 characters, or
+      give one contact more than 5 different tags. Launch the app.<br>
+      Expected: The app starts with an empty contact list, the same as for a corrupted file.
+
+1. Commands when saving fails
+
+   1. Prerequisites: Launch the app in a disposable folder. While it is open, move `data/addressbook.json`
+      elsewhere and create a folder named `addressbook.json` inside `data`, so that saving fails.
+
+   1. Test case: `help`<br>
+      Expected: The help window opens. No save error is shown.
+
+   1. Test case: `exit`<br>
+      Expected: The app stays open and shows `Could not save data due to the following error: ...`.
+
+   1. Test case: Close the main window.<br>
+      Expected: The app quits.

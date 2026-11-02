@@ -88,6 +88,8 @@ Shows a message explaining how to access the help page.
 
 Format: `help`
 
+* Press Esc to close the help window and go back to typing commands. Pressing `F1` also opens it.
+* If the help window is minimized, `help` restores it.
 
 ### Recalling previous commands
 
@@ -243,8 +245,8 @@ Format: `fav INDEX`
 * Archived contacts must be unarchived before using `fav` or `unfav`. Otherwise, the command reports
   `Cannot change favourite status for an archived contact. Unarchive it first.` and leaves data unchanged.
 * The command word is case-sensitive. Leading and trailing spaces are ignored; extra arguments are rejected.
-* Missing, zero, negative, non-integer or overflowing indices show an invalid command format message with
-  the `fav` usage. A positive index outside the displayed list shows `The person index provided is invalid.`.
+* Missing, zero, negative or non-integer indices show an invalid command format message with the `fav` usage.
+  A positive index outside the displayed list, however large, shows `The person index provided is invalid.`.
   Rejected commands leave contact data and the displayed list unchanged.
 
 Example: `fav 2` marks the 2nd currently displayed contact.
@@ -298,6 +300,8 @@ Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/note NOTE]`
 * On success, the full active contact list is shown again in stored order. Search again before using an index from the previous results.
 * An optional field given with nothing after it is removed: `/room` on its own removes the room, and
   `/note` on its own removes the note. `/name` and `/phone` are required, so they cannot be removed.
+* If the contact already has the details given, such as `/room` on a contact with no room, nothing is changed and
+  RAcontact shows `NAME already has these details. No changes made.` The current list is kept as it is.
 * Be careful with field names in a note, as they change that field and still report success:
   `edit 1 /note ask /name Bob Lee` renames the contact to `Bob Lee`, and `edit 1 /note keep /room` removes the room.
   Because `/tag` is not a field of `edit`, `edit 1 /note ask /tag Staff` is rejected with the note's message about
@@ -520,6 +524,8 @@ means archived, and `false` means active. Older files without this field load co
 
 If saving fails, an error is shown and the in-memory change remains visible. It has not been
 confirmed saved to disk; resolve the storage problem before relying on it surviving a restart.
+While saving fails, `help` still opens the help window, but `exit` shows the save error and keeps RAcontact open,
+so that you do not lose unsaved changes without noticing. Closing the window still quits, and unsaved changes are lost.
 
 Favourite status is saved with each contact and remains after restarting, including when the status is removed.
 Older data files without favourite status still load; their contacts start unfavourited.
@@ -553,8 +559,6 @@ _Details coming soon ..._
 ## Known issues
 
 1. **When using multiple screens**, if you move the application to a secondary screen, and later switch to using only the primary screen, the GUI will open off-screen. The remedy is to delete the `preferences.json` file created by the application before running the application again.
-2. **If you minimize the Help Window** and then run the `help` command (or use the `Help` menu, or the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
-
 --------------------------------------------------------------------------------------------------------------------
 
 ## Command summary

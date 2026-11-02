@@ -35,6 +35,7 @@ public class ParserUtil {
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
 
     private static final String PREFIX_MARKER = "/";
+    private static final String POSITIVE_INTEGER_REGEX = "0*[1-9][0-9]*";
 
     private static final Logger logger = LogsCenter.getLogger(ParserUtil.class);
 
@@ -66,15 +67,19 @@ public class ParserUtil {
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be
-     * trimmed.
+     * trimmed. A positive integer too large for an {@code int} becomes the largest {@code Index}, which is past the
+     * end of any list, so commands report it as an invalid index rather than an invalid format.
      * @throws ParseException if the specified index is invalid (not a non-zero unsigned integer).
      */
     public static Index parseIndex(String oneBasedIndex) throws ParseException {
         String trimmedIndex = oneBasedIndex.trim();
-        if (!StringUtil.isNonZeroUnsignedInteger(trimmedIndex)) {
-            throw new ParseException(MESSAGE_INVALID_INDEX);
+        if (StringUtil.isNonZeroUnsignedInteger(trimmedIndex)) {
+            return Index.fromOneBased(Integer.parseInt(trimmedIndex));
         }
-        return Index.fromOneBased(Integer.parseInt(trimmedIndex));
+        if (trimmedIndex.matches(POSITIVE_INTEGER_REGEX)) {
+            return Index.fromOneBased(Integer.MAX_VALUE);
+        }
+        throw new ParseException(MESSAGE_INVALID_INDEX);
     }
 
     /**

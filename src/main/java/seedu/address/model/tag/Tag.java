@@ -111,10 +111,14 @@ public class Tag {
      * Returns the form of {@code name} used to compare tag names, ignoring case, extra whitespace and how
      * accented letters are encoded, such as "é" typed as one character or as "e" and a combining mark.
      * Two names refer to the same tag exactly when their comparison keys are equal.
+     * The name is lowercased, uppercased, then lowercased again, so that a typed name and its stored form compare
+     * equal even when title-casing changes a letter, such as the dotless "ı" stored as "I" or "ẞ" stored as "ß".
      */
     public static String toComparisonKey(String name) {
         requireNonNull(name);
-        return Normalizer.normalize(StringUtil.collapseWhitespace(name).toLowerCase(Locale.ROOT), Normalizer.Form.NFC);
+        String caseFolded = StringUtil.collapseWhitespace(name).toLowerCase(Locale.ROOT)
+                .toUpperCase(Locale.ROOT).toLowerCase(Locale.ROOT);
+        return Normalizer.normalize(caseFolded, Normalizer.Form.NFC);
     }
 
     private String getComparisonKey() {
