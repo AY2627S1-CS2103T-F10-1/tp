@@ -1408,6 +1408,15 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
    1. Test case: `edit 2 /room B-204`, then `edit 2 /room`<br>
       Expected: The 2nd contact's card shows `Room: B-204`, then the room line is removed.
 
+   1. Test case: `edit 2 /room` again, after the test case above<br>
+      Expected: Nothing changes. The status message is `Bernice Yu already has these details. No changes made.`
+
+   1. Test case: `edit 2 /note same` twice<br>
+      Expected: The first command sets the note. The second shows the same `No changes made.` message as above.
+
+   1. Test case: `edit 2147483648 /room`, then `edit 99999999999999999999 /room`<br>
+      Expected: No contact is changed. Both show `The person index provided is invalid.`, like `edit 2147483647 /room`.
+
    1. Test case: `edit 1 /note see /docs`<br>
       Expected: No contact is changed. Error: `No word in a note can start with "/", as that starts a new field.`
 

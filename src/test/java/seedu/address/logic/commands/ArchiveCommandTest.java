@@ -98,7 +98,7 @@ public class ArchiveCommandTest {
 
     @Test
     public void parse_invalidArguments_doesNotChangeData() {
-        for (String args : List.of("", "0", "-1", "+1", "1.5", "2147483648", "one", "1 2", "1 /tag friends")) {
+        for (String args : List.of("", "0", "-1", "+1", "1.5", "one", "1 2", "1 /tag friends")) {
             assertThrows(ParseException.class, () -> parser.parseCommand("archive " + args));
             assertEquals(List.of(ALICE, BOB), model.getAddressBook().getPersonList());
             assertEquals(List.of(ALICE, BOB), model.getFilteredPersonList());

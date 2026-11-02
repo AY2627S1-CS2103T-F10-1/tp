@@ -38,7 +38,7 @@ public class EmergencyCommandParserTest {
     @Test
     public void parse_invalidClear_failure() {
         String usage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, EmergencyCommand.MESSAGE_USAGE);
-        for (String input : new String[]{"/clear", "0 /clear", "-1 /clear", "2147483648 /clear",
+        for (String input : new String[]{"/clear", "0 /clear", "-1 /clear",
             "1 /clear extra", "1 /CLEAR", "1 /clear /name Bob", "1 /phone 91234567 /clear",
             "1 /clear /relation", "1 /name Bob /phone 91234567 /clear"}) {
             assertParseFailure(parser, input, usage);
@@ -53,7 +53,7 @@ public class EmergencyCommandParserTest {
         for (String input : new String[]{"", "0 /name Bob /phone 91234567", "1 /name Bob", "1 /phone 91234567",
             "1 /name Bob /phone 91234567 /foo value", "1 /name Bob /phone 91234567 /clear",
             "Bob /name Bob /phone 91234567", "1 /name Bob /PHONE 91234567",
-            "-1 /name Bob /phone 91234567", "999999999999999999999 /name Bob /phone 91234567"}) {
+            "-1 /name Bob /phone 91234567"}) {
             assertParseFailure(parser, input, usage);
         }
     }

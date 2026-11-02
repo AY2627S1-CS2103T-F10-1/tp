@@ -299,6 +299,8 @@ Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/note NOTE]`
 * On success, the full active contact list is shown again in stored order. Search again before using an index from the previous results.
 * An optional field given with nothing after it is removed: `/room` on its own removes the room, and
   `/note` on its own removes the note. `/name` and `/phone` are required, so they cannot be removed.
+* If the contact already has the details given, such as `/room` on a contact with no room, nothing is changed and
+  RAcontact shows `NAME already has these details. No changes made.` The current list is kept as it is.
 * Be careful with field names in a note, as they change that field and still report success:
   `edit 1 /note ask /name Bob Lee` renames the contact to `Bob Lee`, and `edit 1 /note keep /room` removes the room.
   Because `/tag` is not a field of `edit`, `edit 1 /note ask /tag Staff` is rejected with the note's message about

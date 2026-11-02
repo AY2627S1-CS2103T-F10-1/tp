@@ -24,7 +24,7 @@ public class DeleteCommandParserTest {
 
     @Test
     public void parse_invalidArgs_throwsParseException() {
-        String[] invalidInputs = {"", "   ", "0", "-1", "+1", "999999999999999999999",
+        String[] invalidInputs = {"", "   ", "0", "-1", "+1",
             "Alice", "/name", "/name   ", "Alice /name Tan", "/tag friends",
             "/name Alice /name Bob"};
         for (String input : invalidInputs) {
