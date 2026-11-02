@@ -134,7 +134,7 @@ Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
 * Room is optional for any contact, regardless of tags. It can contain up to 20 characters:
   letters, digits, spaces and hyphens.
 * Note is optional free text, such as an allergy or how the contact prefers to be reached. It can contain
-  up to 200 characters of any kind. `/` is allowed inside a word (e.g., `24/7`, `and/or`, `w/`, links), but a word
+  up to 200 characters of any kind, although most emoji count as 2 or more. `/` is allowed inside a word (e.g., `24/7`, `and/or`, `w/`, links), but a word
   cannot start with `/`, because that marks the start of a field. If a word in the note is a field name such as
   `/room` or `/tag`, the rest of the note is taken as that field: `/note talk to /room officer` gives the note
   `talk to` and the room `officer`.
@@ -294,6 +294,10 @@ Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/note NOTE]`
 * On success, the full active contact list is shown again in stored order. Search again before using an index from the previous results.
 * An optional field given with nothing after it is removed: `/room` on its own removes the room, and
   `/note` on its own removes the note. `/name` and `/phone` are required, so they cannot be removed.
+* Be careful with field names in a note, as they change that field and still report success:
+  `edit 1 /note ask /name Bob Lee` renames the contact to `Bob Lee`, and `edit 1 /note keep /room` removes the room.
+  Because `/tag` is not a field of `edit`, `edit 1 /note ask /tag Staff` is rejected with the note's message about
+  words starting with `/`. Check the status message after editing a note.
 
 Examples:
 * `edit 2 /phone 9123 4567` changes the phone number of the 2nd contact.
