@@ -265,7 +265,7 @@ Example: `unfav 1` removes favourite status from the 1st currently displayed con
 
 ### Listing favourite contacts: `list fav`
 
-Shows active favourite contacts from across the address book, including those hidden by an earlier search.
+Shows active favourite contacts from across the contact list, including those hidden by an earlier search.
 
 Format: `list fav`
 
@@ -439,7 +439,7 @@ Format: `find /name NAME`, `find /tag TAG`, `find /phone NUMBER` or `find /room 
 Format: `archive INDEX` or `archive /tag TAG`
 
 * `INDEX` is a positive integer from the currently displayed list, including search results.
-* `/tag TAG` archives **all active contacts** with that tag across the address book,
+* `/tag TAG` archives **all active contacts** with that tag across the contact list,
   including contacts outside the displayed results. Matching ignores case and extra whitespace.
 * Selection is internal: the command runs immediately without a preview or confirmation.
 * The current view/filter stays in place. Archived contacts disappear from active results;
@@ -466,7 +466,7 @@ stored and are hidden at startup and in these normal lists/searches.
 Format: `unarchive INDEX` or `unarchive /tag TAG`
 
 * Run `list archived` before restoring by index. Use the index currently displayed.
-* Tag selection restores all archived contacts matching the tag across the address book,
+* Tag selection restores all archived contacts matching the tag across the contact list,
   ignoring case and extra whitespace. Active contacts are unchanged.
 * The current view/filter stays in place: restored contacts disappear from the archived view.
   Use `list` to see them among active contacts.
@@ -478,7 +478,7 @@ Example: `list archived`, then `unarchive 1`; or `unarchive /tag Study Group`.
 
 ### Deleting a person: `delete`
 
-Permanently deletes the specified person from the address book. From `list archived`,
+Permanently deletes the specified person from the contact list. From `list archived`,
 `delete INDEX` can delete an archived contact; it cannot then be unarchived.
 
 Format: `delete INDEX` or `delete /name NAME`
@@ -497,7 +497,7 @@ Format: `delete INDEX` or `delete /name NAME`
 
 
 Examples:
-* `list` followed by `delete 2` deletes the 2nd person in the address book.
+* `list` followed by `delete 2` deletes the 2nd person in the contact list.
 * `find /name Betsy Crower` followed by `delete 1` deletes the 1st person in the results of the `find` command.
 
 ### Clearing all entries: `clear`
