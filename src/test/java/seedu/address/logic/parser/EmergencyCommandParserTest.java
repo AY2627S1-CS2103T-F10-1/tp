@@ -59,6 +59,12 @@ public class EmergencyCommandParserTest {
     }
 
     @Test
+    public void parse_nameWithSlashInsideWord_success() {
+        assertParseSuccess(parser, "1 /name Kumar s/o Rajan /phone 91234567", new EmergencyCommand(INDEX_FIRST_PERSON,
+                new EmergencyContact(new Name("Kumar s/o Rajan"), new Phone("91234567"), "")));
+    }
+
+    @Test
     public void parse_invalidDetails_usesSharedValidation() {
         assertParseFailure(parser, "1 /name /phone 91234567", Name.MESSAGE_EMPTY);
         assertParseFailure(parser, "1 /name Bob /phone", Phone.MESSAGE_EMPTY);

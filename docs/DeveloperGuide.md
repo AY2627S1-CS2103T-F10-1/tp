@@ -232,26 +232,33 @@ After the command returns, `LogicManager` saves the address book through the exi
 * **Restrict name matching to active contacts:** excludes archived contacts from ordinary name deletion.
   Index deletion remains available for a contact explicitly displayed in the archive view.
 
+### Name validation
+
+`Name.VALIDATION_REGEX` accepts letters and digits in any language, using `\p{L}` and `\p{N}` rather than `\p{Alnum}`, which in Java only matches ASCII, so an RA can save a resident's real name. `\p{M}` allows accent marks, and `'`, `-`, `.` and `/` allow names such as `O'Brien`, `Mary-Jane`, `Tan Jr.` and `Kumar s/o Rajan`. Each word must start with a letter or digit, so no word of a name starts with `/`, which `ArgumentTokenizer` and `ParserUtil#hasUnknownPrefix()` treat as a field. `add`, `edit`, `emergency` and the data file all use this rule.
+
+`Name` also collapses extra whitespace and checks `Name.MAX_LENGTH` itself, as `Tag` and `Room` do. `JsonAdaptedPerson` and `JsonAdaptedEmergencyContact` both build a `Name`, so a name in an edited data file follows the same rules as a typed one, and the existing duplicate check catches `Sarah Tan` and `Sarah  Tan`.
+
 ### Tag feature
 
-Tags are added to a contact when it is created, with `add NAME /phone PHONE [/room ROOM] [/tag TAG]...`.
+Tags are added to a contact when it is created, with `add NAME /phone PHONE [/room ROOM] [/tag TAG]... [/note NOTE]`.
 
 #### Implementation
 
-`AddCommandParser` uses `ArgumentTokenizer` with the `/phone`, `/room` and `/tag` keywords, so they can be given in any order. The text before the first keyword is the name. `/phone` must be given exactly once and `/room` at most once; a word starting with `/` that is not one of these keywords is rejected. `/tag` is optional and may be repeated, once per tag.
+`AddCommandParser` uses `ArgumentTokenizer` with the `/phone`, `/room`, `/tag` and `/note` keywords, so they can be given in any order. The text before the first keyword is the name. `/phone` must be given exactly once, and `/room` and `/note` at most once; a word starting with `/` that is not one of these keywords is rejected. `/tag` is optional and may be repeated, once per tag.
 
-For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. So `/tag` with no value is reported as an empty tag, and `/tag RA, Staff` as invalid characters. `AddCommandParser` collects the tags into a `LinkedHashSet`, rejects a tag already given (`Contact already has this tag.`), and then rejects more than `Person.MAX_TAGS` tags.
+For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters, longer than `Tag.MAX_LENGTH` in title case. So `/tag` with no value is reported as an empty tag, and `/tag RA, Staff` as invalid characters. The diagram below groups these as an invalid value. `ParserUtil#parseTags()` then creates the `Tag` and collects the tags into a `LinkedHashSet`, rejects a tag already given (`Repeated tag: TAG. Each tag can only be given once.`), and then rejects more than `Person.MAX_TAGS` tags.
 
 The activity diagram below shows the order in which these checks run for an `add` command.
 
-<img src="images/TagValidationActivityDiagram.png" width="800" />
+<img src="images/TagValidationActivityDiagram.png" alt="Order of the tag checks in the add command" width="400" />
 
 `Tag.VALIDATION_REGEX` uses `\p{L}`, `\p{M}` and `\p{N}` rather than `\p{Alnum}`, which in Java only matches ASCII, so letters and digits in any language are accepted. `\p{M}` allows accent marks, for letters typed as a base letter followed by a combining mark.
 
 `Tag` compares tag names ignoring case and stores them in title case: the first letter of each word in upper case and the rest in lower case. As `JsonAdaptedTag` also builds a `Tag`, tags in an edited data file are normalized the same way when loaded.
 
-Two Unicode details keep the stored form consistent with loading and comparing:
+Three Unicode details keep the stored form consistent with loading and comparing:
 
+* `Tag#toComparisonKey()` normalizes names to NFC, because `é` can be typed as one character or as `e` and a combining mark. Otherwise they would look the same on the card but count as two tags, and `find /tag` would match only the form typed.
 * Each word is lowercased as a whole before its first letter is title-cased. Some letters lowercase differently depending on their neighbors: the Greek `Σ` becomes `ς` at the end of a word and `σ` elsewhere. Lowercasing letters one at a time would store `ΟΣ` as `Οσ`, while `Tag#toComparisonKey()` lowercases the whole name to `ος`, so `find /tag ΟΣ` would match nothing and `/tag ΟΣ /tag ος` would be two different tags.
 * `Tag#isValidTagName()` also checks the length of the title-case form, because a few letters, such as `İ`, become two characters in lower case. Otherwise a tag within the limit as typed could be saved longer than `Tag.MAX_LENGTH` and make the data file fail to load. `ParserUtil#parseTag()` reports such a tag as too long.
  `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were typed. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
@@ -380,7 +387,7 @@ the same ordering. Sorting does not modify the backing address book or its saved
 1. Collapse whitespace, then reject any word starting with `/` other than `/tag` as an invalid format.
 2. Parse the text before the first keyword as the `INDEX`; an invalid index is reported as an invalid format.
 3. Require at least one `/tag`; otherwise report an invalid format.
-4. Parse each value with `ParserUtil#parseTag()`, as `add` does, so an empty or invalid tag is reported the same way. A tag given twice is reported as `Repeated tag: TAG. Each tag can only be given once.` rather than `add`'s `Contact already has this tag.`, which would wrongly suggest that the contact already has the tag. The tag limit is not checked here, because it applies to the tags left after the toggle.
+4. Parse each value with `ParserUtil#parseTag()`, as `add` does, so an empty or invalid tag is reported the same way. A tag given twice is reported as `Repeated tag: TAG. Each tag can only be given once.`, as in `add`. The tag limit is not checked here, because it applies to the tags left after the toggle.
 
 `ToggleCommand` holds the `Index` and a `LinkedHashSet<Tag>` of tags to toggle. In `execute()` it:
 
@@ -458,13 +465,15 @@ case-sensitive `NameEqualsPredicate`, so a typo cannot delete a different contac
 
 #### Implementation
 
-The sequence diagram below shows how `find /name alx yeo` is executed.
+The sequence diagram below shows the parts of `find /name alx yeo` specific to this feature. It leaves out how
+`AddressBookParser` creates `FindCommandParser` and the `CommandResult`, which the general logic diagram already covers.
 
-![Interactions for the `find /name alx yeo` Command](images/FindNameSequenceDiagram.png)
+<img src="images/FindNameSequenceDiagram.png" alt="Interactions for the find /name alx yeo command" width="740" />
 
 1. `FindCommandParser` creates a `NameFuzzyMatchesPredicate` `p` from the value after `/name`, gets its ranking
    comparator `c` with `NameFuzzyMatchesPredicate#getRankingComparator()`, and creates a `FindCommand` with both.
-   `/tag` and `/phone` searches create a `FindCommand` without a comparator, so their results keep their usual order.
+   `/tag`, `/phone` and `/room` searches create a `FindCommand` without a comparator, so their results keep their usual
+   order.
 2. The predicate's constructor collapses whitespace (including Unicode spaces such as U+00A0), converts the text
    to lowercase and splits it into the search words `alx` and `yeo`. Blank text is rejected, although the parser
    already prevents this.
@@ -489,11 +498,12 @@ The sequence diagram below shows how `find /name alx yeo` is executed.
      | 10 or more                 | 3             |
 
      The tiers are kept in the private `TypoTolerance` enum, which `NameFuzzyMatchesPredicate#getAllowedTypos()` reads.
-5. `alx` is 1 typo from `alex` and `yeo` is 1 typo from `yeoh`, so `Alex Yeoh` is listed.
+5. `alx` is 1 typo from `alex` and `yeo` is the start of `yeoh`, so `Alex Yeoh` is listed.
 6. The `SortedList` orders the matches with `c`. Each search word costs 0 for a whole word, 1 for the start of a
    word, and 1 plus its typos otherwise, using its cheapest name word; a contact's cost is the sum over the search
-   words. Cheaper contacts are listed first, and `SortedList`'s stable sort keeps contacts of equal cost in their
-   address book order. `test()` and the comparator share the same cost calculation, so they cannot disagree.
+   words. Cheaper contacts are listed first. `ModelManager` breaks ties by position in the `FilteredList`, so contacts of
+   equal cost keep their address book order, even after `fav` replaces one of them or an earlier `list sorted`.
+   `test()` and the comparator share the same cost calculation, so they cannot disagree.
 
 #### Design considerations
 
@@ -1083,6 +1093,28 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
    1. Test case: `list`<br>
       Expected: An empty list and `No contacts found.`.
 
+### Adding a contact with a real name
+
+1. Prerequisites: Start with the sample data.
+
+1. Test case: `add Kumar s/o Rajan /phone 91234561`, then `add O'Brien /phone 91234563`, then `add 李小明 /phone 91234566`<br>
+   Expected: All three contacts are added.
+
+1. Test case: `find /name s/o`<br>
+   Expected: `Kumar s/o Rajan` is listed.
+
+1. Test case: `list`, then `delete /name O'Brien`<br>
+   Expected: `O'Brien` is deleted.
+
+1. Other incorrect commands to try: `add -Lee /phone 91234567`, `add R@chel /phone 91234567`<br>
+   Expected: No contact is added. The error lists the characters allowed in a name.
+
+1. Test case: `add /x /phone 91234567`<br>
+   Expected: No contact is added. Error: `Invalid command format!` followed by the `add` usage.
+
+1. Test case: Add a contact named `Wei Ming Tan` repeated seven times, then shrink the window to its minimum width.<br>
+   Expected: The whole name wraps onto several lines on the card and does not end in `...`.
+
 ### Adding a contact with tags
 
 1. Adding a contact with tags
@@ -1113,13 +1145,13 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
       Expected: No contact is added. Error: `Tag limit reached (max 5)`
 
    1. Test case: `add Ben Ong /phone 9876 5432 /tag RA /tag ra`<br>
-      Expected: No contact is added. Error: `Contact already has this tag.`
+      Expected: No contact is added. Error: `Repeated tag: Ra. Each tag can only be given once.`
 
    1. Test case: `add Ben Ong /phone 9876 5432 /tag RA /tag`<br>
       Expected: No contact is added. Error: `Tag cannot be empty.`
 
    1. Test case: `add Ben Ong /phone 9876 5432 /tag ΟΣ /tag ος`<br>
-      Expected: No contact is added. Error: `Contact already has this tag.`
+      Expected: No contact is added. Error: `Repeated tag: Ος. Each tag can only be given once.`
 
    1. Test case: `add Ben Ong /phone 9876 5432 /tag A` followed by 25 copies of `İ` (26 characters as typed, 51 in title case)<br>
       Expected: No contact is added. Error: `Tag too long, please shorten it and try again.`
@@ -1165,10 +1197,11 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 
 1. Prerequisites: Start with the sample data.
 
-1. Test case: `find /tag friends`<br>
-   Expected: Only contacts tagged `Friends` are shown. The status message shows how many are listed.
+1. Test case: `find /tag resident`<br>
+   Expected: Only `Alex Yeoh`, `Bernice Yu`, `Charlotte Oliveiro` and `Roy Balakrishnan` are shown. `David Li` is not
+   shown, because `Resident Fellow` is a different tag. The status message shows `4 person(s) listed!`.
 
-1. Test case: `find   /tag   FRIENDS  `<br>
+1. Test case: `find   /tag   RESIDENT  `<br>
    Expected: Same as above.
 
 1. Test case: `find /tag Nobody`<br>
@@ -1177,8 +1210,11 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 1. Test case: `find /tag`<br>
    Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
 
-1. Other incorrect commands to try: `find friends`, `find /tag friends /name Alex`, `find /tag friends /tag family`<br>
+1. Other incorrect commands to try: `find resident`, `find /tag resident /name Alex`<br>
    Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
+
+1. Test case: `find /tag resident /tag staff`<br>
+   Expected: The list is unchanged. Error: `Multiple values specified for the following single-valued field(s): /tag`
 
 1. Test case: `list /filter friends`<br>
    Expected: The list is unchanged. Error: `Invalid command format. Usage: list`
@@ -1231,11 +1267,26 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 1. Test case: `find /name Alex Tan`<br>
    Expected: An empty list. The status message shows `No contacts found`, because no word in any name is close to `Tan`.
 
+1. Test case: In a disposable address book, `clear`, then `add Tan Ah /phone 91110001`, `add Tan Bo /phone 91110002`,
+   `add Tan Cy /phone 91110003`, `add Tan Di /phone 91110004`, `find /name Tan`, `fav 1` and `fav 1` again<br>
+   Expected: The list stays in the order added. The second `fav 1` reports that `Tan Ah` is already a favourite.
+
+1. Test case: In a disposable address book, `clear`, then `add Tan Cy /phone 91110003`, `add Tan Ah /phone 91110001`,
+   `find /name Tan`, `list sorted` and `find /name Tan` again<br>
+   Expected: Both searches list `Tan Cy` before `Tan Ah`, the order added.
+
 1. Test case: `find /name`<br>
    Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
 
 1. Test case: `find /name Alex /name Bernice`<br>
    Expected: The list is unchanged. An error names the repeated `/name` prefix.
+
+1. Test case: `find /name Alex /rom B-204`<br>
+   Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
+
+1. Test case: `find /name Alex /rom B-204` and `find /name Alex /room B-204`, each with a non-breaking space (U+00A0)
+   instead of the space after `Alex`<br>
+   Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
 
 1. Test case: `delete /name alex yeoh`<br>
    Expected: Nothing is deleted. The status message shows `No contacts found matching that search. No contacts deleted.`,
@@ -1300,15 +1351,17 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
    1. Test case: `add Wei Ling /phone 9876 5433 /note ends with /`<br>
       Expected: Same error as above.
 
-   1. Test case: `add Wei Ling /phone 9876 5433 /note talk to /room officer`<br>
-      Expected: Wei Ling is added with the note `talk to` and the room `officer`, as described in the UG.
+   1. Test case: `add Wei Jie /phone 9876 5435 /note talk to /room officer`<br>
+      Expected: Wei Jie is added with the note `talk to` and the room `officer`, as described in the UG.
 
    1. Test case: `add Wei Ling /phone 9876 5433 /note a /note b`<br>
       Expected: No contact is added. The error names `/note` as a repeated field.
 
    1. Test case: `add Wei Ling /phone 9876 5433 /note ` followed by 201 letters<br>
       Expected: No contact is added. Error: `Note too long, please shorten it and try again.`
-      With exactly 200 letters, the contact is added and the note wraps onto several lines on the card.
+
+   1. Test case: `add Wei Min /phone 9876 5436 /note ` followed by 200 letters<br>
+      Expected: Wei Min is added and the note wraps onto several lines on the card.
 
 1. Editing and removing a note
 
@@ -1324,7 +1377,16 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
       Expected: The 2nd contact's card shows `Room: B-204`, then the room line is removed.
 
    1. Test case: `edit 1 /note see /docs`<br>
-      Expected: No contact is changed. The status message shows the `edit` usage, because `/docs` is not a known field.
+      Expected: No contact is changed. Error: `No word in a note can start with "/", as that starts a new field.`
+
+   1. Test case: `edit 3 /note ask /name Bob Lee`<br>
+      Expected: The 3rd contact is renamed to `Bob Lee` and its note becomes `ask`, as described in the UG.
+
+   1. Test case: `edit 2 /room B-204`, then `edit 2 /note keep /room`<br>
+      Expected: The 2nd contact's room is removed and its note becomes `keep`, as described in the UG.
+
+   1. Test case: `edit 4 /note ask /tag Staff`<br>
+      Expected: No contact is changed. Error: `No word in a note can start with "/", as that starts a new field.`
 
    1. Test case: Close the app and reopen it.<br>
       Expected: Notes added or edited above are still shown.

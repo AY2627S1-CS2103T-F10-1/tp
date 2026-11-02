@@ -17,14 +17,20 @@ public class RoomTest {
 
     @Test
     public void constructor_invalidRoom_throwsIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> new Room("B#204"));
+        assertThrows(IllegalArgumentException.class, () -> new Room("B_204"));
     }
 
     @Test
     public void isValidRoom() {
         assertTrue(Room.isValidRoom(""));
         assertTrue(Room.isValidRoom("B-204"));
-        assertFalse(Room.isValidRoom("B#204"));
+        assertTrue(Room.isValidRoom("#03-12"));
+        assertTrue(Room.isValidRoom("-4"));
+        assertFalse(Room.isValidRoom("B_204"));
+        assertFalse(Room.isValidRoom("-"));
+        assertFalse(Room.isValidRoom("---"));
+        assertFalse(Room.isValidRoom("#"));
+        assertFalse(Room.isValidRoom("- -"));
         assertFalse(Room.isValidRoom("B".repeat(Room.MAX_LENGTH + 1)));
     }
 
