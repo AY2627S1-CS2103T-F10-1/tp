@@ -523,6 +523,8 @@ means archived, and `false` means active. Older files without this field load co
 
 If saving fails, an error is shown and the in-memory change remains visible. It has not been
 confirmed saved to disk; resolve the storage problem before relying on it surviving a restart.
+While saving fails, `help` still opens the help window, but `exit` shows the save error and keeps RAcontact open,
+so that you do not lose unsaved changes without noticing. Closing the window still quits, and unsaved changes are lost.
 
 Favourite status is saved with each contact and remains after restarting, including when the status is removed.
 Older data files without favourite status still load; their contacts start unfavourited.

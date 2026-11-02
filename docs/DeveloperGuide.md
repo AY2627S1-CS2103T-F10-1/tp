@@ -1536,4 +1536,18 @@ Start with two active contacts sharing room `B-204`, one contact in `B-205`, and
 
    1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
 
+1. Commands when saving fails
+
+   1. Prerequisites: Launch the app in a disposable folder. While it is open, move `data/addressbook.json`
+      elsewhere and create a folder named `addressbook.json` inside `data`, so that saving fails.
+
+   1. Test case: `help`<br>
+      Expected: The help window opens. No save error is shown.
+
+   1. Test case: `exit`<br>
+      Expected: The app stays open and shows `Could not save data due to the following error: ...`.
+
+   1. Test case: Close the main window.<br>
+      Expected: The app quits.
+
 1. _{ more test cases …​ }_
