@@ -124,6 +124,14 @@ public class NameFuzzyMatchesPredicateTest {
     }
 
     @Test
+    public void test_nameWithSymbolsOrOtherLanguage_returnsTrue() {
+        assertTrue(new NameFuzzyMatchesPredicate("obrien").test(new PersonBuilder().withName("O'Brien").build()));
+        assertTrue(new NameFuzzyMatchesPredicate("s/o").test(new PersonBuilder().withName("Kumar s/o Rajan").build()));
+        assertTrue(new NameFuzzyMatchesPredicate("jose").test(new PersonBuilder().withName("José García").build()));
+        assertTrue(new NameFuzzyMatchesPredicate("李小明").test(new PersonBuilder().withName("李小明").build()));
+    }
+
+    @Test
     public void test_notCloseMatch_returnsFalse() {
         // typos beyond the limit of each tier
         assertDoesNotMatch("Ab", "Al Tan"); // 2 chars, 1 typo

@@ -71,6 +71,14 @@ public class AddCommandParserTest {
     }
 
     @Test
+    public void parse_nameWithSymbolsOrOtherLanguage_success() {
+        for (String name : new String[]{"Kumar s/o Rajan", "O'Brien", "Mary-Jane Lee", "José García", "李小明"}) {
+            assertParseSuccess(parser, name + " /phone " + VALID_PHONE,
+                    new AddCommand(validPersonBuilder().withName(name).build()));
+        }
+    }
+
+    @Test
     public void parse_invalidName_failure() {
         assertParseFailure(parser, "Sarah& Tan /phone 91234567", Name.MESSAGE_CONSTRAINTS);
     }
@@ -92,7 +100,6 @@ public class AddCommandParserTest {
     @Test
     public void parse_wrongPrefix_failure() {
         assertParseFailure(parser, "Sarah Tan p/91234567", MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, "n/Sarah Tan /phone 91234567", Name.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " t/Resident", Phone.MESSAGE_INVALID_CHARACTERS);
         assertParseFailure(parser, VALID_NAME_AND_PHONE + " /unknown value", MESSAGE_INVALID_FORMAT);
     }

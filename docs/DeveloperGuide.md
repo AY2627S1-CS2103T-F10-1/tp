@@ -232,6 +232,12 @@ After the command returns, `LogicManager` saves the address book through the exi
 * **Restrict name matching to active contacts:** excludes archived contacts from ordinary name deletion.
   Index deletion remains available for a contact explicitly displayed in the archive view.
 
+### Name validation
+
+`Name.VALIDATION_REGEX` accepts letters and digits in any language, using `\p{L}` and `\p{N}` rather than `\p{Alnum}`, which in Java only matches ASCII, so an RA can save a resident's real name. `\p{M}` allows accent marks, and `'`, `-`, `.` and `/` allow names such as `O'Brien`, `Mary-Jane`, `Tan Jr.` and `Kumar s/o Rajan`. Each word must start with a letter or digit, so no word of a name starts with `/`, which `ArgumentTokenizer` and `ParserUtil#hasUnknownPrefix()` treat as a field. `add`, `edit`, `emergency` and the data file all use this rule.
+
+`Name` also collapses extra whitespace and checks `Name.MAX_LENGTH` itself, as `Tag` and `Room` do. `JsonAdaptedPerson` and `JsonAdaptedEmergencyContact` both build a `Name`, so a name in an edited data file follows the same rules as a typed one, and the existing duplicate check catches `Sarah Tan` and `Sarah  Tan`.
+
 ### Tag feature
 
 Tags are added to a contact when it is created, with `add NAME /phone PHONE [/room ROOM] [/tag TAG]... [/note NOTE]`.
@@ -1086,6 +1092,28 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 
    1. Test case: `list`<br>
       Expected: An empty list and `No contacts found.`.
+
+### Adding a contact with a real name
+
+1. Prerequisites: Start with the sample data.
+
+1. Test case: `add Kumar s/o Rajan /phone 91234561`, then `add O'Brien /phone 91234563`, then `add 李小明 /phone 91234566`<br>
+   Expected: All three contacts are added.
+
+1. Test case: `find /name s/o`<br>
+   Expected: `Kumar s/o Rajan` is listed.
+
+1. Test case: `list`, then `delete /name O'Brien`<br>
+   Expected: `O'Brien` is deleted.
+
+1. Other incorrect commands to try: `add -Lee /phone 91234567`, `add R@chel /phone 91234567`<br>
+   Expected: No contact is added. The error lists the characters allowed in a name.
+
+1. Test case: `add /x /phone 91234567`<br>
+   Expected: No contact is added. Error: `Invalid command format!` followed by the `add` usage.
+
+1. Test case: Add a contact named `Wei Ming Tan` repeated seven times, then shrink the window to its minimum width.<br>
+   Expected: The whole name wraps onto several lines on the card and does not end in `...`.
 
 ### Adding a contact with tags
 

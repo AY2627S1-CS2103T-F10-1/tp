@@ -129,7 +129,9 @@ Adds a contact with a required name and phone number, and optional room, tags an
 
 Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
 
-* Name is required and can contain up to 100 characters. Existing name character rules apply.
+* Name is required and can contain up to 100 characters: letters and digits in any language, spaces, and the
+  symbols `'`, `-`, `.` and `/`. Each word must start with a letter or digit, so `Kumar s/o Rajan`, `O'Brien`,
+  `Mary-Jane Lee`, `José García` and `李小明` are accepted, but `/x` and `-Lee` are not.
 * Phone is required and can contain up to 20 characters: digits, spaces, `+`, hyphens and parentheses. It must contain at least one digit; formatting characters alone are rejected with `Phone number must contain at least one digit.`
 * Room is optional for any contact, regardless of tags. It can contain up to 20 characters:
   letters, digits, spaces, hyphens and `#`, with at least one letter or digit (e.g., `B-204`, `#03-12`).
@@ -388,7 +390,7 @@ Format: `find /name NAME`, `find /tag TAG`, `find /phone NUMBER` or `find /room 
 
     So `find /name Jonathn` (1 typo) finds `Jonathan Chua`, but `find /name Jnthn` (3 typos in a 5-letter word) does not.
     Short words must be typed exactly, so `find /name Al` does not find `Alex Yeoh`, and `find /name Ong` does not
-    find `Ng Kai`.
+    find `Ng Kai`. This also applies to names in other languages, so `find /name 李小` does not find `李小明`.
 * Because small typos are allowed, a search may also list contacts with similar names; for example,
   `find /name Tan` may also list a contact named `Tay`.
 * The closest matches are listed first: contacts whose name contains the exact words you typed, then contacts
@@ -529,7 +531,8 @@ Each contact's `isFavourite` property is a JSON boolean, `true` or `false`. If t
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
-A contact with more than 5 distinct tags also makes the data file invalid, as does a tag or room with no letter or digit (e.g., `---`), or a note longer than 200 characters or with a word starting with `/` (e.g., `see /docs`; a link such as `https://nus.edu.sg` is fine). See [`add`](#adding-a-contact-add) for the rules of each field.<br>
+A contact with more than 5 distinct tags also makes the data file invalid, as does a name over 100 characters or with characters `add` does not allow, a tag or room with no letter or digit (e.g., `---`), or a note longer than 200 characters or with a word starting with `/` (e.g., `see /docs`; a link such as `https://nus.edu.sg` is fine). See [`add`](#adding-a-contact-add) for the rules of each field.<br>
+Extra spaces in a name are collapsed when the file is loaded, so `Sarah Tan` and `Sarah  Tan` count as duplicates, which also makes the file invalid.<br>
 Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
