@@ -245,8 +245,8 @@ Format: `fav INDEX`
 * Archived contacts must be unarchived before using `fav` or `unfav`. Otherwise, the command reports
   `Cannot change favourite status for an archived contact. Unarchive it first.` and leaves data unchanged.
 * The command word is case-sensitive. Leading and trailing spaces are ignored; extra arguments are rejected.
-* Missing, zero, negative, non-integer or overflowing indices show an invalid command format message with
-  the `fav` usage. A positive index outside the displayed list shows `The person index provided is invalid.`.
+* Missing, zero, negative or non-integer indices show an invalid command format message with the `fav` usage.
+  A positive index outside the displayed list, however large, shows `The person index provided is invalid.`.
   Rejected commands leave contact data and the displayed list unchanged.
 
 Example: `fav 2` marks the 2nd currently displayed contact.

@@ -208,8 +208,10 @@ in-memory change.
 
 #### Implementation
 
-`DeleteCommandParser` retains signed integer input as an index attempt, so invalid or overflowing indices
-are rejected rather than interpreted as names. Other input must contain a single non-empty `/name`
+`DeleteCommandParser` retains signed integer input as an index attempt, so invalid indices are rejected
+rather than interpreted as names. As with every index, `ParserUtil#parseIndex()` treats a positive integer too
+large for an `int` as the largest index, so `delete 2147483648` reports an invalid index rather than an invalid
+format. Other input must contain a single non-empty `/name`
 selector without preamble text. The parser constructs `DeleteCommand` with `NameEqualsPredicate`, which
 compares the supplied name with the stored full name exactly and case-sensitively; it does not collapse
 internal whitespace.
@@ -260,9 +262,9 @@ Three Unicode details keep the stored form consistent with loading and comparing
 
 * `Tag#toComparisonKey()` normalizes names to NFC, because `é` can be typed as one character or as `e` and a combining mark. Otherwise they would look the same on the card but count as two tags, and `find /tag` would match only the form typed.
 * Each word is lowercased as a whole before its first letter is title-cased. Some letters lowercase differently depending on their neighbors: the Greek `Σ` becomes `ς` at the end of a word and `σ` elsewhere. Lowercasing letters one at a time would store `ΟΣ` as `Οσ`, while `Tag#toComparisonKey()` lowercases the whole name to `ος`, so `find /tag ΟΣ` would match nothing and `/tag ΟΣ /tag ος` would be two different tags.
+* `Tag#toComparisonKey()` lowercases, uppercases, then lowercases again, because title-casing can turn a letter into one that lowercases differently. The dotless `ı` is stored as `I`, which lowercases to `i`, and `ẞ` is stored as `ß`, which uppercases to `SS`. The round trip gives a typed name and its stored form the same key, so `find /tag ı` and `find /tag ẞ` find the tags they created.
 * `Tag#isValidTagName()` also checks the length of the title-case form, because a few letters, such as `İ`, become two characters in lower case. Otherwise a tag within the limit as typed could be saved longer than `Tag.MAX_LENGTH` and make the data file fail to load. `ParserUtil#parseTag()` reports such a tag as too long.
  `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were typed. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
-* `Tag#toComparisonKey()` lowercases, uppercases, then lowercases again, because title-casing can turn a letter into one that lowercases differently. The dotless `ı` is stored as `I`, which lowercases to `i`, and `ẞ` is stored as `ß`, which uppercases to `SS`. The round trip gives a typed name and its stored form the same key, so `find /tag ı` and `find /tag ẞ` find the tags they created.
 
 #### Design considerations
 
@@ -1249,10 +1251,10 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 1. Test case: `add Unicode Tester /phone 91234567 /tag ı` (Turkish dotless i), then `find /tag ı`, then `find /tag I`<br>
    Expected: The tag is shown as `I`. Both searches list Unicode Tester.
 
-### Finding contacts by name
-
 1. Test case: `add Sharp Tester /phone 91234568 /tag ẞ` (capital sharp s), then `find /tag ẞ`, then `find /tag ß`<br>
    Expected: The tag is shown as `ß`. Both searches list Sharp Tester.
+
+### Finding contacts by name
 
 1. Prerequisites: Start with the sample data.
 
@@ -1456,8 +1458,8 @@ Changing tags | `find /phone 91234567`, `toggle 1 /tag Staff`, `find /phone 9123
 Saving and restarting | Close and reopen the app, then `list fav` | Only Test One is a favourite. Its room, note and tags remain as saved.
 Repeated removal | `find /phone 91234567`, then `unfav 1` twice | The first command removes the badge. The second message starts with `Contact is not a favourite:`. Test One's other details remain intact.
 No favourites | `list fav`, then `list` | The favourite view is empty with `No favourite contacts found.`. `list` restores all three contacts.
-Invalid formats | `fav`, `fav 0`, `fav -1`, `fav 2147483648`, `unfav 1 extra` | Invalid command format and the respective usage message; data and the displayed list stay unchanged.
-Out-of-range index | `fav 999999` | Error: `The person index provided is invalid.`; data and the displayed list stay unchanged.
+Invalid formats | `fav`, `fav 0`, `fav -1`, `unfav 1 extra` | Invalid command format and the respective usage message; data and the displayed list stay unchanged.
+Out-of-range index | `fav 999999`, `fav 2147483648`, `unfav 99999999999999999999` | Error: `The person index provided is invalid.`; data and the displayed list stay unchanged.
 Invalid listing | `list fav 1` | Error: `Invalid command format. Usage: list fav`; the displayed list stays unchanged.
 Case sensitivity | `FAV 1`, `UNFAV 1`, `LIST fav`, `list FAV` | The first three report `Unknown command.`. The last reports `Invalid command format. Usage: list`. No data changes.
 
