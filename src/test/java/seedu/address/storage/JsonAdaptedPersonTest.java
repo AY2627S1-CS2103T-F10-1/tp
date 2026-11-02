@@ -76,11 +76,31 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_nameWithSymbols_returnsPerson() throws Exception {
+        Person person = new PersonBuilder(BENSON).withName("Kumar s/o Rajan").build();
+        assertEquals(person, new JsonAdaptedPerson(person).toModelType());
+    }
+
+    @Test
     public void toModelType_invalidName_throwsIllegalValueException() {
         JsonAdaptedPerson person =
                 new JsonAdaptedPerson(INVALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_TAGS);
         String expectedMessage = Name.MESSAGE_CONSTRAINTS;
         assertThrows(IllegalValueException.class, expectedMessage, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_nameTooLong_throwsIllegalValueException() {
+        JsonAdaptedPerson person = new JsonAdaptedPerson("A".repeat(Name.MAX_LENGTH + 1), VALID_PHONE, VALID_EMAIL,
+                VALID_ADDRESS, VALID_TAGS);
+        assertThrows(IllegalValueException.class, Name.MESSAGE_CONSTRAINTS, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_nameWithExtraSpaces_collapsesSpaces() throws Exception {
+        JsonAdaptedPerson person =
+                new JsonAdaptedPerson("Sarah   Tan", VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_TAGS);
+        assertEquals(new Name("Sarah Tan"), person.toModelType().getName());
     }
 
     @Test
@@ -96,6 +116,13 @@ public class JsonAdaptedPersonTest {
                 new JsonAdaptedPerson(VALID_NAME, INVALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_TAGS);
         String expectedMessage = Phone.MESSAGE_CONSTRAINTS;
         assertThrows(IllegalValueException.class, expectedMessage, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_legacyPhoneWithoutDigits_remainsReadable() throws Exception {
+        JsonAdaptedPerson person =
+                new JsonAdaptedPerson(VALID_NAME, "---", VALID_EMAIL, VALID_ADDRESS, VALID_TAGS);
+        assertEquals("---", person.toModelType().getPhone().value);
     }
 
     @Test
@@ -170,7 +197,7 @@ public class JsonAdaptedPersonTest {
 
     @Test
     public void toModelType_invalidRoom_throwsIllegalValueException() {
-        JsonAdaptedPerson person = withRoomAndNote("B#204", null);
+        JsonAdaptedPerson person = withRoomAndNote("B_204", null);
         assertThrows(IllegalValueException.class, Room.MESSAGE_INVALID_CHARACTERS, person::toModelType);
     }
 

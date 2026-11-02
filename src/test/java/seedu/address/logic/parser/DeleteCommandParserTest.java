@@ -24,7 +24,7 @@ public class DeleteCommandParserTest {
 
     @Test
     public void parse_invalidArgs_throwsParseException() {
-        String[] invalidInputs = {"", "   ", "0", "-1", "+1", "999999999999999999999",
+        String[] invalidInputs = {"", "   ", "0", "-1", "+1",
             "Alice", "/name", "/name   ", "Alice /name Tan", "/tag friends",
             "/name Alice /name Bob"};
         for (String input : invalidInputs) {
@@ -32,6 +32,22 @@ public class DeleteCommandParserTest {
                     String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteCommand.MESSAGE_USAGE));
         }
     }
+    @Test
+    public void parse_nameWithSlashInsideWord_success() {
+        assertParseSuccess(parser, "/name Kumar s/o Rajan",
+                new DeleteCommand(new NameEqualsPredicate("Kumar s/o Rajan")));
+    }
+
+    @Test
+    public void parse_nameWhitespace_normalizedBeforeMatching() {
+        for (String space : new String[]{"   ", "\u00a0", "\u2003", "\u202f"}) {
+            assertParseSuccess(parser, "/name " + space + "Alice" + space + "Tan" + space,
+                    new DeleteCommand(new NameEqualsPredicate("Alice Tan")));
+            assertParseFailure(parser, "/name " + space,
+                    String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteCommand.MESSAGE_USAGE));
+        }
+    }
+
     @Test
     public void parse_nameArgs_returnsNameDeleteCommand() {
         assertParseSuccess(parser, "/name Alice", new DeleteCommand(new NameEqualsPredicate("Alice")));

@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.testutil.PersonBuilder;
 
-public class EmergencyContactPredicateTest {
+public class EmergencyTagPredicateTest {
 
-    private final EmergencyContactPredicate predicate = new EmergencyContactPredicate();
+    private final EmergencyTagPredicate predicate = new EmergencyTagPredicate();
 
     @Test
     public void test_emergencyTagIgnoringCase_returnsTrue() {
@@ -27,6 +27,13 @@ public class EmergencyContactPredicateTest {
         assertFalse(predicate.test(new PersonBuilder().withTags("emerg", "emergencyservice").build()));
         assertFalse(predicate.test(new PersonBuilder().withName("Emergency")
                 .withEmail("emergency@example.com").withAddress("Emergency Road").build()));
+    }
+
+    @Test
+    public void test_emergencyContactDetailsWithoutEmergencyTag_returnsFalse() {
+        Person person = new PersonBuilder().withTags("resident").build().withEmergencyContact(
+                new EmergencyContact(new Name("Emergency Service"), new Phone("995"), ""));
+        assertFalse(predicate.test(person));
     }
 
     @Test

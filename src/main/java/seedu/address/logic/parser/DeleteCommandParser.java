@@ -4,6 +4,7 @@ import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME_COMMAND;
 
 import seedu.address.commons.core.index.Index;
+import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.NameEqualsPredicate;
@@ -43,12 +44,11 @@ public class DeleteCommandParser implements Parser<DeleteCommand> {
         // The tokenizer only recognises a prefix that follows whitespace, so restore the leading space.
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(" " + args, PREFIX_NAME_COMMAND);
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME_COMMAND);
-        if (!argMultimap.getPreamble().isEmpty()
-                || argMultimap.getValue(PREFIX_NAME_COMMAND).isEmpty()
-                || argMultimap.getValue(PREFIX_NAME_COMMAND).get().isEmpty()) {
+        String name = StringUtil.collapseWhitespace(argMultimap.getValue(PREFIX_NAME_COMMAND).orElse(""));
+        if (!argMultimap.getPreamble().isEmpty() || name.isEmpty()) {
             throw new ParseException(MESSAGE_INVALID_COMMAND_FORMAT);
         }
-        return new NameEqualsPredicate(argMultimap.getValue(PREFIX_NAME_COMMAND).get());
+        return new NameEqualsPredicate(name);
     }
 
 }

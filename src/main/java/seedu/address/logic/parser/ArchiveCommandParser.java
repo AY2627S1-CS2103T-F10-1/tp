@@ -3,6 +3,7 @@ package seedu.address.logic.parser;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG_COMMAND;
 
+import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.ArchiveCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.PersonHasTagPredicate;
@@ -18,7 +19,7 @@ public class ArchiveCommandParser implements Parser<ArchiveCommand> {
             ArgumentMultimap arguments = ArgumentTokenizer.tokenize(" " + args.trim(), PREFIX_TAG_COMMAND);
             arguments.verifyNoDuplicatePrefixesFor(PREFIX_TAG_COMMAND);
             if (arguments.getValue(PREFIX_TAG_COMMAND).isPresent()) {
-                String tag = arguments.getValue(PREFIX_TAG_COMMAND).orElseThrow();
+                String tag = StringUtil.collapseWhitespace(arguments.getValue(PREFIX_TAG_COMMAND).orElseThrow());
                 if (!arguments.getPreamble().isEmpty() || tag.isEmpty()) {
                     throw new ParseException(MESSAGE_INVALID_COMMAND_FORMAT);
                 }

@@ -7,6 +7,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import seedu.address.commons.core.LogsCenter;
 
@@ -35,6 +37,7 @@ public class HelpWindow extends UiPart<Stage> {
     public HelpWindow(Stage root) {
         super(FXML, root);
         helpMessage.setText(HELP_MESSAGE);
+        root.addEventHandler(KeyEvent.KEY_PRESSED, this::hideOnEscape);
     }
 
     /**
@@ -42,6 +45,15 @@ public class HelpWindow extends UiPart<Stage> {
      */
     public HelpWindow() {
         this(new Stage());
+    }
+
+    /**
+     * Hides the help window when Esc is pressed, so that it can be dismissed without the mouse.
+     */
+    private void hideOnEscape(KeyEvent event) {
+        if (event.getCode() == KeyCode.ESCAPE) {
+            hide();
+        }
     }
 
     /**
@@ -86,6 +98,7 @@ public class HelpWindow extends UiPart<Stage> {
      * Focuses on the help window.
      */
     public void focus() {
+        getRoot().setIconified(false);
         getRoot().requestFocus();
     }
 

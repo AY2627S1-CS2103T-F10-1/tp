@@ -1,5 +1,7 @@
 package seedu.address.storage;
 
+import static seedu.address.commons.util.AppUtil.checkArgument;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,6 +30,7 @@ class JsonSerializableAddressBook {
      */
     @JsonCreator
     public JsonSerializableAddressBook(@JsonProperty("persons") List<JsonAdaptedPerson> persons) {
+        checkArgument(persons != null, "Persons list cannot be null.");
         this.persons.addAll(persons);
     }
 
@@ -48,6 +51,9 @@ class JsonSerializableAddressBook {
     public AddressBook toModelType() throws IllegalValueException {
         AddressBook addressBook = new AddressBook();
         for (JsonAdaptedPerson jsonAdaptedPerson : persons) {
+            if (jsonAdaptedPerson == null) {
+                throw new IllegalValueException("Persons list contains a null entry.");
+            }
             Person person = jsonAdaptedPerson.toModelType();
             if (addressBook.hasPerson(person)) {
                 throw new IllegalValueException(MESSAGE_DUPLICATE_PERSON);

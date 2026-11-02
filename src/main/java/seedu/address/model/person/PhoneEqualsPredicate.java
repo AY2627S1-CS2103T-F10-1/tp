@@ -2,6 +2,7 @@ package seedu.address.model.person;
 
 import java.util.function.Predicate;
 
+import seedu.address.commons.util.StringUtil;
 import seedu.address.commons.util.ToStringBuilder;
 
 /**
@@ -11,12 +12,17 @@ public class PhoneEqualsPredicate implements Predicate<Person> {
     private final String phone;
 
     public PhoneEqualsPredicate(String phone) {
-        this.phone = phone.replaceAll("\\s+", "");
+        this.phone = removeWhitespace(phone);
     }
 
     @Override
     public boolean test(Person person) {
-        return person.getPhone().value.replaceAll("\\s+", "").equals(phone);
+        return removeWhitespace(person.getPhone().value).equals(phone);
+    }
+
+    /** Removes supported whitespace for comparison without changing stored phone formatting. */
+    private static String removeWhitespace(String phone) {
+        return StringUtil.collapseWhitespace(phone).replace(" ", "");
     }
 
     @Override

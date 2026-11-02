@@ -20,6 +20,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.commons.core.index.Index;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
@@ -93,9 +94,19 @@ public class ParserUtilTest {
     }
 
     @Test
-    public void parseIndex_outOfRangeInput_throwsParseException() {
-        assertThrows(ParseException.class, MESSAGE_INVALID_INDEX, ()
-            -> ParserUtil.parseIndex(Long.toString(Integer.MAX_VALUE + 1)));
+    public void parseIndex_notPositiveInteger_throwsParseException() {
+        for (String input : List.of("", "0", "000", "-1", "+1", "-2147483648", "1.5", "1e3")) {
+            assertThrows(ParseException.class, MESSAGE_INVALID_INDEX, () -> ParserUtil.parseIndex(input));
+        }
+    }
+
+    @Test
+    public void parseIndex_tooLargeForInt_returnsLargestIndex() throws Exception {
+        Index largestIndex = Index.fromOneBased(Integer.MAX_VALUE);
+        for (String input : List.of("2147483647", "2147483648", " 99999999999999999999 ", "0002147483648",
+                "9".repeat(1000))) {
+            assertEquals(largestIndex, ParserUtil.parseIndex(input));
+        }
     }
 
     @Test
@@ -147,6 +158,18 @@ public class ParserUtilTest {
     public void parsePhone_emptyValue_throwsParseException() {
         assertThrows(ParseException.class, Phone.MESSAGE_EMPTY, () -> ParserUtil.parsePhone(""));
         assertThrows(ParseException.class, Phone.MESSAGE_EMPTY, () -> ParserUtil.parsePhone(WHITESPACE));
+    }
+
+    @Test
+    public void parsePhone_noDigits_throwsParseException() {
+        for (String phone : new String[]{"++++", "---", "( )", "+()-"}) {
+            assertThrows(ParseException.class, Phone.MESSAGE_NO_DIGITS, () -> ParserUtil.parsePhone(phone));
+        }
+    }
+
+    @Test
+    public void parsePhone_oneDigitWithFormatting_returnsPhone() throws Exception {
+        assertEquals(new Phone("+(1)-"), ParserUtil.parsePhone("+(1)-"));
     }
 
     @Test
@@ -358,9 +381,18 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseTags_duplicatesDifferingInUnicodeForm_throwsParseException() {
+        List<String> tagsWithDuplicate = List.of("Caf\u00e9", "Cafe\u0301");
+
+        String expectedMessage = String.format(Tag.MESSAGE_REPEATED, "Cafe\u0301");
+        assertThrows(ParseException.class, expectedMessage, () -> ParserUtil.parseTags(tagsWithDuplicate));
+    }
+
+    @Test
     public void parseTags_duplicatesDifferingInCase_throwsParseException() {
         List<String> tagsWithDuplicate = List.of(VALID_TAG_1, VALID_TAG_1.toUpperCase());
 
-        assertThrows(ParseException.class, Tag.MESSAGE_DUPLICATE, () -> ParserUtil.parseTags(tagsWithDuplicate));
+        String expectedMessage = String.format(Tag.MESSAGE_REPEATED, new Tag(VALID_TAG_1).tagName);
+        assertThrows(ParseException.class, expectedMessage, () -> ParserUtil.parseTags(tagsWithDuplicate));
     }
 }

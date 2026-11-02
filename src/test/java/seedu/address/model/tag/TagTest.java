@@ -40,6 +40,10 @@ public class TagTest {
         assertFalse(Tag.isValidTagName("Block_4")); // underscore
         assertFalse(Tag.isValidTagName("Café!")); // non-ASCII letter with a symbol
         assertFalse(Tag.isValidTagName("🚨")); // emoji is not a letter
+        assertFalse(Tag.isValidTagName("-")); // boundary: no letter or digit
+        assertFalse(Tag.isValidTagName("---")); // only hyphens
+        assertFalse(Tag.isValidTagName("- -")); // only hyphens, in two words
+        assertFalse(Tag.isValidTagName("\u0301")); // only a combining accent mark
         assertFalse(Tag.isValidTagName(INVALID_TAG_TOO_LONG)); // boundary: one character too long
 
         // valid tag names
@@ -47,6 +51,7 @@ public class TagTest {
         assertTrue(Tag.isValidTagName("4")); // boundary: single digit
         assertTrue(Tag.isValidTagName("Block4")); // letters and digits
         assertTrue(Tag.isValidTagName("Hall-Staff")); // hyphen
+        assertTrue(Tag.isValidTagName("-4")); // boundary: one digit among hyphens
         assertTrue(Tag.isValidTagName("Resident Fellow")); // inner space
         assertTrue(Tag.isValidTagName("  Resident    Fellow  ")); // extra spaces are collapsed
         assertTrue(Tag.isValidTagName(VALID_TAG_AT_MAX_LENGTH)); // boundary: exactly at the limit
@@ -165,6 +170,38 @@ public class TagTest {
         assertEquals("resident fellow", Tag.toComparisonKey("  Resident   FELLOW "));
         assertEquals("", Tag.toComparisonKey("   ")); // whitespace only
         assertEquals("ra/staff", Tag.toComparisonKey("RA/Staff")); // accepts values that are not valid tags
+    }
+
+    @Test
+    public void matchesName_dotlessI_matchesTypedAndStoredForms() {
+        Tag tag = new Tag("ı");
+        assertEquals("I", tag.tagName);
+        for (String name : new String[]{"ı", "I", "i"}) {
+            assertTrue(tag.matchesName(name), name);
+            assertEquals(tag, new Tag(name));
+        }
+        assertTrue(new Tag("Kıvanç").matchesName("kıvanç"));
+    }
+
+    @Test
+    public void matchesName_capitalSharpS_matchesTypedAndStoredForms() {
+        Tag tag = new Tag("ẞ");
+        assertEquals("ß", tag.tagName);
+        for (String name : new String[]{"ẞ", "ß", "SS", "ss"}) {
+            assertTrue(tag.matchesName(name), name);
+            assertEquals(tag, new Tag(name));
+        }
+        assertTrue(new Tag("Straße").matchesName("STRAẞE"));
+    }
+
+    @Test
+    public void matchesName_everyValidSingleCharacterTag_matchesTypedForm() {
+        for (int codePoint = 0; codePoint <= Character.MAX_CODE_POINT; codePoint++) {
+            String typed = Character.toString(codePoint);
+            if (Tag.isValidTagName(typed)) {
+                assertTrue(new Tag(typed).matchesName(typed), String.format("U+%04X", codePoint));
+            }
+        }
     }
 
     @Test

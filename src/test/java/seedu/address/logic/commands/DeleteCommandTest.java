@@ -158,6 +158,27 @@ public class DeleteCommandTest {
     }
 
     @Test
+    public void execute_normalizedName_deletesActiveMatchAndKeepsArchivedContacts() throws Exception {
+        for (String space : List.of("   ", "\u00a0", "\u2003", "\u202f")) {
+            Person alice = new PersonBuilder().withName("Alice Tan").build();
+            Person archived = new PersonBuilder().withName("Bob Smith").build().withArchive(true);
+            model = new ModelManager();
+            model.addPerson(alice);
+            model.addPerson(archived);
+            model.updateFilteredPersonList(Person::isArchived);
+            DeleteCommandParser parser = new DeleteCommandParser();
+
+            parser.parse("/name Alice" + space + "Tan").execute(model);
+            assertEquals(List.of(archived), model.getAddressBook().getPersonList());
+            assertTrue(model.getFilteredPersonList().isEmpty());
+
+            CommandResult result = parser.parse("/name Bob" + space + "Smith").execute(model);
+            assertEquals(DeleteCommand.MESSAGE_NO_MATCHES, result.getFeedbackToUser());
+            assertEquals(List.of(archived), model.getAddressBook().getPersonList());
+        }
+    }
+
+    @Test
     public void execute_partialOrDifferentCaseName_preservesContacts() throws Exception {
         Person alice = new PersonBuilder().withName("Alice Tan").build();
         model = new ModelManager(new AddressBook(), new UserPrefs());

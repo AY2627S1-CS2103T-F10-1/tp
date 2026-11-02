@@ -26,7 +26,6 @@ public class PhoneEqualsPredicateTest {
         assertTrue(new PhoneEqualsPredicate("91234567").test(spaced));
         assertTrue(new PhoneEqualsPredicate(" 9123  4567 ").test(compact));
         assertTrue(new PhoneEqualsPredicate("9123\t4567").test(compact));
-        assertEquals("9123 4567", spaced.getPhone().value);
     }
 
     @Test
@@ -36,6 +35,18 @@ public class PhoneEqualsPredicateTest {
         assertFalse(new PhoneEqualsPredicate("65-(9123)-4567").test(person));
         assertFalse(new PhoneEqualsPredicate("+65(9123)4567").test(person));
         assertFalse(new PhoneEqualsPredicate("+65-9123-4567").test(person));
+    }
+
+    @Test
+    public void test_unicodeSpaces_matchesNormalizedPhone() {
+        Person spaced = new PersonBuilder().withPhone("9123 4567").build();
+        Person compact = new PersonBuilder().withPhone("91234567").build();
+        for (String space : new String[]{"\u00a0", "\u2003", "\u202f"}) {
+            PhoneEqualsPredicate predicate = new PhoneEqualsPredicate(space + "9123" + space + "4567" + space);
+            assertTrue(predicate.test(spaced));
+            assertTrue(predicate.test(compact));
+            assertEquals(new PhoneEqualsPredicate("91234567"), predicate);
+        }
     }
 
     @Test

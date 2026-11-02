@@ -65,7 +65,7 @@ public class EditCommandParserTest {
     public void parse_invalidValue_failure() {
         assertParseFailure(parser, " 1 /name James&", Name.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, " 1 /phone 911a", Phone.MESSAGE_INVALID_CHARACTERS);
-        assertParseFailure(parser, " 1 /room B#1", Room.MESSAGE_INVALID_CHARACTERS);
+        assertParseFailure(parser, " 1 /room B_1", Room.MESSAGE_INVALID_CHARACTERS);
 
         // only the first invalid value is reported
         assertParseFailure(parser, " 1 /name James& /phone 911a", Name.MESSAGE_CONSTRAINTS);

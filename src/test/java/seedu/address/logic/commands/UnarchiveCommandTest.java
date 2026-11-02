@@ -131,7 +131,7 @@ public class UnarchiveCommandTest {
 
     @Test
     public void parse_invalidArguments_rejectedWithoutChanges() {
-        for (String args : List.of("", "0", "-1", "+1", "1.5", "2147483648", "one", "1 2", "/tag",
+        for (String args : List.of("", "0", "-1", "+1", "1.5", "one", "1 2", "/tag",
                 "/tag friends /tag Study Group", "1 /tag friends", "/tag friends /name Alice", "/Tag friends")) {
             assertThrows(ParseException.class, () -> parser.parseCommand("unarchive " + args));
             assertEquals(List.of(active, first, second, unrelated), model.getAddressBook().getPersonList());

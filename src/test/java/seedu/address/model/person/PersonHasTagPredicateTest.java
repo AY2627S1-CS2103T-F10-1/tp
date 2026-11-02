@@ -40,6 +40,30 @@ public class PersonHasTagPredicateTest {
     }
 
     @Test
+    public void test_tagInOtherUnicodeForm_returnsTrue() {
+        Person person = new PersonBuilder().withTags("Caf\u00e9").build();
+        assertTrue(new PersonHasTagPredicate("Cafe\u0301").test(person));
+    }
+
+    @Test
+    public void test_dotlessITagSearchedAsTyped_returnsTrue() {
+        assertTagFoundBy("\u0131", "\u0131", "I", "i");
+    }
+
+    @Test
+    public void test_capitalSharpSTagSearchedAsTyped_returnsTrue() {
+        assertTagFoundBy("\u1e9e", "\u1e9e", "\u00df", "SS");
+    }
+
+    /** Asserts that a person tagged {@code tagName} is found by a search for each of {@code searches}. */
+    private static void assertTagFoundBy(String tagName, String... searches) {
+        Person person = new PersonBuilder().withTags(tagName).build();
+        for (String search : searches) {
+            assertTrue(new PersonHasTagPredicate(search).test(person), search);
+        }
+    }
+
+    @Test
     public void test_personDoesNotHaveTag_returnsFalse() {
         // person has no tags
         assertFalse(new PersonHasTagPredicate("RA").test(new PersonBuilder().build()));

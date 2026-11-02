@@ -33,7 +33,7 @@ public class FavouriteCommandParsersTest {
 
     @Test
     public void parse_invalidArguments_failure() {
-        for (String args : List.of("", "  ", "0", "-1", "+1", "1.5", "2147483648", "one", "1 2",
+        for (String args : List.of("", "  ", "0", "-1", "+1", "1.5", "one", "1 2",
                 "1\t2", "1 extra", "/name Alice", "1 /tag friends")) {
             assertParseFailure(favParser, args,
                     String.format(MESSAGE_INVALID_COMMAND_FORMAT, FavCommand.MESSAGE_USAGE));

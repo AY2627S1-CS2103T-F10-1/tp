@@ -3,6 +3,7 @@ package seedu.address.model.tag;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import java.text.Normalizer;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -20,18 +21,20 @@ public class Tag {
     public static final int MAX_LENGTH = 50;
 
     public static final String MESSAGE_CONSTRAINTS = "Tags should only contain letters, digits, spaces and hyphens, "
-            + "and be at most " + MAX_LENGTH + " characters long.";
+            + "with at least one letter or digit, and be at most " + MAX_LENGTH + " characters long.";
     public static final String MESSAGE_EMPTY = "Tag cannot be empty.";
     public static final String MESSAGE_TOO_LONG = "Tag too long, please shorten it and try again.";
-    public static final String MESSAGE_INVALID_CHARACTERS = "Tag contains invalid characters.";
-    public static final String MESSAGE_DUPLICATE = "Contact already has this tag.";
+    public static final String MESSAGE_INVALID_CHARACTERS =
+            "Tags should only contain letters, digits, spaces and hyphens, with at least one letter or digit.";
+    public static final String MESSAGE_REPEATED = "Repeated tag: %1$s. Each tag can only be given once.";
 
     /**
-     * One or more words of letters, digits and hyphens, separated by single spaces.
+     * One or more words of letters, digits and hyphens, separated by single spaces, with at least one letter or digit.
      * Letters and digits may be from any language; accent marks ({@code \p{M}}) are allowed so that letters
      * typed as a base letter followed by a combining mark are accepted too.
      */
-    public static final String VALIDATION_REGEX = "[\\p{L}\\p{M}\\p{N}-]+( [\\p{L}\\p{M}\\p{N}-]+)*";
+    public static final String VALIDATION_REGEX =
+            "(?=.*[\\p{L}\\p{N}])[\\p{L}\\p{M}\\p{N}-]+( [\\p{L}\\p{M}\\p{N}-]+)*";
 
     private static final String WORD_SEPARATOR = " ";
 
@@ -105,12 +108,17 @@ public class Tag {
     }
 
     /**
-     * Returns the form of {@code name} used to compare tag names, ignoring case and extra whitespace.
+     * Returns the form of {@code name} used to compare tag names, ignoring case, extra whitespace and how
+     * accented letters are encoded, such as "é" typed as one character or as "e" and a combining mark.
      * Two names refer to the same tag exactly when their comparison keys are equal.
+     * The name is lowercased, uppercased, then lowercased again, so that a typed name and its stored form compare
+     * equal even when title-casing changes a letter, such as the dotless "ı" stored as "I" or "ẞ" stored as "ß".
      */
     public static String toComparisonKey(String name) {
         requireNonNull(name);
-        return StringUtil.collapseWhitespace(name).toLowerCase(Locale.ROOT);
+        String caseFolded = StringUtil.collapseWhitespace(name).toLowerCase(Locale.ROOT)
+                .toUpperCase(Locale.ROOT).toLowerCase(Locale.ROOT);
+        return Normalizer.normalize(caseFolded, Normalizer.Form.NFC);
     }
 
     private String getComparisonKey() {
