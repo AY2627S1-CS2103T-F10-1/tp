@@ -4,7 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.model.Model.PREDICATE_SHOW_ACTIVE_PERSONS;
 
 import seedu.address.model.Model;
-import seedu.address.model.person.EmergencyContactPredicate;
+import seedu.address.model.person.EmergencyTagPredicate;
 
 /**
  * Lists all contacts tagged as emergency to the user.
@@ -20,7 +20,7 @@ public class ListEmergencyCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS.and(new EmergencyContactPredicate()));
+        model.updateFilteredPersonList(PREDICATE_SHOW_ACTIVE_PERSONS.and(new EmergencyTagPredicate()));
         return new CommandResult(model.getFilteredPersonList().isEmpty() ? MESSAGE_EMPTY : MESSAGE_SUCCESS);
     }
 }
