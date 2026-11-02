@@ -184,6 +184,27 @@ public class TagTest {
     }
 
     @Test
+    public void matchesName_capitalSharpS_matchesTypedAndStoredForms() {
+        Tag tag = new Tag("ẞ");
+        assertEquals("ß", tag.tagName);
+        for (String name : new String[]{"ẞ", "ß", "SS", "ss"}) {
+            assertTrue(tag.matchesName(name), name);
+            assertEquals(tag, new Tag(name));
+        }
+        assertTrue(new Tag("Straße").matchesName("STRAẞE"));
+    }
+
+    @Test
+    public void matchesName_everyValidSingleCharacterTag_matchesTypedForm() {
+        for (int codePoint = 0; codePoint <= Character.MAX_CODE_POINT; codePoint++) {
+            String typed = Character.toString(codePoint);
+            if (Tag.isValidTagName(typed)) {
+                assertTrue(new Tag(typed).matchesName(typed), String.format("U+%04X", codePoint));
+            }
+        }
+    }
+
+    @Test
     public void hashCode_differentCase_sameHashCode() {
         assertEquals(new Tag("RA").hashCode(), new Tag("ra").hashCode());
         assertNotEquals(new Tag("RA").hashCode(), new Tag("Resident").hashCode());

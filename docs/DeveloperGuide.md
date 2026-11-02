@@ -262,6 +262,7 @@ Three Unicode details keep the stored form consistent with loading and comparing
 * Each word is lowercased as a whole before its first letter is title-cased. Some letters lowercase differently depending on their neighbors: the Greek `Σ` becomes `ς` at the end of a word and `σ` elsewhere. Lowercasing letters one at a time would store `ΟΣ` as `Οσ`, while `Tag#toComparisonKey()` lowercases the whole name to `ος`, so `find /tag ΟΣ` would match nothing and `/tag ΟΣ /tag ος` would be two different tags.
 * `Tag#isValidTagName()` also checks the length of the title-case form, because a few letters, such as `İ`, become two characters in lower case. Otherwise a tag within the limit as typed could be saved longer than `Tag.MAX_LENGTH` and make the data file fail to load. `ParserUtil#parseTag()` reports such a tag as too long.
  `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were typed. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
+* `Tag#toComparisonKey()` lowercases, uppercases, then lowercases again, because title-casing can turn a letter into one that lowercases differently. The dotless `ı` is stored as `I`, which lowercases to `i`, and `ẞ` is stored as `ß`, which uppercases to `SS`. The round trip gives a typed name and its stored form the same key, so `find /tag ı` and `find /tag ẞ` find the tags they created.
 
 #### Design considerations
 
@@ -1249,6 +1250,9 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
    Expected: The tag is shown as `I`. Both searches list Unicode Tester.
 
 ### Finding contacts by name
+
+1. Test case: `add Sharp Tester /phone 91234568 /tag ẞ` (capital sharp s), then `find /tag ẞ`, then `find /tag ß`<br>
+   Expected: The tag is shown as `ß`. Both searches list Sharp Tester.
 
 1. Prerequisites: Start with the sample data.
 
