@@ -88,6 +88,8 @@ Shows a message explaining how to access the help page.
 
 Format: `help`
 
+* Press Esc to close the help window and go back to typing commands. Pressing `F1` also opens it.
+* If the help window is minimized, `help` restores it.
 
 ### Recalling previous commands
 
@@ -552,8 +554,6 @@ _Details coming soon ..._
 ## Known issues
 
 1. **When using multiple screens**, if you move the application to a secondary screen, and later switch to using only the primary screen, the GUI will open off-screen. The remedy is to delete the `preferences.json` file created by the application before running the application again.
-2. **If you minimize the Help Window** and then run the `help` command (or use the `Help` menu, or the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
-
 --------------------------------------------------------------------------------------------------------------------
 
 ## Command summary

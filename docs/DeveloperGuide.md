@@ -1053,6 +1053,26 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases …​ }_
 
+1. Window title
+
+   1. Launch the app.<br>
+      Expected: The title bar of the main window shows `RAcontact`.
+
+### Viewing help
+
+1. Closing the help window with the keyboard
+
+   1. Test case: `help`, then press Esc, then type `list` and press Enter.<br>
+      Expected: The help window closes, the command box has focus again, and `list` runs without using the mouse.
+
+   1. Test case: Press F1, then press Esc.<br>
+      Expected: Same as above.
+
+1. Reopening a minimized help window
+
+   1. Test case: `help`, minimize the help window, then click the main window and run `help` again.<br>
+      Expected: The help window is restored and brought to the front.
+
 ### Recalling previous commands
 
 Start each test below in a newly launched app so that command history is empty. Click the command box before
