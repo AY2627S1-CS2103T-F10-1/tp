@@ -9,6 +9,7 @@ import static seedu.address.testutil.TypicalPersons.AMY;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -64,6 +65,26 @@ public class LogicManagerTest {
     public void execute_commandExecutionError_throwsCommandException() {
         String deleteCommand = "delete 9";
         assertCommandException(deleteCommand, MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+    }
+
+    @Test
+    public void execute_phoneWithoutDigits_rejectedWithoutChangingDataViewOrFile() throws Exception {
+        model.addPerson(AMY);
+        logic.execute("emergency 1 /name Bob Choo /phone 91234567");
+        List<Person> stored = List.copyOf(model.getAddressBook().getPersonList());
+        List<Person> displayed = List.copyOf(logic.getFilteredPersonList());
+        Path dataPath = temporaryFolder.resolve("addressBook.json");
+        String saved = Files.readString(dataPath);
+
+        for (String phone : List.of("++++", "---", "( )", "+()-")) {
+            for (String command : List.of("add Sarah Tan /phone ", "edit 1 /phone ",
+                    "emergency 1 /name Bob Choo /phone ")) {
+                assertThrows(ParseException.class, Phone.MESSAGE_NO_DIGITS, () -> logic.execute(command + phone));
+                assertEquals(stored, model.getAddressBook().getPersonList());
+                assertEquals(displayed, logic.getFilteredPersonList());
+                assertEquals(saved, Files.readString(dataPath));
+            }
+        }
     }
 
     @Test

@@ -130,12 +130,17 @@ public class ParserUtil {
      * Parses a {@code String phone} into a {@code Phone}.
      * Leading and trailing whitespaces will be trimmed.
      *
-     * @throws ParseException if the given {@code phone} is empty, too long or contains invalid characters.
+     * @throws ParseException if the given {@code phone} is empty, too long, contains invalid characters
+     *         or has no digits.
      */
     public static Phone parsePhone(String phone) throws ParseException {
         requireNonNull(phone);
         String trimmedPhone = phone.trim();
         checkText(trimmedPhone, PHONE_RULES);
+        // Check new command input here so previously saved numbers remain loadable.
+        if (trimmedPhone.chars().noneMatch(Character::isDigit)) {
+            throw new ParseException(Phone.MESSAGE_NO_DIGITS);
+        }
         return new Phone(trimmedPhone);
     }
 
@@ -223,9 +228,10 @@ public class ParserUtil {
         requireNonNull(tags);
         final Set<Tag> tagSet = new LinkedHashSet<>();
         for (String tagName : tags) {
-            boolean isNewTag = tagSet.add(parseTag(tagName));
+            Tag tag = parseTag(tagName);
+            boolean isNewTag = tagSet.add(tag);
             if (!isNewTag) {
-                throw new ParseException(Tag.MESSAGE_DUPLICATE);
+                throw new ParseException(String.format(Tag.MESSAGE_REPEATED, tag.tagName));
             }
         }
         if (tagSet.size() > Person.MAX_TAGS) {

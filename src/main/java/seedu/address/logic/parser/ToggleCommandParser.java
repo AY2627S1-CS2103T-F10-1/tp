@@ -16,8 +16,6 @@ import seedu.address.model.tag.Tag;
  * Parses input arguments and creates a new ToggleCommand object.
  */
 public class ToggleCommandParser implements Parser<ToggleCommand> {
-    public static final String MESSAGE_REPEATED_TAG = "Repeated tag: %1$s. Each tag can only be given once.";
-
     /**
      * Parses the given {@code String} of arguments in the context of the ToggleCommand
      * and returns a ToggleCommand object for execution.
@@ -49,7 +47,7 @@ public class ToggleCommandParser implements Parser<ToggleCommand> {
         for (String tagValue : tagValues) {
             Tag tag = ParserUtil.parseTag(tagValue);
             if (!tags.add(tag)) {
-                throw new ParseException(String.format(MESSAGE_REPEATED_TAG, tag.tagName));
+                throw new ParseException(String.format(Tag.MESSAGE_REPEATED, tag.tagName));
             }
         }
         return tags;

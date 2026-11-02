@@ -33,6 +33,12 @@ public class DeleteCommandParserTest {
         }
     }
     @Test
+    public void parse_nameWithSlashInsideWord_success() {
+        assertParseSuccess(parser, "/name Kumar s/o Rajan",
+                new DeleteCommand(new NameEqualsPredicate("Kumar s/o Rajan")));
+    }
+
+    @Test
     public void parse_nameWhitespace_normalizedBeforeMatching() {
         for (String space : new String[]{"   ", "\u00a0", "\u2003", "\u202f"}) {
             assertParseSuccess(parser, "/name " + space + "Alice" + space + "Tan" + space,

@@ -40,6 +40,10 @@ public class TagTest {
         assertFalse(Tag.isValidTagName("Block_4")); // underscore
         assertFalse(Tag.isValidTagName("Café!")); // non-ASCII letter with a symbol
         assertFalse(Tag.isValidTagName("🚨")); // emoji is not a letter
+        assertFalse(Tag.isValidTagName("-")); // boundary: no letter or digit
+        assertFalse(Tag.isValidTagName("---")); // only hyphens
+        assertFalse(Tag.isValidTagName("- -")); // only hyphens, in two words
+        assertFalse(Tag.isValidTagName("\u0301")); // only a combining accent mark
         assertFalse(Tag.isValidTagName(INVALID_TAG_TOO_LONG)); // boundary: one character too long
 
         // valid tag names
@@ -47,6 +51,7 @@ public class TagTest {
         assertTrue(Tag.isValidTagName("4")); // boundary: single digit
         assertTrue(Tag.isValidTagName("Block4")); // letters and digits
         assertTrue(Tag.isValidTagName("Hall-Staff")); // hyphen
+        assertTrue(Tag.isValidTagName("-4")); // boundary: one digit among hyphens
         assertTrue(Tag.isValidTagName("Resident Fellow")); // inner space
         assertTrue(Tag.isValidTagName("  Resident    Fellow  ")); // extra spaces are collapsed
         assertTrue(Tag.isValidTagName(VALID_TAG_AT_MAX_LENGTH)); // boundary: exactly at the limit

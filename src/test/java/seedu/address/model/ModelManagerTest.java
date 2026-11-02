@@ -19,6 +19,7 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.person.NameEqualsPredicate;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.AddressBookBuilder;
+import seedu.address.testutil.PersonBuilder;
 
 public class ModelManagerTest {
 
@@ -27,6 +28,8 @@ public class ModelManagerTest {
             Comparator.comparingInt(person -> person.getName().fullName.length());
     /** Persons in the order they are added to the address book, which NAME_LENGTH_ORDER changes. */
     private static final List<Person> ORIGINAL_ORDER = List.of(ALICE, BENSON, CARL, DANIEL);
+    /** Treats all persons as equal, as a ranking does for persons who match equally well. */
+    private static final Comparator<Person> ALL_TIED = (first, second) -> 0;
 
     private ModelManager modelManager = new ModelManager();
 
@@ -110,6 +113,38 @@ public class ModelManagerTest {
 
         // Benson Meier and Daniel Meier have names of the same length
         assertEquals(List.of(CARL, BENSON, DANIEL, ALICE), modelManager.getFilteredPersonList());
+    }
+
+    @Test
+    public void setPerson_tiedPersons_keepsOriginalOrder() {
+        modelManager = getModelOf(ORIGINAL_ORDER);
+        modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS, ALL_TIED);
+        Person editedAlice = new PersonBuilder(ALICE).withRoom("C-101").build();
+
+        modelManager.setPerson(ALICE, editedAlice);
+
+        assertEquals(List.of(editedAlice, BENSON, CARL, DANIEL), modelManager.getFilteredPersonList());
+    }
+
+    @Test
+    public void setPerson_tiedPersonAmongDifferentRanks_keepsDisplayOrder() {
+        modelManager = getModelOf(ORIGINAL_ORDER);
+        modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS, NAME_LENGTH_ORDER);
+        Person editedBenson = new PersonBuilder(BENSON).withRoom("C-101").build();
+
+        modelManager.setPerson(BENSON, editedBenson);
+
+        assertEquals(List.of(CARL, editedBenson, DANIEL, ALICE), modelManager.getFilteredPersonList());
+    }
+
+    @Test
+    public void updateFilteredPersonList_tiesAfterAnotherOrder_restoresOriginalOrder() {
+        modelManager = getModelOf(ORIGINAL_ORDER);
+        modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS, NAME_LENGTH_ORDER);
+
+        modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS, ALL_TIED);
+
+        assertEquals(ORIGINAL_ORDER, modelManager.getFilteredPersonList());
     }
 
     @Test

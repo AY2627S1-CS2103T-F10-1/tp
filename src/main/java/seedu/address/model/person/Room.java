@@ -10,7 +10,8 @@ public class Room {
     public static final int MAX_LENGTH = 20;
     public static final String MESSAGE_EMPTY = "Room number cannot be empty.";
     public static final String MESSAGE_TOO_LONG = "Room number too long, please shorten it and try again.";
-    public static final String MESSAGE_INVALID_CHARACTERS = "Room number contains invalid characters.";
+    public static final String MESSAGE_INVALID_CHARACTERS = "Room numbers should only contain letters, digits, "
+            + "spaces, hyphens and #, with at least one letter or digit.";
 
     public final String value;
 
@@ -24,7 +25,7 @@ public class Room {
 
     /** Returns true if {@code room} is a valid room; an empty room means the contact has no room. */
     public static boolean isValidRoom(String room) {
-        return room.length() <= MAX_LENGTH && (room.isEmpty() || room.matches("[\\p{Alnum} -]+"));
+        return room.length() <= MAX_LENGTH && (room.isEmpty() || room.matches("(?=.*\\p{Alnum})[\\p{Alnum}# -]+"));
     }
 
     @Override

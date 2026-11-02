@@ -145,6 +145,11 @@ public class Person {
         return new Person(name, phone, email, address, tags, room, note, Optional.of(contact), archive, isFavourite);
     }
 
+    /** Returns a copy without emergency details, preserving every other field. */
+    public Person withoutEmergencyContact() {
+        return new Person(name, phone, email, address, tags, room, note, Optional.empty(), archive, isFavourite);
+    }
+
     /**
      * Returns an immutable tag set, which throws {@code UnsupportedOperationException}
      * if modification is attempted.

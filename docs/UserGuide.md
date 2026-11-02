@@ -23,7 +23,7 @@ The app stores and retrieves contact information; it does not make calls, send m
 
 1. Download the latest `.jar` file from [here](https://github.com/AY2627S1-CS2103T-F10-1/tp/releases).
 
-1. Copy the file to the folder you want to use as the _home folder_ for your AddressBook.
+1. Copy the file to the folder you want to use as the _home folder_ for RAcontact.
 
 1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar addressbook.jar`.<br>
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
@@ -40,7 +40,7 @@ The app stores and retrieves contact information; it does not make calls, send m
 
    * `list fav` : Lists favourite contacts.
 
-   * `add John Doe /phone 98765432` : Adds a contact named `John Doe` to the Address Book.
+   * `add John Doe /phone 98765432` : Adds a contact named `John Doe` to RAcontact.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
@@ -129,12 +129,14 @@ Adds a contact with a required name and phone number, and optional room, tags an
 
 Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
 
-* Name is required and can contain up to 100 characters. Existing name character rules apply.
-* Phone is required and can contain up to 20 characters: digits, spaces, `+`, hyphens and parentheses.
+* Name is required and can contain up to 100 characters: letters and digits in any language, spaces, and the
+  symbols `'`, `-`, `.` and `/`. Each word must start with a letter or digit, so `Kumar s/o Rajan`, `O'Brien`,
+  `Mary-Jane Lee`, `José García` and `李小明` are accepted, but `/x` and `-Lee` are not.
+* Phone is required and can contain up to 20 characters: digits, spaces, `+`, hyphens and parentheses. It must contain at least one digit; formatting characters alone are rejected with `Phone number must contain at least one digit.`
 * Room is optional for any contact, regardless of tags. It can contain up to 20 characters:
-  letters, digits, spaces and hyphens.
+  letters, digits, spaces, hyphens and `#`, with at least one letter or digit (e.g., `B-204`, `#03-12`).
 * Note is optional free text, such as an allergy or how the contact prefers to be reached. It can contain
-  up to 200 characters of any kind. `/` is allowed inside a word (e.g., `24/7`, `and/or`, `w/`, links), but a word
+  up to 200 characters of any kind, although most emoji count as 2 or more. `/` is allowed inside a word (e.g., `24/7`, `and/or`, `w/`, links), but a word
   cannot start with `/`, because that marks the start of a field. If a word in the note is a field name such as
   `/room` or `/tag`, the rest of the note is taken as that field: `/note talk to /room officer` gives the note
   `talk to` and the room `officer`.
@@ -142,12 +144,13 @@ Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
   `/phone`, `/room` and `/note` cannot be repeated.
 * Repeat `/tag` once per tag, up to five tags. Spaces inside a tag are allowed, so `/tag Resident Fellow` is one tag.
 * Tags may contain letters and digits in any language (e.g., `Café`, `宿舍`), spaces and hyphens (`-`),
-  up to 50 characters. They are not case-sensitive, and are displayed with the first letter of each word
+  up to 50 characters, with at least one letter or digit. They are not case-sensitive, and are displayed with the first letter of each word
   capitalized and the rest in lower case, so `RA`, `ra` and `Ra` all appear as `Ra`.
   Tags in an edited data file are displayed the same way.
   The 50-character limit applies to the tag as displayed; a few letters, such as the Turkish `İ`, take two
   characters in lower case.
-* Duplicate tags, including tags differing only in case or extra spaces (e.g., `/tag RA /tag ra`), are rejected.
+* Duplicate tags, including tags differing only in case or extra spaces (e.g., `/tag RA /tag ra`) or in how an
+  accented letter was typed, are rejected.
 * Leading and trailing spaces are trimmed, and extra whitespace is collapsed into one space.
 * Supplying `/room`, `/tag` or `/note` without a value is rejected.
 * A contact is a duplicate when its name matches an existing contact (case-sensitive).
@@ -262,7 +265,7 @@ Example: `unfav 1` removes favourite status from the 1st currently displayed con
 
 ### Listing favourite contacts: `list fav`
 
-Shows active favourite contacts from across the address book, including those hidden by an earlier search.
+Shows active favourite contacts from across the contact list, including those hidden by an earlier search.
 
 Format: `list fav`
 
@@ -294,6 +297,10 @@ Format: `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/note NOTE]`
 * On success, the full active contact list is shown again in stored order. Search again before using an index from the previous results.
 * An optional field given with nothing after it is removed: `/room` on its own removes the room, and
   `/note` on its own removes the note. `/name` and `/phone` are required, so they cannot be removed.
+* Be careful with field names in a note, as they change that field and still report success:
+  `edit 1 /note ask /name Bob Lee` renames the contact to `Bob Lee`, and `edit 1 /note keep /room` removes the room.
+  Because `/tag` is not a field of `edit`, `edit 1 /note ask /tag Staff` is rejected with the note's message about
+  words starting with `/`. Check the status message after editing a note.
 
 Examples:
 * `edit 2 /phone 9123 4567` changes the phone number of the 2nd contact.
@@ -305,23 +312,28 @@ Examples:
 
 ### Assigning an emergency contact: `emergency`
 
-Stores emergency details for a person without adding another entry to the contact list.
+Stores or clears emergency details for a person without adding another entry to the contact list.
 
-Format: `emergency INDEX /name NAME /phone PHONE [/relation RELATION]`
+Format: `emergency INDEX /name NAME /phone PHONE [/relation RELATION]` or `emergency INDEX /clear`
 
 * `INDEX` identifies the person in the currently displayed list, as with `edit`.
-* Name and phone are required and follow the same rules as `add`. Fields may appear in any order.
+* Archived contacts must be unarchived before assigning, replacing or clearing emergency details. Otherwise, the command reports `Cannot change emergency details of an archived contact. Unarchive it first.` and leaves the contact and current view unchanged.
+* When assigning or replacing details, name and phone are required and follow the same rules as `add`. Fields may appear in any order.
 * Relation is optional free text, up to 50 characters. Extra whitespace is collapsed.
 * Each prefix may appear only once. Invalid input leaves the contact unchanged.
 * A person can have one emergency contact. Running the command again replaces all previous emergency details.
   Name and phone are required each time; omitting relation replaces the previous relation with an empty value.
 * Emergency details are a separate person field. Toggling tags does not remove them.
-  Clearing emergency details without providing a replacement is not supported yet.
+* Use `/clear` alone after the index to remove the emergency details. It cannot be combined with `/name`, `/phone` or `/relation`, repeated, or followed by a value. If no emergency details are assigned, the command reports `No emergency contact assigned to NAME. No changes made.` and leaves the contact unchanged.
+* Clearing preserves every other contact detail, including the general emergency tag, and keeps the current view.
 * Details appear on the person's card and are saved automatically. Ordinary edits preserve them.
+* The success message identifies the person and shows the new details as `emergency: NAME(RELATION) PHONE`; the relation and parentheses are omitted when no relation is given.
 * The same emergency details may be assigned to several people independently.
 * This does not change `list emerg`, which lists the app's tagged emergency resources.
 
 Example: `emergency 1 /name Bob Choo /phone 9123 4567 /relation Brother`
+
+To remove those details: `emergency 1 /clear`. The message is `Emergency contact cleared for NAME.`
 
 ### Toggling tags: `toggle`
 
@@ -349,15 +361,14 @@ Searches active contacts even when run from the archived view.
 Format: `find /name NAME`, `find /tag TAG`, `find /phone NUMBER` or `find /room ROOM`
 
 * Exactly one of `/name`, `/tag`, `/phone` and `/room` must be given, and nothing may be typed before it.
-* Name search ignores capital letters and forgives small typos; for example, `find /name alx yeo` finds `Alex Yeoh`.
-* Tag search ignores case and extra spaces; for example, `find /tag Friends` matches the tag `friends`.
 * Spaces before and after `NAME`, `TAG`, `NUMBER` or `ROOM` are ignored.
 * If no person matches, the message `No contacts found` is shown and the list is empty. Otherwise, the number of persons listed is shown.
-* A prefix must be followed by a space, so `find /tagfriends` is not recognised as a tag search.
-* If the prefix is missing or not followed by a space (such as `/tagfriends`), multiple search prefixes are given, or `NAME`, `TAG`, `NUMBER` or `ROOM` is empty, an invalid command format message is shown.
+* If the prefix is missing or not followed by a space (such as `/tagfriends`), multiple search prefixes are given, any other word starts with `/` (such as a mistyped `/rom`), or `NAME`, `TAG`, `NUMBER` or `ROOM` is empty, an invalid command format message is shown and the list does not change.
 * If `/name`, `/tag`, `/phone` or `/room` is repeated, a message listing the repeated prefix is shown.
 
-Finding by name (`/name`):
+#### Finding by name: `/name`
+
+* Capital letters are ignored and small typos are forgiven; for example, `find /name alx yeo` finds `Alex Yeoh`.
 * You do not need the full name. Each word you type must match one of the words in the contact's name,
   in any order; for example, `find /name Yeoh` and `find /name Yeoh Alex` both find `Alex Yeoh`.
 * Every word you type must match. For example, `find /name Alex Tan` does not find `Alex Yeoh`, because no part of
@@ -379,7 +390,7 @@ Finding by name (`/name`):
 
     So `find /name Jonathn` (1 typo) finds `Jonathan Chua`, but `find /name Jnthn` (3 typos in a 5-letter word) does not.
     Short words must be typed exactly, so `find /name Al` does not find `Alex Yeoh`, and `find /name Ong` does not
-    find `Ng Kai`.
+    find `Ng Kai`. This also applies to names in other languages, so `find /name 李小` does not find `李小明`.
 * Because small typos are allowed, a search may also list contacts with similar names; for example,
   `find /name Tan` may also list a contact named `Tay`.
 * The closest matches are listed first: contacts whose name contains the exact words you typed, then contacts
@@ -389,26 +400,33 @@ Finding by name (`/name`):
 * Extra spaces between words are ignored, including the non-breaking spaces that names pasted from a chat app
   or web page may contain.
 
-Finding by phone (`/phone`):
+![Results of find /name alx yeo](images/findNameResults.png)
+
+#### Finding by phone: `/phone`
+
 * Searches all active contacts for an exact phone number, including contacts hidden by an earlier search.
 * Extra spaces are ignored, as when storing phone numbers. Other formatting must match:
   `+65 9123 4567` does not match `+6591234567`, and `9123` does not match `91234567`.
 * All contacts sharing the number are listed. Any non-empty value is accepted; an unknown value matches nobody.
 * Example: `find /phone 91234567` lists contacts whose phone number is `91234567`.
 
-Finding by tag (`/tag`):
+#### Finding by tag: `/tag`
+
+* Case and extra spaces are ignored; for example, `find /tag Friends` matches the tag `friends`.
 * Only one tag can be searched at a time, so `find /tag friends /tag family` is rejected.
 * Any non-empty `TAG` is accepted. A value that is not a valid tag, or that no contact has, simply matches nobody.
 * A person is listed if any one of their tags is exactly `TAG`; for example, `find /tag friends` matches a person tagged `friends` and `owesMoney`, but not one tagged `friends2`.
 
-Finding by room (`/room`):
+#### Finding by room: `/room`
+
 * Matches the complete room number, ignoring case and extra whitespace: `find /room b-204` matches `B-204`.
 * Partial numbers do not match. `B-204`, `B204` and `B 204` are different room numbers.
 * Lists all active contacts sharing the room, including those hidden by a previous search.
 * Contacts without a room and archived contacts are excluded. Any non-empty search value is accepted;
   an unknown room simply matches nobody.
 
-Examples:
+#### Examples
+
 * `find /name Alex Yeoh` returns `Alex Yeoh`
 * `find /name alex` returns `Alex Yeoh`
 * `find /name Bernise` returns `Bernice Yu`, despite the typo
@@ -421,7 +439,7 @@ Examples:
 Format: `archive INDEX` or `archive /tag TAG`
 
 * `INDEX` is a positive integer from the currently displayed list, including search results.
-* `/tag TAG` archives **all active contacts** with that tag across the address book,
+* `/tag TAG` archives **all active contacts** with that tag across the contact list,
   including contacts outside the displayed results. Matching ignores case and extra whitespace.
 * Selection is internal: the command runs immediately without a preview or confirmation.
 * The current view/filter stays in place. Archived contacts disappear from active results;
@@ -448,7 +466,7 @@ stored and are hidden at startup and in these normal lists/searches.
 Format: `unarchive INDEX` or `unarchive /tag TAG`
 
 * Run `list archived` before restoring by index. Use the index currently displayed.
-* Tag selection restores all archived contacts matching the tag across the address book,
+* Tag selection restores all archived contacts matching the tag across the contact list,
   ignoring case and extra whitespace. Active contacts are unchanged.
 * The current view/filter stays in place: restored contacts disappear from the archived view.
   Use `list` to see them among active contacts.
@@ -460,7 +478,7 @@ Example: `list archived`, then `unarchive 1`; or `unarchive /tag Study Group`.
 
 ### Deleting a person: `delete`
 
-Permanently deletes the specified person from the address book. From `list archived`,
+Permanently deletes the specified person from the contact list. From `list archived`,
 `delete INDEX` can delete an archived contact; it cannot then be unarchived.
 
 Format: `delete INDEX` or `delete /name NAME`
@@ -479,7 +497,7 @@ Format: `delete INDEX` or `delete /name NAME`
 
 
 Examples:
-* `list` followed by `delete 2` deletes the 2nd person in the address book.
+* `list` followed by `delete 2` deletes the 2nd person in the contact list.
 * `find /name Betsy Crower` followed by `delete 1` deletes the 1st person in the results of the `find` command.
 
 ### Clearing all entries: `clear`
@@ -496,7 +514,7 @@ Format: `exit`
 
 ### Saving the data
 
-AddressBook automatically saves data after every command. You do not need to save manually. Archive state is stored as the boolean `archive`: `true`
+RAcontact automatically saves data after every command. You do not need to save manually. Archive state is stored as the boolean `archive`: `true`
 means archived, and `false` means active. Older files without this field load contacts as active.
 
 If saving fails, an error is shown and the in-memory change remains visible. It has not been
@@ -507,14 +525,15 @@ Older data files without favourite status still load; their contacts start unfav
 
 ### Editing the data file
 
-AddressBook data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
+RAcontact data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
 
 Each contact's `isFavourite` property is a JSON boolean, `true` or `false`. If the property is absent, it defaults to `false`.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
-If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
-A contact with more than 5 distinct tags also makes the data file invalid, as does a note longer than 200 characters or with a word starting with `/` (e.g., `see /docs`; a link such as `https://nus.edu.sg` is fine). See [`add`](#adding-a-contact-add) for the rules of each field.<br>
-Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
+If your changes make the data file invalid, RAcontact starts with an empty contact list at the next run. The invalid file remains on disk until you run a command (RAcontact saves after every command). Still, we recommend backing up the file before editing it.<br>
+A contact with more than 5 distinct tags also makes the data file invalid, as does a name over 100 characters or with characters `add` does not allow, a tag or room with no letter or digit (e.g., `---`), or a note longer than 200 characters or with a word starting with `/` (e.g., `see /docs`; a link such as `https://nus.edu.sg` is fine). See [`add`](#adding-a-contact-add) for the rules of each field.<br>
+Extra spaces in a name are collapsed when the file is loaded, so `Sarah Tan` and `Sarah  Tan` count as duplicates, which also makes the file invalid.<br>
+Furthermore, certain edits can cause RAcontact to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
 ### Archiving data files `[coming in v2.0]`
@@ -526,7 +545,7 @@ _Details coming soon ..._
 ## FAQ
 
 **Q**: How do I transfer my data to another computer?<br>
-**A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous AddressBook home folder.
+**A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous RAcontact home folder.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -547,17 +566,15 @@ Action | Format, Examples
 **Unarchive** | `unarchive INDEX` or `unarchive /tag TAG`
 **Clear** | `clear`
 **Delete** | `delete INDEX` or `delete /name NAME`<br> e.g., `delete 3`, `delete /name Alice Tan`
-**Edit (suspended)** | Temporarily unavailable. Displays `Edit not currently supported`.
 **Find** | `find /name NAME`, `find /tag TAG`, `find /phone NUMBER` or `find /room ROOM`<br> e.g., `find /name alx yeo`, `find /tag friends`, `find /phone 87438807`, `find /room B-204`
 **Edit** | `edit INDEX [/name NAME] [/phone PHONE] [/room ROOM] [/note NOTE]`<br> e.g., `edit 2 /phone 9123 4567`, `edit 3 /room`
 **Toggle** | `toggle INDEX /tag TAG [/tag TAG]…​`<br> e.g., `toggle 1 /tag emergency`
-**Find** | `find /name NAME`, `find /tag TAG` or `find /phone NUMBER`<br> e.g., `find /name James Jake`, `find /tag friends`
 **List** | `list`
 **List sorted by name** | `list sorted`
 **List emergency contacts** | `list emerg`
 **Mark favourite** | `fav INDEX`<br> e.g., `fav 2`
 **Remove favourite status** | `unfav INDEX`<br> e.g., `unfav 1`
 **List favourite contacts** | `list fav`
-**Assign emergency contact** | `emergency INDEX /name NAME /phone PHONE [/relation RELATION]`
+**Assign or clear emergency contact** | `emergency INDEX /name NAME /phone PHONE [/relation RELATION]` or `emergency INDEX /clear`
 **Help** | `help`
 **Recall commands** | ↑ for older commands; ↓ for newer commands or the saved unfinished input. Press Enter to execute. The command box must be focused.
