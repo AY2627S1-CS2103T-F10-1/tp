@@ -19,7 +19,11 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+
 import seedu.address.commons.exceptions.DataLoadingException;
+import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
@@ -82,6 +86,37 @@ public class JsonAddressBookStorageTest {
     @Test
     public void read_notJsonFormat_exceptionThrown() {
         assertThrows(DataLoadingException.class, () -> readAddressBook("notJsonFormatAddressBook.json"));
+    }
+
+    @Test
+    public void read_nullRootPersonsListOrEntry_throwsDataLoadingException() throws Exception {
+        Path filePath = testFolder.resolve("nullContacts.json");
+        for (String json : List.of("null", "{\"persons\":null}", "{}", "{\"persons\":[null]}")) {
+            Files.writeString(filePath, json);
+            assertThrows(DataLoadingException.class, () -> new JsonAddressBookStorage(filePath).readAddressBook());
+            assertEquals(json, Files.readString(filePath));
+        }
+    }
+
+    @Test
+    public void read_emptyPersonsList_returnsEmptyAddressBook() throws Exception {
+        Path filePath = testFolder.resolve("emptyContacts.json");
+        Files.writeString(filePath, "{\"persons\":[]}");
+        assertEquals(new AddressBook(), new JsonAddressBookStorage(filePath).readAddressBook().orElseThrow());
+    }
+
+    @Test
+    public void read_nullTag_throwsDataLoadingException() throws Exception {
+        Path filePath = testFolder.resolve("nullTag.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+        storage.saveAddressBook(getTypicalAddressBook());
+        JsonNode json = JsonUtil.fromJsonString(Files.readString(filePath), JsonNode.class);
+        ArrayNode tags = (ArrayNode) json.get("persons").get(0).get("tags");
+        tags.addNull();
+        Files.writeString(filePath, json.toString());
+
+        assertThrows(DataLoadingException.class, storage::readAddressBook);
+        assertEquals(json.toString(), Files.readString(filePath));
     }
 
     @Test
