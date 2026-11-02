@@ -40,6 +40,12 @@ public class PersonHasTagPredicateTest {
     }
 
     @Test
+    public void test_tagInOtherUnicodeForm_returnsTrue() {
+        Person person = new PersonBuilder().withTags("Caf\u00e9").build();
+        assertTrue(new PersonHasTagPredicate("Cafe\u0301").test(person));
+    }
+
+    @Test
     public void test_personDoesNotHaveTag_returnsFalse() {
         // person has no tags
         assertFalse(new PersonHasTagPredicate("RA").test(new PersonBuilder().build()));

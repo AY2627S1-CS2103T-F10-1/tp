@@ -132,7 +132,7 @@ Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
 * Name is required and can contain up to 100 characters. Existing name character rules apply.
 * Phone is required and can contain up to 20 characters: digits, spaces, `+`, hyphens and parentheses. It must contain at least one digit; formatting characters alone are rejected with `Phone number must contain at least one digit.`
 * Room is optional for any contact, regardless of tags. It can contain up to 20 characters:
-  letters, digits, spaces and hyphens.
+  letters, digits, spaces, hyphens and `#`, with at least one letter or digit (e.g., `B-204`, `#03-12`).
 * Note is optional free text, such as an allergy or how the contact prefers to be reached. It can contain
   up to 200 characters of any kind, although most emoji count as 2 or more. `/` is allowed inside a word (e.g., `24/7`, `and/or`, `w/`, links), but a word
   cannot start with `/`, because that marks the start of a field. If a word in the note is a field name such as
@@ -142,12 +142,13 @@ Format: `add NAME /phone PHONE [/room ROOM] [/tag TAG]…​ [/note NOTE]`
   `/phone`, `/room` and `/note` cannot be repeated.
 * Repeat `/tag` once per tag, up to five tags. Spaces inside a tag are allowed, so `/tag Resident Fellow` is one tag.
 * Tags may contain letters and digits in any language (e.g., `Café`, `宿舍`), spaces and hyphens (`-`),
-  up to 50 characters. They are not case-sensitive, and are displayed with the first letter of each word
+  up to 50 characters, with at least one letter or digit. They are not case-sensitive, and are displayed with the first letter of each word
   capitalized and the rest in lower case, so `RA`, `ra` and `Ra` all appear as `Ra`.
   Tags in an edited data file are displayed the same way.
   The 50-character limit applies to the tag as displayed; a few letters, such as the Turkish `İ`, take two
   characters in lower case.
-* Duplicate tags, including tags differing only in case or extra spaces (e.g., `/tag RA /tag ra`), are rejected.
+* Duplicate tags, including tags differing only in case or extra spaces (e.g., `/tag RA /tag ra`) or in how an
+  accented letter was typed, are rejected.
 * Leading and trailing spaces are trimmed, and extra whitespace is collapsed into one space.
 * Supplying `/room`, `/tag` or `/note` without a value is rejected.
 * A contact is a duplicate when its name matches an existing contact (case-sensitive).
@@ -528,7 +529,7 @@ Each contact's `isFavourite` property is a JSON boolean, `true` or `false`. If t
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
-A contact with more than 5 distinct tags also makes the data file invalid, as does a note longer than 200 characters or with a word starting with `/` (e.g., `see /docs`; a link such as `https://nus.edu.sg` is fine). See [`add`](#adding-a-contact-add) for the rules of each field.<br>
+A contact with more than 5 distinct tags also makes the data file invalid, as does a tag or room with no letter or digit (e.g., `---`), or a note longer than 200 characters or with a word starting with `/` (e.g., `see /docs`; a link such as `https://nus.edu.sg` is fine). See [`add`](#adding-a-contact-add) for the rules of each field.<br>
 Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 

@@ -240,18 +240,19 @@ Tags are added to a contact when it is created, with `add NAME /phone PHONE [/ro
 
 `AddCommandParser` uses `ArgumentTokenizer` with the `/phone`, `/room`, `/tag` and `/note` keywords, so they can be given in any order. The text before the first keyword is the name. `/phone` must be given exactly once, and `/room` and `/note` at most once; a word starting with `/` that is not one of these keywords is rejected. `/tag` is optional and may be repeated, once per tag.
 
-For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters. So `/tag` with no value is reported as an empty tag, and `/tag RA, Staff` as invalid characters. `AddCommandParser` collects the tags into a `LinkedHashSet`, rejects a tag already given (`Contact already has this tag.`), and then rejects more than `Person.MAX_TAGS` tags.
+For each `/tag` value, `ParserUtil#parseTag()` collapses extra whitespace and reports the first problem it finds, in this order: empty, longer than `Tag.MAX_LENGTH`, invalid characters, longer than `Tag.MAX_LENGTH` in title case. So `/tag` with no value is reported as an empty tag, and `/tag RA, Staff` as invalid characters. The diagram below groups these as an invalid value. `ParserUtil#parseTags()` then creates the `Tag` and collects the tags into a `LinkedHashSet`, rejects a tag already given (`Repeated tag: TAG. Each tag can only be given once.`), and then rejects more than `Person.MAX_TAGS` tags.
 
 The activity diagram below shows the order in which these checks run for an `add` command.
 
-<img src="images/TagValidationActivityDiagram.png" width="800" />
+<img src="images/TagValidationActivityDiagram.png" alt="Order of the tag checks in the add command" width="400" />
 
 `Tag.VALIDATION_REGEX` uses `\p{L}`, `\p{M}` and `\p{N}` rather than `\p{Alnum}`, which in Java only matches ASCII, so letters and digits in any language are accepted. `\p{M}` allows accent marks, for letters typed as a base letter followed by a combining mark.
 
 `Tag` compares tag names ignoring case and stores them in title case: the first letter of each word in upper case and the rest in lower case. As `JsonAdaptedTag` also builds a `Tag`, tags in an edited data file are normalized the same way when loaded.
 
-Two Unicode details keep the stored form consistent with loading and comparing:
+Three Unicode details keep the stored form consistent with loading and comparing:
 
+* `Tag#toComparisonKey()` normalizes names to NFC, because `é` can be typed as one character or as `e` and a combining mark. Otherwise they would look the same on the card but count as two tags, and `find /tag` would match only the form typed.
 * Each word is lowercased as a whole before its first letter is title-cased. Some letters lowercase differently depending on their neighbors: the Greek `Σ` becomes `ς` at the end of a word and `σ` elsewhere. Lowercasing letters one at a time would store `ΟΣ` as `Οσ`, while `Tag#toComparisonKey()` lowercases the whole name to `ος`, so `find /tag ΟΣ` would match nothing and `/tag ΟΣ /tag ος` would be two different tags.
 * `Tag#isValidTagName()` also checks the length of the title-case form, because a few letters, such as `İ`, become two characters in lower case. Otherwise a tag within the limit as typed could be saved longer than `Tag.MAX_LENGTH` and make the data file fail to load. `ParserUtil#parseTag()` reports such a tag as too long.
  `Person` keeps its tags in a `LinkedHashSet`, so they appear on the contact card in the order they were typed. `Person` also checks `Person.MAX_TAGS` in its constructor, and `JsonAdaptedPerson` rejects a data file that breaks this limit.
@@ -380,7 +381,7 @@ the same ordering. Sorting does not modify the backing address book or its saved
 1. Collapse whitespace, then reject any word starting with `/` other than `/tag` as an invalid format.
 2. Parse the text before the first keyword as the `INDEX`; an invalid index is reported as an invalid format.
 3. Require at least one `/tag`; otherwise report an invalid format.
-4. Parse each value with `ParserUtil#parseTag()`, as `add` does, so an empty or invalid tag is reported the same way. A tag given twice is reported as `Repeated tag: TAG. Each tag can only be given once.` rather than `add`'s `Contact already has this tag.`, which would wrongly suggest that the contact already has the tag. The tag limit is not checked here, because it applies to the tags left after the toggle.
+4. Parse each value with `ParserUtil#parseTag()`, as `add` does, so an empty or invalid tag is reported the same way. A tag given twice is reported as `Repeated tag: TAG. Each tag can only be given once.`, as in `add`. The tag limit is not checked here, because it applies to the tags left after the toggle.
 
 `ToggleCommand` holds the `Index` and a `LinkedHashSet<Tag>` of tags to toggle. In `execute()` it:
 
@@ -1116,13 +1117,13 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
       Expected: No contact is added. Error: `Tag limit reached (max 5)`
 
    1. Test case: `add Ben Ong /phone 9876 5432 /tag RA /tag ra`<br>
-      Expected: No contact is added. Error: `Contact already has this tag.`
+      Expected: No contact is added. Error: `Repeated tag: Ra. Each tag can only be given once.`
 
    1. Test case: `add Ben Ong /phone 9876 5432 /tag RA /tag`<br>
       Expected: No contact is added. Error: `Tag cannot be empty.`
 
    1. Test case: `add Ben Ong /phone 9876 5432 /tag ΟΣ /tag ος`<br>
-      Expected: No contact is added. Error: `Contact already has this tag.`
+      Expected: No contact is added. Error: `Repeated tag: Ος. Each tag can only be given once.`
 
    1. Test case: `add Ben Ong /phone 9876 5432 /tag A` followed by 25 copies of `İ` (26 characters as typed, 51 in title case)<br>
       Expected: No contact is added. Error: `Tag too long, please shorten it and try again.`
@@ -1168,10 +1169,11 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 
 1. Prerequisites: Start with the sample data.
 
-1. Test case: `find /tag friends`<br>
-   Expected: Only contacts tagged `Friends` are shown. The status message shows how many are listed.
+1. Test case: `find /tag resident`<br>
+   Expected: Only `Alex Yeoh`, `Bernice Yu`, `Charlotte Oliveiro` and `Roy Balakrishnan` are shown. `David Li` is not
+   shown, because `Resident Fellow` is a different tag. The status message shows `4 person(s) listed!`.
 
-1. Test case: `find   /tag   FRIENDS  `<br>
+1. Test case: `find   /tag   RESIDENT  `<br>
    Expected: Same as above.
 
 1. Test case: `find /tag Nobody`<br>
@@ -1180,8 +1182,11 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 1. Test case: `find /tag`<br>
    Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
 
-1. Other incorrect commands to try: `find friends`, `find /tag friends /name Alex`, `find /tag friends /tag family`<br>
+1. Other incorrect commands to try: `find resident`, `find /tag resident /name Alex`<br>
    Expected: The list is unchanged. Error: `Invalid command format!` followed by the `find` usage.
+
+1. Test case: `find /tag resident /tag staff`<br>
+   Expected: The list is unchanged. Error: `Multiple values specified for the following single-valued field(s): /tag`
 
 1. Test case: `list /filter friends`<br>
    Expected: The list is unchanged. Error: `Invalid command format. Usage: list`
