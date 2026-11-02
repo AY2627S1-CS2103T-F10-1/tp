@@ -797,8 +797,6 @@ The following activity diagram summarizes what happens when a user executes a ne
   * Pros: Will use less memory (e.g. for `delete`, just save the person being deleted).
   * Cons: We must ensure that the implementation of each individual command is correct.
 
-_{more aspects and alternatives to be added}_
-
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Documentation, logging, testing, dev-ops**
@@ -1051,8 +1049,6 @@ testers are expected to do more *exploratory* testing.
    1. Relaunch the app by double-clicking the JAR file.<br>
        Expected: The most recent window size and location are retained.
 
-1. _{ more test cases …​ }_
-
 1. Window title
 
    1. Launch the app.<br>
@@ -1102,8 +1098,6 @@ Restart | Submit `list`, close the app and reopen it. Type `unfinished draft` an
 
    1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
       Expected: Similar to previous.
-
-1. _{ more test cases …​ }_
 
 ### Listing all contacts
 
@@ -1532,9 +1526,27 @@ Start with two active contacts sharing room `B-204`, one contact in `B-205`, and
 
 ### Saving data
 
-1. Dealing with missing/corrupted data files
+1. Dealing with missing and corrupted data files
 
-   1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
+   1. Prerequisites: Copy the JAR file into an empty folder and use that folder for every test case below,
+      so that your real data is never touched. Close the app before changing any file.
+
+   1. Test case: Delete `data/addressbook.json` (or launch the app for the first time), then launch the app.<br>
+      Expected: The sample contacts are shown. `data/addressbook.json` is not created until a command is run.
+      Run `list`, and the file is created containing the sample contacts.
+
+   1. Test case: Replace the contents of `data/addressbook.json` with `{ not json`, then launch the app.<br>
+      Expected: The app starts with an empty contact list. The file still contains `{ not json`.
+
+   1. Test case: After the test case above, close the app without running a command, then relaunch it.<br>
+      Expected: Same as above. The corrupted file is kept until a command is run.
+
+   1. Test case: After the test case above, run `list`.<br>
+      Expected: `data/addressbook.json` is overwritten with an empty contact list, and the corrupted contents are lost.
+
+   1. Test case: Restore a valid data file, then edit one contact's `name` to a value longer than 100 characters, or
+      give one contact more than 5 different tags. Launch the app.<br>
+      Expected: The app starts with an empty contact list, the same as for a corrupted file.
 
 1. Commands when saving fails
 
@@ -1549,5 +1561,3 @@ Start with two active contacts sharing room `B-204`, one contact in `B-205`, and
 
    1. Test case: Close the main window.<br>
       Expected: The app quits.
-
-1. _{ more test cases …​ }_
