@@ -228,9 +228,10 @@ public class ParserUtil {
         requireNonNull(tags);
         final Set<Tag> tagSet = new LinkedHashSet<>();
         for (String tagName : tags) {
-            boolean isNewTag = tagSet.add(parseTag(tagName));
+            Tag tag = parseTag(tagName);
+            boolean isNewTag = tagSet.add(tag);
             if (!isNewTag) {
-                throw new ParseException(Tag.MESSAGE_DUPLICATE);
+                throw new ParseException(String.format(Tag.MESSAGE_REPEATED, tag.tagName));
             }
         }
         if (tagSet.size() > Person.MAX_TAGS) {
