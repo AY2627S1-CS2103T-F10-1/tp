@@ -1059,6 +1059,17 @@ testers are expected to do more *exploratory* testing.
    1. Launch the app.<br>
       Expected: The title bar of the main window shows `RAcontact`.
 
+### Reading long result messages
+
+1. Wrapping a long error message
+
+   1. Test case: `add`<br>
+      Expected: The usage message wraps onto new lines within the result display, with no horizontal scroll bar.
+      If it is taller than the result display, a vertical scroll bar appears.
+
+   1. Test case: Resize the window to its smallest width, then enter `add` again.<br>
+      Expected: Same as above.
+
 ### Viewing help
 
 1. Closing the help window with the keyboard
