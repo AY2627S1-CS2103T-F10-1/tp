@@ -25,7 +25,7 @@ The app stores and retrieves contact information; it does not make calls, send m
 
 1. Copy the file to the folder you want to use as the _home folder_ for RAcontact.
 
-1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar addressbook.jar`.<br>
+1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar` followed by the name of the JAR file you downloaded.<br>
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
    ![Ui](images/Ui.png)
 
