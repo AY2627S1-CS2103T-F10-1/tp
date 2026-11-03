@@ -18,6 +18,9 @@ title: Developer Guide
   a variant of the [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) that also counts
   swapping two adjacent letters as one typo. Our implementation in `StringUtil` is written from the algorithm's
   description.
+* AI use: Disha ([@d1sha1](https://github.com/d1sha1)) used [Claude Code](https://www.anthropic.com/claude-code),
+  an AI coding assistant, to help write and review code, tests and documentation for their contributions,
+  such as fuzzy name search, the note field, tag and name validation, and UI fixes.
 * Libraries used: [JavaFX](https://openjfx.io/) for the user interface,
   [Jackson](https://github.com/FasterXML/jackson) for JSON storage, and
   [JUnit 5](https://github.com/junit-team/junit5) for automated tests.
@@ -770,6 +773,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *` | user | delete a contact | can only keep needed contacts |
 | `* * *` | user searching for a contact | search by tag as well as by name | can find the right vendor when I cannot recall the company name |
 | `* * *` | user handling an emergency | list every contact tagged as emergency | can reach the on-call number without remembering a name |
+| `* * *` | user on duty | search for a contact by phone number | can tell who a missed call or message came from |
 | `* *` | user exploring the app for the first time | see the app preloaded with sample contacts | can see how the app will look once it holds my own data |
 | `* *` | user exploring the app for the first time | list every command the app supports | can find out what the app does without reading a manual |
 | `* *` | user ready to start using the app for personal use | delete all the sample data in one command | can quickly clear out the sample data before entering my own |
@@ -790,13 +794,18 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *` | user with archived contacts | list my archived contacts | can still look someone up when a query about last year comes in |
 | `* *` | user with archived contacts | restore an archived contact to my main list | can bring a resident back if they return to the block |
 | `* *` | user | hide private contact details | can minimize the chance of someone else seeing them by accident |
+| `* *` | user | record a short note against a contact, such as an allergy or a preferred way to reach them | have important context at hand when I reach out |
+| `* *` | user | delete a contact by typing their full name | do not have to look up the contact's index first |
+| `* *` | user whose residents' situations change | replace or clear a resident's emergency contact | can rely on the emergency details being current |
+| `* *` | user with archived contacts | restore every archived contact carrying a given tag at once | can bring back a whole group, such as residents returning next semester |
+| `* *` | user | bring back my previous command with a keypress | can repeat or amend a lookup without typing it again |
+| `* *` | user with a long contact list | sort my contact list by name | can find my way around a list too long to scan |
+| `* *` | user handling an emergency | mark a contact as a favourite | can keep the numbers I need most within easy reach |
+| `* *` | user handling an emergency | list my favourite contacts | can reach my most-used numbers first |
+| `* *` | user with new residents | archive every contact carrying a given tag at once | can clear out last year's residents quickly |
+| `* *` | user handling an emergency | remove a contact from my favourites | can keep my favourite list short |
 | `*` | user | use a short form of a long command | can enter commands with fewer keystrokes |
-| `*` | user | bring back my previous command with a keypress | can repeat or amend a lookup without typing it again |
 | `*` | user | redo a command I have undone | can get back a change I undid by accident |
-| `*` | user with a long contact list | sort my contact list by name | can find my way around a list too long to scan |
-| `*` | user handling an emergency | mark a contact as a favourite | can keep the numbers I need most within easy reach |
-| `*` | user handling an emergency | list my favourite contacts | can reach my most-used numbers first |
-| `*` | user with new residents | archive every contact carrying a given tag at once | can clear out last year's residents quickly |
 
 ### Use cases
 
