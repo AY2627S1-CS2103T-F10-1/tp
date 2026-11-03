@@ -18,6 +18,9 @@ title: Developer Guide
   a variant of the [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) that also counts
   swapping two adjacent letters as one typo. Our implementation in `StringUtil` is written from the algorithm's
   description.
+* AI use: Disha ([@d1sha1](https://github.com/d1sha1)) used [Claude Code](https://www.anthropic.com/claude-code),
+  an AI coding assistant, to help write and review code, tests and documentation for their contributions,
+  such as fuzzy name search, the note field, tag and name validation, and UI fixes.
 * Libraries used: [JavaFX](https://openjfx.io/) for the user interface,
   [Jackson](https://github.com/FasterXML/jackson) for JSON storage, and
   [JUnit 5](https://github.com/junit-team/junit5) for automated tests.
