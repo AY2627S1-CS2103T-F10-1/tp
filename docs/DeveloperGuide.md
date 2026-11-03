@@ -21,6 +21,9 @@ title: Developer Guide
 * AI use: Disha ([@d1sha1](https://github.com/d1sha1)) used [Claude Code](https://www.anthropic.com/claude-code),
   an AI coding assistant, to help write and review code, tests and documentation for their contributions,
   such as fuzzy name search, the note field, tag and name validation, and UI fixes.
+* AI use: Guo Jie ([@topinmys](https://github.com/topinmys)) used OpenAI Codex to assist with implementation,
+  debugging, testing and documentation for contact listing, emergency-tag listing, favourite contacts and command recall.
+  It also supported preliminary pull request reviews and refinement of the User Guide, Developer Guide and UML diagrams.
 * Libraries used: [JavaFX](https://openjfx.io/) for the user interface,
   [Jackson](https://github.com/FasterXML/jackson) for JSON storage, and
   [JUnit 5](https://github.com/junit-team/junit5) for automated tests.
